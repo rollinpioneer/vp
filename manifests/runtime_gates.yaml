@@ -50,3 +50,47 @@ short_training_gate:
     - Only two one-episode PKL smoke shards were used.
     - This gate verifies data loading, gradient updates, and checkpoint writing.
     - It is not evidence of learned policy success.
+
+official_success_audit:
+  status: passed
+  criterion: saved_final_state_or_saved_final_state_plus_last_action
+  checked_per_layout: 300
+  layouts:
+    bowl_on_plate_1: {accepted: 256, acceptance_rate: 0.8533333333333334}
+    bowl_on_plate_2: {accepted: 44, acceptance_rate: 0.14666666666666667}
+    bowl_on_plate_3: {accepted: 114, acceptance_rate: 0.38}
+    bowl_on_plate_4: {accepted: 286, acceptance_rate: 0.9533333333333334}
+  decision: use_balanced_44_episode_subset_per_layout
+
+balanced_training_dataset:
+  status: passed
+  episodes_per_layout: 44
+  total_episodes: 176
+  uploaded: false
+  files:
+    - {filename: bowl_on_plate_1.pkl, size_bytes: 175288816, sha256: 45658f6d72dc2b005c56b0fd60d315127495bc079bb2390c9afa5c4131e2b13b}
+    - {filename: bowl_on_plate_2.pkl, size_bytes: 164742647, sha256: 9450a73a990a9af2616df9a2f880069e39cc7095af0f56b5874bb07a722057c0}
+    - {filename: bowl_on_plate_3.pkl, size_bytes: 170198887, sha256: 1e2a5f2ce3bf9000ee96cb97c3ab92e9a2fb137dc385d2a234a4595f8883517c}
+    - {filename: bowl_on_plate_4.pkl, size_bytes: 158206727, sha256: 0c6140eb748b1a899e5bb928c9a98acc05f24c0bf7d5bb9b196cf09d8d43761b}
+
+thousand_step_training_gate:
+  status: passed
+  seed: 0
+  task_indices: [0, 1, 2, 3]
+  demos_per_layout: 44
+  train_steps: 1000
+  batch_size: 16
+  elapsed_seconds: 68.14
+  checkpoint:
+    filename: snapshot/0.pt
+    size_bytes: 122294507
+    sha256: fcefe45d6dee8f6a0cbfdcec111e51284fec6c5b69b9c903f0f87cf4c6d19053
+    uploaded: false
+  limitation: timing_and_optimization_gate_only_not_policy_success
+
+formal_three_seed_training:
+  status: pending
+  seeds: [0, 1, 2]
+  train_steps: 300010
+  demos_per_layout: 44
+  paired_policy_evaluation: pending

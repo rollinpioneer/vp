@@ -107,17 +107,28 @@ class ContractTests(unittest.TestCase):
         self.assertAlmostEqual(belief.recovery_time or 0.0, 0.5)
 
     def test_saved_mimiclabs_xml_migration_is_metadata_only_and_idempotent(self):
-        xml = """<mujoco><worldbody>
-        <body name='plate_main'><geom name='plate_g0' type='box' size='1 1 1'/></body>
-        <body name='bowl_main'><geom name='bowl_g0' type='box' size='1 1 1'/></body>
-        </worldbody></mujoco>"""
-        migrated = migrate_saved_model_xml(xml)
-        migrated_twice = migrate_saved_model_xml(migrated)
-        self.assertEqual(migrated, migrated_twice)
-        self.assertIn("plate_reg_bbox", migrated)
-        self.assertIn("bowl_reg_int", migrated)
-        self.assertIn("plate_horizontal_radius_site", migrated)
-        self.assertEqual(migrated.count("plate_g0"), 1)
+        expected_bbox_sizes = {
+            "bowl_0": "0.0649999688 0.0649981696 0.0184044146",
+            "bowl_1": "0.059999415 0.0599991702 0.026286042",
+            "bowl_2": "0.057499530225 0.05749959405 0.02421663445",
+            "bowl_4": "0.05 0.04999958 0.0248779995",
+        }
+        for variant, bbox_size in expected_bbox_sizes.items():
+            with self.subTest(variant=variant):
+                xml = f"""<mujoco><asset>
+                <texture file='/assets/objaverse/bowl/{variant}/visual/image0.png'/>
+                </asset><worldbody>
+                <body name='plate_main'><geom name='plate_g0' type='box' size='1 1 1'/></body>
+                <body name='bowl_main'><geom name='bowl_g0' type='box' size='1 1 1'/></body>
+                </worldbody></mujoco>"""
+                migrated = migrate_saved_model_xml(xml)
+                migrated_twice = migrate_saved_model_xml(migrated)
+                self.assertEqual(migrated, migrated_twice)
+                self.assertIn("plate_reg_bbox", migrated)
+                self.assertIn("bowl_reg_int", migrated)
+                self.assertIn(bbox_size, migrated)
+                self.assertIn("plate_horizontal_radius_site", migrated)
+                self.assertEqual(migrated.count("plate_g0"), 1)
 
 
 if __name__ == "__main__":

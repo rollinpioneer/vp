@@ -1,0 +1,128 @@
+diff --git a/point_bridge/robot_utils/mimiclabs/generate_pkl.py b/point_bridge/robot_utils/mimiclabs/generate_pkl.py
+index baf04da..9e090a6 100644
+--- a/point_bridge/robot_utils/mimiclabs/generate_pkl.py
++++ b/point_bridge/robot_utils/mimiclabs/generate_pkl.py
+@@ -11,6 +11,7 @@ Points reduced using Farthest Point Sampling.
+
+ """
+
++import argparse
+ import sys
+
+ sys.path.append("../../")
+@@ -50,20 +51,40 @@ from point_bridge.robot_utils.common.camera_utils import (
+     add_camera_with_offset,
+     add_cameras_from_extrinsics,
+ )
++from vico_point.envs.mimiclabs_compat import migrate_saved_model_xml
++
++
++def comma_separated(value):
++    return [item for item in value.split(",") if item]
++
++
++def comma_separated_ints(value):
++    return [int(item) for item in value.split(",") if item]
++
++
++parser = argparse.ArgumentParser()
++parser.add_argument("--task-name", default="bowl_on_plate")
++parser.add_argument("--task-names", type=comma_separated)
++parser.add_argument("--demo-indices", type=comma_separated_ints)
++parser.add_argument("--demo-start", type=int, default=0)
++parser.add_argument("--demo-stop", type=int)
++parser.add_argument("--max-accepted", type=int)
++parser.add_argument("--save-pixels", action="store_true")
++parser.add_argument("--add-real-cam", action="store_true")
++args = parser.parse_args()
+
+ HOME_DIR = Path(point_bridge.__path__[0]).parent
+-TASK_NAME = "bowl_on_plate" # bowl_on_plate, mug_on_plate, stack_bowls
+-save_pixels = False
++TASK_NAME = args.task_name # bowl_on_plate, mug_on_plate, stack_bowls
++save_pixels = args.save_pixels
+ save_dir_suffix = ""
+-add_real_cam = True # add real camera from camera extrinsics
+-add_depth_from_real_cam = True
++add_real_cam = args.add_real_cam # add real camera from camera extrinsics
++add_depth_from_real_cam = args.add_real_cam
+
+ DATASET_PATH = HOME_DIR / f"data/mimicgen_data/{TASK_NAME}"
+ SAVE_DATA_PATH = HOME_DIR / "expert_demos"
+ BDDL_DIR = HOME_DIR / "third_party/mimiclabs/mimiclabs/mimiclabs/task_suites/new_task_suite"
+
+ benchmark_name = "mimiclabs"
+-NUM_DEMOS = None
+ camera_names = ["agentviewleft", "agentview", "robot0_eye_in_hand"]
+ cam_extrinsics_path = HOME_DIR / "point_bridge/robot_utils/fr3/calibration_matrices/camera_extrinsics.json"
+
+@@ -105,6 +126,8 @@ DEFAULT_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+ # get task names
+ task_names = [f.name for f in DATASET_PATH.iterdir() if f.is_dir()]
+ task_names.sort()
++if args.task_names is not None:
++    task_names = [name for name in task_names if name in args.task_names]
+ num_tasks = len(task_names)
+
+ bodynames = ["gripper0_eef"]
+@@ -166,9 +189,12 @@ for task_idx, task_name in enumerate(task_names):
+         save_key_name = f"object_tracks_{saved_points_per_obj}"
+         object_points[save_key_name] = {}
+
+-    for demo_idx, demo_key in enumerate(data.keys()):
+-        if NUM_DEMOS is not None and demo_idx >= NUM_DEMOS:
+-            break
++    if args.demo_indices is None:
++        demo_keys = sorted(data.keys(), key=lambda key: int(key.rsplit("_", 1)[1]))
++        demo_keys = demo_keys[args.demo_start : args.demo_stop]
++    else:
++        demo_keys = [f"demo_{index}" for index in args.demo_indices]
++    for demo_idx, demo_key in enumerate(demo_keys, start=args.demo_start):
+
+         try:
+             print(f"Processing demo {demo_idx + 1}: {demo_key}")
+@@ -196,10 +222,12 @@ for task_idx, task_name in enumerate(task_names):
+             observation["eef_states"], observation["gripper_states"] = [], []
+
+             for step_idx in range(len(demo_data["states"])):
+-                state = demo_data["states"][0]
++                state = demo_data["states"][step_idx]
+                 if step_idx == 0:
+                     model_file = demo_data.attrs["model_file"]
+-                    env.reset_to({"states": state, "model": model_file})
++                    env.reset_to(
++                        {"states": state, "model": migrate_saved_model_xml(model_file)}
++                    )
+
+                     # Add new camera after reset using utility function
+                     camera_name = "agentviewleft"
+@@ -231,9 +259,8 @@ for task_idx, task_name in enumerate(task_names):
+                             pixelkey2camera["pixels_cam_8_left"] = "cam_8_left"
+                             camera2pixelkey["cam_8_left"] = "pixels_cam_8_left"
+                 else:
+-                    obs, reward, done, info = env.step(
+-                        demo_data["actions"][step_idx - 1]
+-                    )
++                    env.sim.set_state_from_flattened(state)
++                    env.sim.forward()
+
+                 # camera metrics (for every step since camera can move if base moves)
+                 transforms = MujocoTransforms(
+@@ -489,11 +516,15 @@ for task_idx, task_name in enumerate(task_names):
+             observation["gripper_states"] = np.array(observation["gripper_states"])
+
+             # save data
+-            if reward == 1.0:
++            saved_final_success = env._check_success()
++            _, final_reward, _, _ = env.step(demo_data["actions"][-1])
++            if saved_final_success or final_reward == 1.0:
+                 observations.append(observation)
+                 actions.append(np.array(demo_data["actions"], dtype=np.float32))
++                if args.max_accepted is not None and len(observations) >= args.max_accepted:
++                    break
+             else:
+-                print(f"Skipping demo {demo_key} because final reward is {reward}")
++                print(f"Skipping demo {demo_key} because final transition is not successful")
+         except Exception as e:
+             print(f"Error processing demo {demo_key}: {e}")
+             continue

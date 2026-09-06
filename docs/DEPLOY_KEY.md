@@ -4,7 +4,7 @@
 
 在 GitHub 仓库的 `Settings -> Deploy keys -> Add deploy key` 中填写：
 
-- **Title**：`vico-point experiment host 2026-09-06`
+- **Title**：`vico-point experiment host`
 - **Key**：
 
 ```text

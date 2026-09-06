@@ -24,7 +24,10 @@
 - `experiments/v1/capture_pointbridge_replay.py`：从锁定 MimicLabs 回放捕获真实 RGB-D、标定与稳定 GT 点身份，并兼容迁移旧保存模型所缺的非物理 metadata。
 - `experiments/v1/real_visibility_eval.py`：在同一捕获上配对执行 E00、E10 和仅诊断用隐藏真值上界。
 - `manifests/v1_e00_e10_scenarios.csv`：3 个训练 seed、每个 seed 50 对固定 E00/E10 场景。
-- `manifests/runtime_gates.yaml`：记录真实回放、可见性门槛和短训练 checkpoint 的小型证据与本地大文件校验值。
+- `scripts/audit_mimiclabs_success.py`：按保存终态审计官方 HDF5 的成功轨迹。
+- `scripts/generate_pointbridge_pkls.py`：应用锁定补丁并并行生成已审计的训练 PKL。
+- `scripts/train_pointbridge_three_seeds.py`：以每布局 44 条平衡成功轨迹启动三 seed 正式训练。
+- `manifests/runtime_gates.yaml`：记录真实回放、可见性、数据生成和训练门槛的小型证据与本地大文件校验值。
 
 运行方式不需要安装第三方 Python 依赖：
 

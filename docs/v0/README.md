@@ -11,11 +11,13 @@
 6. 四个官方 `bowl_on_plate` HDF5 均按预期字节数下载，可由 `h5py` 打开，SHA-256 已记录在未上传清单。
 7. 专用 Python 3.11 venv 已安装 MuJoCo、robosuite、MimicLabs 等运行依赖。
 8. 保存模型 XML 可在回放前仅补齐不可见、无碰撞的 `reg_bbox` 与 extent-site metadata；40-step 记录状态恢复已通过。
-9. 使用两个有效 PKL 分片完成真实 GPU 3-step Point Bridge 训练，生成并校验 `snapshot/0.pt`、`1.pt`、`2.pt`。
+9. 完成四个官方分片各 300 条轨迹的保存状态成功审计，通过数依次为 256、44、114、286。
+10. 以共同可用的保守规模生成四布局各 44 条平衡成功轨迹；四个 PKL 均通过 episode 数、点张量形状和 SHA-256 校验。
+11. 使用四布局 PKL 完成真实 GPU 1000-step 计时门槛，训练返回 0，用时 68.14 秒。
 
 ## 当前状态
 
-`pointbridge_real_short_training_gate_passed_formal_training_pending`。RoboCasa Objaverse 资产、记录状态恢复、真实 RGB-D 捕获和短训练 checkpoint 链路均已通过。当前 PKL smoke 只含两个有效 episode，不构成正常场景学习结果；正式 300010-step 三种子训练和 checkpoint 策略评测尚未完成。
+`balanced_44_per_layout_pointbridge_dataset_ready_formal_training_pending`。RoboCasa Objaverse 资产、记录状态恢复、真实 RGB-D 捕获、四布局平衡训练集和 1000-step 训练链路均已通过。布局 2 在 300 条官方轨迹中仅有 44 条满足保守的保存终态/末动作成功判定，因此没有伪称每布局 100 条。正式 300010-step 三种子训练和 checkpoint 策略评测尚未完成。
 
 ## V0 验收命令
 
@@ -23,6 +25,7 @@
 python scripts/run_v0.py
 PYTHONPATH=src python -m unittest discover -s tests -v
 python scripts/run_pointbridge_short_gate.py --steps 3
+python scripts/train_pointbridge_three_seeds.py --steps 1000
 ```
 
 ## 不包含的内容

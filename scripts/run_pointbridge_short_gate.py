@@ -13,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_UPSTREAM = ROOT / "third_party" / "pointbridge"
 
 
+def _task_indices(value: str) -> list[int]:
+    return [int(item) for item in value.split(",") if item]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--upstream", type=Path, default=DEFAULT_UPSTREAM)
@@ -20,14 +24,18 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--cuda-device", default="0")
+    parser.add_argument("--task-indices", type=_task_indices, default=[0, 1, 2, 3])
     args = parser.parse_args()
 
     upstream = args.upstream.resolve()
-    required = [
-        upstream / "point_bridge" / "train.py",
-        upstream / "expert_demos" / "mimiclabs__no_images" / "bowl_on_plate_3.pkl",
-        upstream / "expert_demos" / "mimiclabs__no_images" / "bowl_on_plate_4.pkl",
-    ]
+    required = [upstream / "point_bridge" / "train.py"]
+    required.extend(
+        upstream
+        / "expert_demos"
+        / "mimiclabs__no_images"
+        / f"bowl_on_plate_{task_index + 1}.pkl"
+        for task_index in args.task_indices
+    )
     missing = [str(path) for path in required if not path.exists()]
     if missing:
         parser.error("missing local Point Bridge inputs: " + ", ".join(missing))
@@ -67,7 +75,7 @@ def main() -> int:
         "suite.history_len=1",
         "suite.obs_type=[points]",
         "dataloader.bc_dataset.suffix=_no_images",
-        "dataloader.bc_dataset.task_indices=[2,3]",
+        "dataloader.bc_dataset.task_indices=" + str(args.task_indices).replace(" ", ""),
         "dataloader.bc_dataset.noise_object_points=false",
         "experiment=v0_pointbridge_short_train",
         "suite.action_mode=pose",

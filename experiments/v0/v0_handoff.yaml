@@ -1,7 +1,7 @@
 stage: V0
-status: real_mimiclabs_egl_smoke_passed_recorded_xml_restore_blocked
+status: balanced_pointbridge_dataset_ready_formal_training_pending
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
-own_commit: 0ee3c2e1581529ce219d79a66c288f26072c6414
+repository_commit_at_generation: dd3d0ddaff03ce5b38cb270cf7b0ace28919ad7a
 primary_task: bowl_on_plate
 input_level: P
 point_budget: 64
@@ -19,6 +19,13 @@ third_party_gitignored: true
 real_egl_environment_smoke: passed
 real_egl_smoke_steps: 2
 real_egl_object_points: 256
-recorded_hdf5_state_restore: blocked_asset_xml_name_mismatch
 synthetic_contract_check: passed
-next_step: obtain_matching_legacy_robocasa_assets_or_migrate_hdf5_model_xml
+recorded_hdf5_state_restore: passed_metadata_only_xml_migration
+success_audit_checked_per_layout: 300
+success_audit_accepted: [256, 44, 114, 286]
+balanced_demos_per_layout: 44
+generated_pkl_episodes: [44, 44, 44, 44]
+formal_training_steps: 300010
+formal_training_seeds: [0, 1, 2]
+formal_training_complete: false
+next_step: train_three_formal_seeds_then_run_fixed_paired_policy_evaluation
