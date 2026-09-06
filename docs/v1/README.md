@@ -26,6 +26,13 @@
 python scripts/run_v1.py
 ```
 
+真实 Point Bridge checkpoint 使用：
+
+```bash
+python scripts/evaluate_pointbridge_paired.py /path/to/300000.pt \
+  --training-seed 0 --scenario-count 50
+```
+
 结果写入 `outputs/v1/`，场景注册表写入 `manifests/scenario_registry.csv`。当前 evaluator 是确定性的合成诊断环境，只用于验证实验 plumbing；报告中的 `scientific_status` 明确标为 `not_a_pointbridge_result`。
 
 ## 真实可见性实现
@@ -45,6 +52,7 @@ python scripts/run_v1.py
 - Point Bridge 最短训练门槛：早期两个单 episode PKL 的 3 个真实梯度更新和 3 个本地 checkpoint 均通过。
 - 四布局训练数据：每个官方分片审计 300 条，成功数为 256、44、114、286；正式训练采用每布局 44 条的平衡子集。
 - 四布局 1000-step seed-0 计时门槛返回 0，用时 68.14 秒。
+- 配对策略评测 smoke 已验证同一初态、同一点身份、遮挡前动作一致，且非 oracle 隐藏真值读取为 0。
 
 小型结果与未上传文件校验值见 `manifests/runtime_gates.yaml`。该门槛只证明运行链路可用，不证明策略成功率。
 

@@ -27,6 +27,7 @@
 - `scripts/audit_mimiclabs_success.py`：按保存终态审计官方 HDF5 的成功轨迹。
 - `scripts/generate_pointbridge_pkls.py`：应用锁定补丁并并行生成已审计的训练 PKL。
 - `scripts/train_pointbridge_three_seeds.py`：以每布局 44 条平衡成功轨迹启动三 seed 正式训练。
+- `scripts/evaluate_pointbridge_paired.py`：对真实 checkpoint 运行固定初态的 E00/E10/oracle 配对策略评测。
 - `manifests/runtime_gates.yaml`：记录真实回放、可见性、数据生成和训练门槛的小型证据与本地大文件校验值。
 
 运行方式不需要安装第三方 Python 依赖：

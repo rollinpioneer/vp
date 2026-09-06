@@ -89,8 +89,20 @@ thousand_step_training_gate:
   limitation: timing_and_optimization_gate_only_not_policy_success
 
 formal_three_seed_training:
-  status: pending
+  status: running
   seeds: [0, 1, 2]
   train_steps: 300010
   demos_per_layout: 44
   paired_policy_evaluation: pending
+
+paired_policy_evaluation_smoke:
+  status: passed
+  checkpoint_scope: untrained_step_zero_checkpoint_for_plumbing_only
+  paired_scenarios: 1
+  branches: [E00, E10, E10_ORACLE_HIDDEN_GT]
+  paired_initial_state_hashes_match: true
+  pre_occlusion_action_hashes_match: true
+  fixed_object_point_identity_within_pair: true
+  non_oracle_hidden_truth_reads: 0
+  oracle_synthetic_occluder_hidden_truth_reads: 515
+  scientific_status: not_a_policy_performance_result

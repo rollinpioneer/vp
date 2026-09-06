@@ -10,7 +10,10 @@ from vico_point.envs.scenarios import CONDITIONS, generate_scenarios
 from vico_point.envs.visibility import OcclusionWindow, visible_points_from_depth
 from vico_point.envs.mimiclabs_compat import migrate_saved_model_xml
 from vico_point.perception.observation import build_frame, make_point
-from vico_point.policy.pointbridge_adapter import CausalPointBridgeAdapter
+from vico_point.policy.pointbridge_adapter import (
+    CausalPointBridgeAdapter,
+    fill_unknown_from_visible_group_centroids,
+)
 
 
 class ContractTests(unittest.TestCase):
@@ -84,6 +87,56 @@ class ContractTests(unittest.TestCase):
         adapter.audit_no_hidden_truth(hidden)
         np.testing.assert_allclose(hidden.policy_points, gt)
         self.assertEqual(hidden.source, ("causal_hold",))
+
+    def test_unknown_policy_points_use_visible_group_centroid(self):
+        points = np.array(
+            [
+                [1.0, 2.0, 3.0],
+                [np.nan, np.nan, np.nan],
+                [np.nan, np.nan, np.nan],
+                [np.nan, np.nan, np.nan],
+            ]
+        )
+        filled, count = fill_unknown_from_visible_group_centroids(
+            points, np.array([True, False, False, False]), group_size=2
+        )
+        np.testing.assert_allclose(filled[1], points[0])
+        np.testing.assert_allclose(filled[2:], 0.0)
+        self.assertEqual(count, 3)
+
+    def test_oracle_only_reveals_synthetic_occluder_hidden_points(self):
+        adapter = CausalPointBridgeAdapter(("p0",))
+        rgb = np.full((10, 10, 3), 255, dtype=np.uint8)
+        depth = np.ones((10, 10), dtype=np.float32)
+        intrinsic = np.array(
+            [[10.0, 0.0, 5.0], [0.0, 10.0, 5.0], [0.0, 0.0, 1.0]]
+        )
+        gt = np.array([[0.0, 0.0, 1.0]])
+        window = OcclusionWindow(1, 1, (0.0, 0.0, 1.0, 1.0), depth_m=0.25)
+        before = adapter.adapt(
+            gt,
+            rgb,
+            depth,
+            intrinsic,
+            np.eye(4),
+            step=0,
+            condition="E10",
+            window=window,
+            oracle_hidden_truth=True,
+        )
+        self.assertEqual(before.source, ("current_visible_depth",))
+        hidden = adapter.adapt(
+            gt,
+            rgb,
+            depth,
+            intrinsic,
+            np.eye(4),
+            step=1,
+            condition="E10",
+            window=window,
+            oracle_hidden_truth=True,
+        )
+        self.assertEqual(hidden.source, ("oracle_gt_hidden",))
 
     def test_belief_diagnostics_track_error_switch_and_recovery(self):
         belief = TaskBelief("task-0", "task")
