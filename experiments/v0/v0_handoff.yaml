@@ -1,7 +1,7 @@
 stage: V0
 status: interface_ready_upstream_not_included
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
-own_commit: 9c7a2990e5066845ff1ec014a097ef4f17ba4ae0
+own_commit: 0ee3c2e1581529ce219d79a66c288f26072c6414
 primary_task: bowl_on_plate
 input_level: P
 point_budget: 64
