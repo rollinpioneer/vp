@@ -1,0 +1,6 @@
+asset,source,decision,condition,status
+environment_notes,rollinpioneer/dm,review_only,Check only environment and controller compatibility.,not_migrated
+scenario_and_eval_tools,rollinpioneer/dm,selective_reuse,"Verify reset, action interface, success counting and pairing.",not_migrated
+old_200_state_trajectories,original_experiment_machine,conditional,"Require full simulator snapshots, scene assets, camera setup and reproducible replay.",not_migrated
+datamil_influence_and_models,rollinpioneer/dm,do_not_reuse,Unrelated to visual-policy method.,archived
+old_top20_and_checkpoints,original_experiment_machine,do_not_reuse_as_baseline,Not a compatible new visual-policy baseline.,archived

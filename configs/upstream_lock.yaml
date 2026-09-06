@@ -1,0 +1,14 @@
+checked_on: '2026-09-06'
+upstream:
+  repository: NVlabs/pointbridge
+  commit: 5d567a62d62b5a97c5960d45024e065349680cda
+  license: NVIDIA Source Code License
+  source_included: false
+concept_reference:
+  repository: siddhanthaldar/Point-Policy
+  source_included: false
+legacy:
+  repository: rollinpioneer/dm
+  access: read_only
+  runtime_dependency: false
+note: This lock records the inspected upstream commit, not an installed runtime.

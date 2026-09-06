@@ -1,0 +1,55 @@
+status: plan_only_not_upstream_training_config
+work_name: ViCo-Point
+start_stages:
+- V0
+- V1
+primary_benchmark: Point Bridge / MimicLabs
+development_tasks:
+- bowl_on_plate
+- mug_on_plate
+confirmation_task: stack_bowls
+point_budget:
+  proposed_total: 64
+  robot: 9
+  task: 16
+  context: 39
+  fallback_total_at_v0: 128
+  freeze_before_methods: true
+input_levels:
+  O: full_state_oracle_only
+  P: visible_depth_with_sim_role_labels
+  V: causal_visual_extraction
+history:
+  proposed_frames: 8
+  equal_across_ablations: true
+conditions:
+  E00: no_extra_occlusion_no_extra_constraint
+  E10: occlusion_only
+  E01: physical_constraint_only
+  E11: occlusion_and_constraint
+development:
+  training_seeds:
+  - 0
+  - 1
+  - 2
+  eval_scenarios_per_condition: 50
+confirmation:
+  training_seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  eval_scenarios_per_condition: 100
+  core_method_count: 4
+  task_count: 3
+  policy_run_count: 60
+  rollout_count: 24000
+prohibited_initial_expansions:
+- datamil
+- rl
+- large_world_model
+- active_camera
+- human_to_robot_transfer
+- recovery_controller
+remote_created: false
