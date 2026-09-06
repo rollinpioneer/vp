@@ -36,6 +36,16 @@ python scripts/run_v1.py
 - `E10_ORACLE_HIDDEN_GT` 使用相同 RGB-D 与动作路径，只把隐藏任务点替换为真值，并明确标记为诊断上界。
 - V2 代码骨架记录 mask、遮挡持续时间、误差、identity switch 和重现恢复时间；V2 正式实验未获授权、未完成。
 
+## 真实 runtime gate
+
+- 记录状态恢复：`bowl_on_plate_1/demo_0` 连续捕获 40 步，256 个稳定对象点，`recorded_state_restored=true`。
+- E00 平均可见比例：`0.71376953125`。
+- E10 平均可见比例：`0.53505859375`；平均因果保持比例：`0.227734375`。
+- 非 oracle 分支隐藏真值读取次数：`0`；oracle 仅标记为诊断上界。
+- Point Bridge 训练门槛：seed 0、两个有效 PKL、3 个真实梯度更新和 3 个本地 checkpoint 均通过。
+
+小型结果与未上传文件校验值见 `manifests/runtime_gates.yaml`。该门槛只证明运行链路可用，不证明策略成功率。
+
 ## 尚未完成
 
 1. 完成官方 `bowl_on_plate` 的 300010-step 三种子训练。

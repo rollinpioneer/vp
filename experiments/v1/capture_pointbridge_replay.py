@@ -13,6 +13,9 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_UPSTREAM = ROOT / "third_party" / "pointbridge"
+sys.path.insert(0, str(ROOT / "src"))
+
+from vico_point.envs.mimiclabs_compat import migrate_saved_model_xml
 
 
 def add_upstream_paths(upstream: Path) -> None:
@@ -93,7 +96,7 @@ def main() -> int:
     )
     env.reset()
     if not args.random_reset:
-        env.reset_to({"states": states[0], "model": model_file})
+        env.reset_to({"states": states[0], "model": migrate_saved_model_xml(model_file)})
 
     robot_base = np.eye(4)
     robot_base[:3, 3] = env.sim.data.get_body_xpos("robot0_base")

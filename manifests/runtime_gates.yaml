@@ -1,0 +1,52 @@
+checked_on: '2026-09-07'
+scope: runtime_and_observation_gates_only
+scientific_status: formal_three_seed_policy_evaluation_pending
+
+recorded_replay:
+  dataset_file: bowl_on_plate_1/demo/demo.hdf5
+  demo_key: demo_0
+  recorded_state_restored: true
+  captured_steps: 40
+  stable_object_points: 256
+  binary_capture:
+    local_path: outputs/v1/pointbridge_recorded_40.npz
+    size_bytes: 4476496
+    sha256: b1215e1cedcaa2e5488f55a24f6d5c5293b35219fe29f950f82088d4bc68fb81
+    uploaded: false
+
+visibility_gate:
+  status: passed
+  occlusion_steps: [20, 29]
+  e00_mean_visible_fraction: 0.71376953125
+  e10_mean_visible_fraction: 0.53505859375
+  e10_mean_causal_hold_fraction: 0.227734375
+  non_oracle_hidden_truth_reads: 0
+  oracle_diagnostic_only: true
+
+short_training_gate:
+  status: passed
+  upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
+  seed: 0
+  task_indices: [2, 3]
+  source_pkls: [bowl_on_plate_3.pkl, bowl_on_plate_4.pkl]
+  train_steps: 3
+  batch_size: 2
+  actor_losses: [72.44923400878906, 44.69218063354492, 47.80976486206055]
+  local_run: third_party/pointbridge/exp_local/2026.09.07/v0_pointbridge_short_train/deterministic/000913_hidden_dim_256
+  checkpoints:
+    - filename: snapshot/0.pt
+      size_bytes: 122294507
+      sha256: dadb7d8786b10d8f58298738d09ca7049aa7d76b625126428d61ba672793efd9
+      uploaded: false
+    - filename: snapshot/1.pt
+      size_bytes: 122294507
+      sha256: 079d1c0e9e37f1b0061e8707dcc37c9eed4cad4c66cedb4a784d71f21aca94fe
+      uploaded: false
+    - filename: snapshot/2.pt
+      size_bytes: 122294507
+      sha256: f50e49e0d3f16ad78bdc474911bf2d4f65bc0f4c19e0ae271b505519fa6c8059
+      uploaded: false
+  limitations:
+    - Only two one-episode PKL smoke shards were used.
+    - This gate verifies data loading, gradient updates, and checkpoint writing.
+    - It is not evidence of learned policy success.

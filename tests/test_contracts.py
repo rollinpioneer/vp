@@ -8,6 +8,7 @@ from vico_point.core.types import InputLevel, PointBudget, ObservationState
 from vico_point.core.validation import validate_frame
 from vico_point.envs.scenarios import CONDITIONS, generate_scenarios
 from vico_point.envs.visibility import OcclusionWindow, visible_points_from_depth
+from vico_point.envs.mimiclabs_compat import migrate_saved_model_xml
 from vico_point.perception.observation import build_frame, make_point
 from vico_point.policy.pointbridge_adapter import CausalPointBridgeAdapter
 
@@ -104,6 +105,19 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(belief.identity_switches, 1)
         self.assertAlmostEqual(belief.mean_error or 0.0, 0.05)
         self.assertAlmostEqual(belief.recovery_time or 0.0, 0.5)
+
+    def test_saved_mimiclabs_xml_migration_is_metadata_only_and_idempotent(self):
+        xml = """<mujoco><worldbody>
+        <body name='plate_main'><geom name='plate_g0' type='box' size='1 1 1'/></body>
+        <body name='bowl_main'><geom name='bowl_g0' type='box' size='1 1 1'/></body>
+        </worldbody></mujoco>"""
+        migrated = migrate_saved_model_xml(xml)
+        migrated_twice = migrate_saved_model_xml(migrated)
+        self.assertEqual(migrated, migrated_twice)
+        self.assertIn("plate_reg_bbox", migrated)
+        self.assertIn("bowl_reg_int", migrated)
+        self.assertIn("plate_horizontal_radius_site", migrated)
+        self.assertEqual(migrated.count("plate_g0"), 1)
 
 
 if __name__ == "__main__":
