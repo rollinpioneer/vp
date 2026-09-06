@@ -1,6 +1,6 @@
 checked_on: '2026-09-07'
 v0_status: formal_three_seed_training_passed
-v1_status: formal_checkpoint_paired_policy_evaluation_passed
+v1_status: formal_minimal_e00_e10_paired_policy_evaluation_passed
 recorded_xml_compatibility: passed_metadata_only_migration
 v2_implementation_scaffold_authorized: true
 v2_formal_experiment_authorized: false

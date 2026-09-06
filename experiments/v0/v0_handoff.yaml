@@ -1,5 +1,5 @@
 stage: V0
-status: balanced_pointbridge_dataset_ready_formal_training_pending
+status: formal_training_and_minimal_v1_evaluation_complete
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 repository_commit_at_generation: dd3d0ddaff03ce5b38cb270cf7b0ace28919ad7a
 primary_task: bowl_on_plate

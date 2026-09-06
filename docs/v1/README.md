@@ -13,7 +13,7 @@
 
 ## 已完成
 
-- 两个开发任务：`bowl_on_plate`、`mug_on_plate`。
+- 计划中的两个开发任务为 `bowl_on_plate`、`mug_on_plate`；本次最短正式路径只执行 `bowl_on_plate`。
 - 三个训练 seed：`0/1/2`。
 - 每任务每条件默认 50 个固定场景。
 - E00/E10 使用同一个 simulator seed、初始状态键、点身份键和 scenario ID；`manifests/v1_e00_e10_scenarios.csv` 已冻结 150 对、300 行。
@@ -64,4 +64,4 @@ python scripts/evaluate_pointbridge_paired.py /path/to/300000.pt \
 
 ## 结论边界
 
-V1 正式评测已完成并记录，但当前结果只描述固定配对场景上的成功率，不宣称方法收益、显著性或泛化结论。`E10_ORACLE_HIDDEN_GT` 仅作为诊断上界，不能作为非 oracle 方法结果。
+V1 最短推进路径的正式评测已完成并记录，但当前结果只描述 `bowl_on_plate` 固定配对场景上的成功率，不宣称方法收益、显著性或泛化结论。完整计划中的 `mug_on_plate`、E01/E11 和三基线矩阵尚未执行，不在本次完成声明内。`E10_ORACLE_HIDDEN_GT` 仅作为诊断上界，不能作为非 oracle 方法结果。

@@ -1,5 +1,6 @@
 stage: V1
-status: implementation_ready_real_policy_runs_pending
+status: formal_minimal_paired_policy_evaluation_passed
+scope: shortest_v0_v1_path
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 task: bowl_on_plate
 training_seeds: [0, 1, 2]
@@ -22,3 +23,4 @@ oracle_observation:
   reporting_scope: diagnostic_upper_bound_only
 v2_implementation_scaffold_authorized: true
 v2_formal_experiment_authorized: false
+full_plan_v1_not_claimed: [mug_on_plate, E01, E11, three_baseline_matrix]

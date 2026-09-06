@@ -1,6 +1,6 @@
 # ViCo-Point：视觉稀疏点策略研究启动目录
 
-这是一个独立的新项目目录。当前已锁定并在本地核验 Point Bridge、MimicLabs 和四个官方 `bowl_on_plate` 数据分片，实现了保存模型 XML 兼容迁移、真实回放 RGB-D/可见点遮挡、因果保持、oracle 隔离和 3×50 配对场景清单。真实 3-step 训练与 checkpoint 门槛已通过；三种子正式策略训练尚未完成，不能把观测闸门或 smoke test 报告为科学结果。
+这是一个独立的新项目目录。当前已锁定并在本地核验 Point Bridge、MimicLabs 和四个官方 `bowl_on_plate` 数据分片，实现了保存模型 XML 兼容迁移、真实回放 RGB-D/可见点遮挡、因果保持、oracle 隔离和 3×50 配对场景清单。真实 3-step 训练与 checkpoint 门槛、三种子正式策略训练和最短 V1 E00/E10 配对评测均已完成；完整计划中的 `mug_on_plate`、E01/E11 和三基线矩阵不在本次完成声明内。
 
 主文档位于 `docs/视觉稀疏点策略_分阶段实验计划.md` 和同名 Word 文件。
 当前只启动 V0（独立环境与基线）和 V1（问题验证）；其余阶段依据结果逐步推进。
@@ -38,7 +38,7 @@ python scripts/run_v1.py
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-`scripts/run_v1.py` 的合成结果只证明场景/配对/指标链路可运行。真实回放与观测门槛由 `experiments/v1/capture_pointbridge_replay.py` 和 `experiments/v1/real_visibility_eval.py` 提供；要形成策略研究证据，仍必须完成三种子 Point Bridge checkpoint 和固定配对策略评测。
+`scripts/run_v1.py` 的合成结果只证明场景/配对/指标链路可运行。真实回放与观测门槛由 `experiments/v1/capture_pointbridge_replay.py` 和 `experiments/v1/real_visibility_eval.py` 提供；最短路径的三种子 Point Bridge checkpoint 和固定 E00/E10 配对策略评测已完成，结果边界见 `docs/v1/README.md`。
 
 ## GitHub 上传边界
 

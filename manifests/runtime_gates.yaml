@@ -1,6 +1,6 @@
 checked_on: '2026-09-07'
-scope: runtime_and_observation_gates_only
-scientific_status: formal_three_seed_policy_evaluation_recorded
+scope: runtime_gates_and_minimal_v0_v1_evidence
+scientific_status: formal_minimal_three_seed_policy_evaluation_recorded
 
 recorded_replay:
   dataset_file: bowl_on_plate_1/demo/demo.hdf5
@@ -103,6 +103,7 @@ formal_three_seed_training:
 
 formal_paired_policy_evaluation:
   status: passed
+  scope: shortest_v0_v1_path
   checkpoint_step: 300000
   seeds: [0, 1, 2]
   paired_scenarios_per_seed: 50
@@ -128,6 +129,7 @@ formal_paired_policy_evaluation:
     - {filename: outputs/v1/pointbridge_seed2/paired_rollouts.csv, size_bytes: 38663, sha256: 619d5e96dabedf216ff781045ae486d0bd56f16819370e5a21f0937fd2c2cf62, uploaded: false}
     - {filename: outputs/v1/pointbridge_seed2/summary.json, size_bytes: 1150, sha256: 5bb2310dedd0720dbf2b9ac5c5714a16a5650759c45ff86ba14579182323fca4, uploaded: false}
   limitation: Results record the fixed paired evaluation; they do not by themselves establish a method benefit or statistical significance.
+  full_plan_v1_not_claimed: [mug_on_plate, E01, E11, three_baseline_matrix]
 
 paired_policy_evaluation_smoke:
   status: passed
