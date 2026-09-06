@@ -1,0 +1,9 @@
+local_path,size_bytes,type,description,reason
+/home/xushijie/ViCo-Point_实验计划与新仓库骨架.zip,60202,source_archive,Original project-plan and repository-skeleton archive,Outside repository and duplicates tracked source files
+outputs/v0_contract_check.json,827,generated_result,V0 interface smoke-check output,Generated artifact reproducible with scripts/run_v0.py
+outputs/v1/diagnostic_results.csv,235900,generated_result,V1 synthetic per-rollout diagnostic records,Generated artifact reproducible with scripts/run_v1.py
+outputs/v1/summary.json,1248,generated_result,V1 success-rate summary,Generated artifact reproducible with scripts/run_v1.py
+outputs/v1/diagnostic_report.json,866,generated_result,V1 diagnostic status and paired comparison report,Generated artifact reproducible with scripts/run_v1.py
+data/,0,future_large_asset,Datasets RGB-D frames simulator episodes and cached visual features,Excluded from Git; publish through external storage with checksums
+checkpoints/,0,future_large_asset,Trained model checkpoints and optimizer states,Excluded from Git; publish through external storage with checksums
+third_party/pointbridge/,0,external_source,NVlabs Point Bridge source locked to configs/upstream_lock.yaml,Not vendored; retain upstream license and fetch separately

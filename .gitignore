@@ -16,5 +16,12 @@ checkpoints/
 *.h5
 *.npz
 *.mp4
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.onnx
+*.safetensors
 wandb/
 exp_local/

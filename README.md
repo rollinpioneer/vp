@@ -32,6 +32,16 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 V1 runner 的结果只证明场景/配对/指标链路可运行。要形成研究证据，必须把 `vico_point.envs.synthetic.evaluate_scenario` 替换为锁定提交的 Point Bridge adapter，并接入真实或上游仿真数据。
 
+## GitHub 上传边界
+
+仓库保留源代码、配置、文档、清单和测试的原始目录结构。数据、checkpoint、视频、缓存、压缩包和生成结果不进入 Git；具体文件名、用途与排除原因记录在 `manifests/not_uploaded_files.csv`。上传前运行：
+
+```bash
+python scripts/check_upload_size.py
+```
+
+详细规则见 `docs/UPLOAD_POLICY.md`。
+
 ## 初始化独立本地 Git 仓库
 
 将整个目录放在旧仓库之外，建议与 `dm` 平级。然后运行：
