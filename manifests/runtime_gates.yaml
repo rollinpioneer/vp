@@ -1,6 +1,6 @@
 checked_on: '2026-09-07'
 scope: runtime_and_observation_gates_only
-scientific_status: formal_three_seed_policy_evaluation_pending
+scientific_status: formal_three_seed_policy_evaluation_recorded
 
 recorded_replay:
   dataset_file: bowl_on_plate_1/demo/demo.hdf5
@@ -89,11 +89,45 @@ thousand_step_training_gate:
   limitation: timing_and_optimization_gate_only_not_policy_success
 
 formal_three_seed_training:
-  status: running
+  status: passed
   seeds: [0, 1, 2]
   train_steps: 300010
   demos_per_layout: 44
-  paired_policy_evaluation: pending
+  paired_policy_evaluation: passed
+  process_return_codes: {seed0: 0, seed1: 0, seed2: 0}
+  final_checkpoint_sha256:
+    seed0: 46c8619a39e816e0d82a627e6b68c725b5e63ee3c57afb47c3897eab2510c7c7
+    seed1: 043cd2c3b23d1501d1d8eaae3917569c6cabcdcae7385e08bb2b35cc56c5f30d
+    seed2: 0945ac381069e60be71ed887d41c5669deb111f40ef64cbdfa76ed1fefacac83
+  final_checkpoint_size_bytes: 122294507
+
+formal_paired_policy_evaluation:
+  status: passed
+  checkpoint_step: 300000
+  seeds: [0, 1, 2]
+  paired_scenarios_per_seed: 50
+  total_rows: 450
+  branches:
+    E00: {n: 150, successes: 45, success_rate: 0.3}
+    E10: {n: 150, successes: 43, success_rate: 0.2866666666666667}
+    E10_ORACLE_HIDDEN_GT: {n: 150, successes: 44, success_rate: 0.29333333333333333}
+  per_seed_success_rate:
+    seed0: {E00: 0.4, E10: 0.4, E10_ORACLE_HIDDEN_GT: 0.38}
+    seed1: {E00: 0.24, E10: 0.28, E10_ORACLE_HIDDEN_GT: 0.28}
+    seed2: {E00: 0.26, E10: 0.18, E10_ORACLE_HIDDEN_GT: 0.22}
+  paired_initial_state_hashes_match: true
+  pre_occlusion_action_hashes_match: true
+  fixed_object_point_identity_within_pair: true
+  non_oracle_hidden_truth_reads: 0
+  oracle_diagnostic_only: true
+  outputs:
+    - {filename: outputs/v1/pointbridge_seed0/paired_rollouts.csv, size_bytes: 38986, sha256: 2d300289af487921adf42c934f2f5e0eab58c25fc2ad664e1f20d996c6e1a8aa, uploaded: false}
+    - {filename: outputs/v1/pointbridge_seed0/summary.json, size_bytes: 1148, sha256: ba2d506cc4a456304057d49acaca1fbbc0f90548b65a7948eba9ee01057e1244, uploaded: false}
+    - {filename: outputs/v1/pointbridge_seed1/paired_rollouts.csv, size_bytes: 38619, sha256: 741535d5adceefc22c02125a24270a422297fbdc6250b113a4b60a3394ace2f4, uploaded: false}
+    - {filename: outputs/v1/pointbridge_seed1/summary.json, size_bytes: 1150, sha256: 54721e57f4e40a68ec6048ced007915614b5050e009b5ecd3fa9c0ea84c907c0, uploaded: false}
+    - {filename: outputs/v1/pointbridge_seed2/paired_rollouts.csv, size_bytes: 38663, sha256: 619d5e96dabedf216ff781045ae486d0bd56f16819370e5a21f0937fd2c2cf62, uploaded: false}
+    - {filename: outputs/v1/pointbridge_seed2/summary.json, size_bytes: 1150, sha256: 5bb2310dedd0720dbf2b9ac5c5714a16a5650759c45ff86ba14579182323fca4, uploaded: false}
+  limitation: Results record the fixed paired evaluation; they do not by themselves establish a method benefit or statistical significance.
 
 paired_policy_evaluation_smoke:
   status: passed

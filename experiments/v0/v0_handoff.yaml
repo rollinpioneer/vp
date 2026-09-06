@@ -27,5 +27,22 @@ balanced_demos_per_layout: 44
 generated_pkl_episodes: [44, 44, 44, 44]
 formal_training_steps: 300010
 formal_training_seeds: [0, 1, 2]
-formal_training_complete: false
-next_step: train_three_formal_seeds_then_run_fixed_paired_policy_evaluation
+formal_training_complete: true
+formal_training_final_step: 300010
+formal_training_checkpoint_steps: [100000, 200000, 300000]
+formal_training_checkpoint_sha256:
+  seed0:
+    100000: 3e9d8fd0be21c33926baae134019796b7b0ee2a27fa4a0bef9e371dd55085c42
+    200000: b3970c9ff07f0478903151bd650f8d713f427985b8a341899bd29fa692430ccd
+    300000: 46c8619a39e816e0d82a627e6b68c725b5e63ee3c57afb47c3897eab2510c7c7
+  seed1:
+    100000: d2d1679377f445e11749be3c56bb94336dc96f06d4ac96a7c85e140f66c979b2
+    200000: ba30fc7af5169f2b8b6b2ed6711ddf19e7e70029019ecde99e16c2eb049ae449
+    300000: 043cd2c3b23d1501d1d8eaae3917569c6cabcdcae7385e08bb2b35cc56c5f30d
+  seed2:
+    100000: d7fa15c301b001cb3345cf34fc82ca96e51f330acc2474c22c69afeb6977c6d0
+    200000: 79a1df46edd8cea39933658c52632687b74106c6a7efcdb9b8a802c9753262bf
+    300000: 0945ac381069e60be71ed887d41c5669deb111f40ef64cbdfa76ed1fefacac83
+formal_paired_policy_evaluation_complete: true
+formal_paired_policy_evaluation_scenarios_per_seed: 50
+next_step: preserve_v1_results_and_keep_v2_formal_experiment_unauthorized

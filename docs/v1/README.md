@@ -19,6 +19,8 @@
 - E00/E10 使用同一个 simulator seed、初始状态键、点身份键和 scenario ID；`manifests/v1_e00_e10_scenarios.csv` 已冻结 150 对、300 行。
 - 三个开发基线名称已冻结：任务点、预算匹配全场景点、高预算全场景点。
 - 输出配对 CSV、按方法/条件汇总 JSON 和诊断报告。
+- 三个正式 seed 均使用 `300000.pt` 完成固定 50 对 E00/E10 场景和 oracle 诊断上界，共 150 对场景。
+- 正式聚合结果：E00 `45/150 = 0.30`，E10 `43/150 = 0.2867`，oracle `44/150 = 0.2933`。
 
 ## 运行
 
@@ -34,6 +36,8 @@ python scripts/evaluate_pointbridge_paired.py /path/to/300000.pt \
 ```
 
 结果写入 `outputs/v1/`，场景注册表写入 `manifests/scenario_registry.csv`。当前 evaluator 是确定性的合成诊断环境，只用于验证实验 plumbing；报告中的 `scientific_status` 明确标为 `not_a_pointbridge_result`。
+
+上述命令用于合成诊断基线；正式 checkpoint 评测使用 `scripts/evaluate_pointbridge_paired.py`，结果文件默认写入 `outputs/v1/pointbridge_seed{0,1,2}/`。正式评测的结果文件不上传，文件名、用途、大小和 SHA-256 见 `manifests/not_uploaded_files.csv`。
 
 ## 真实可见性实现
 
@@ -52,12 +56,12 @@ python scripts/evaluate_pointbridge_paired.py /path/to/300000.pt \
 - Point Bridge 最短训练门槛：早期两个单 episode PKL 的 3 个真实梯度更新和 3 个本地 checkpoint 均通过。
 - 四布局训练数据：每个官方分片审计 300 条，成功数为 256、44、114、286；正式训练采用每布局 44 条的平衡子集。
 - 四布局 1000-step seed-0 计时门槛返回 0，用时 68.14 秒。
-- 配对策略评测 smoke 已验证同一初态、同一点身份、遮挡前动作一致，且非 oracle 隐藏真值读取为 0。
+- 三个正式 seed 均完成 `300010` steps，训练进程返回 0，并生成 `100000.pt`、`200000.pt`、`300000.pt`。
+- 配对策略评测已完成：三种子各 50 对 E00/E10，并附带同路径 oracle 诊断上界。
+- 全部配对不变量通过：同一初态、同一点身份、遮挡前动作一致，且非 oracle 隐藏真值读取为 0。
 
 小型结果与未上传文件校验值见 `manifests/runtime_gates.yaml`。该门槛只证明运行链路可用，不证明策略成功率。
 
-## 尚未完成
+## 结论边界
 
-1. 使用四布局各 44 条平衡成功轨迹完成 `bowl_on_plate` 的 300010-step 三种子训练。
-2. 对每个 seed 运行固定 50 对 E00/E10 场景及 oracle 诊断上界。
-3. 在三种子真实结果齐全前，不报告 V1 方法收益或统计结论。
+V1 正式评测已完成并记录，但当前结果只描述固定配对场景上的成功率，不宣称方法收益、显著性或泛化结论。`E10_ORACLE_HIDDEN_GT` 仅作为诊断上界，不能作为非 oracle 方法结果。

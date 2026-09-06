@@ -17,7 +17,7 @@
 
 ## 当前状态
 
-`balanced_44_per_layout_pointbridge_dataset_ready_formal_training_pending`。RoboCasa Objaverse 资产、记录状态恢复、真实 RGB-D 捕获、四布局平衡训练集和 1000-step 训练链路均已通过。布局 2 在 300 条官方轨迹中仅有 44 条满足保守的保存终态/末动作成功判定，因此没有伪称每布局 100 条。正式 300010-step 三种子训练和 checkpoint 策略评测尚未完成。
+`formal_three_seed_training_passed`。RoboCasa Objaverse 资产、记录状态恢复、真实 RGB-D 捕获、四布局平衡训练集、1000-step 门槛和正式三 seed `300010`-step 训练均已通过。布局 2 在 300 条官方轨迹中仅有 44 条满足保守的保存终态/末动作成功判定，因此没有伪称每布局 100 条。正式 checkpoint 的配对策略评测在 V1 中进行。
 
 ## V0 验收命令
 
