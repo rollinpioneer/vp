@@ -1,6 +1,6 @@
 # ViCo-Point：视觉稀疏点策略研究启动目录
 
-这是一个独立的新项目目录。当前已实现 V0-V1 的接口、场景注册、诊断 runner 和配对统计骨架；它仍然不是已经完成 Point Bridge 训练的科学结果。
+这是一个独立的新项目目录。当前已锁定并在本地核验 Point Bridge、MimicLabs 和四个官方 `bowl_on_plate` 数据分片，实现了 V1 的同步 RGB-D/可见点遮挡、因果保持、oracle 隔离和 3×50 配对场景清单。三种子正式策略训练尚未完成，不能把观测闸门或 smoke test 报告为科学结果。
 
 主文档位于 `docs/视觉稀疏点策略_分阶段实验计划.md` 和同名 Word 文件。
 当前只启动 V0（独立环境与基线）和 V1（问题验证）；其余阶段依据结果逐步推进。
@@ -10,7 +10,7 @@
 - 上游工程底座：`NVlabs/pointbridge`，本次核对提交见 `configs/upstream_lock.yaml`。
 - 概念与后续基线：`siddhanthaldar/Point-Policy`。
 - 旧资产出处：`rollinpioneer/dm`，只读；不导入 DataMIL 包、不迁移旧模型与 Top-20。
-- 本目录不附带任何上游代码、数据、模型权重或字体。
+- 上游代码和数据仅保存在本地 `third_party/pointbridge/`，整个目录被 Git 忽略；GitHub 只保存锁定提交、文件名、用途、大小和校验值。
 
 ## 当前实现
 
@@ -21,6 +21,9 @@
 - `src/vico_point/evaluation`：按场景配对的成功率汇总。
 - `scripts/run_v0.py`：运行接口检查并生成 `experiments/v0/v0_handoff.yaml`。
 - `scripts/run_v1.py`：运行确定性的四条件 smoke experiment，生成场景清单和诊断结果。
+- `experiments/v1/capture_pointbridge_replay.py`：从锁定 MimicLabs 回放捕获真实 RGB-D、标定与稳定 GT 点身份。
+- `experiments/v1/real_visibility_eval.py`：在同一捕获上配对执行 E00、E10 和仅诊断用隐藏真值上界。
+- `manifests/v1_e00_e10_scenarios.csv`：3 个训练 seed、每个 seed 50 对固定 E00/E10 场景。
 
 运行方式不需要安装第三方 Python 依赖：
 
@@ -41,6 +44,7 @@ python scripts/check_upload_size.py
 ```
 
 详细规则见 `docs/UPLOAD_POLICY.md`。
+Deploy key 的精确填写内容见 `docs/DEPLOY_KEY.md`。
 
 ## 初始化独立本地 Git 仓库
 

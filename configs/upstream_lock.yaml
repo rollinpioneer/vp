@@ -4,6 +4,17 @@ upstream:
   commit: 5d567a62d62b5a97c5960d45024e065349680cda
   license: NVIDIA Source Code License
   source_included: false
+  local_checkout: third_party/pointbridge
+  local_checkout_gitignored: true
+dependencies:
+  LIBERO:
+    commit: 6436c2a8c112ca9f69ca9cc53eb8ec69fcbd4a6b
+  mimicgen:
+    commit: 98a9ac789d9d2d282efc00f82c41f56b1da93337
+  mimiclabs:
+    commit: 62edb2ce1ef65e7111cf392bcdb644133a1d5513
+  robocasa:
+    commit: 23b7bc01779a1b0243691dd8582936ed2ff51502
 concept_reference:
   repository: siddhanthaldar/Point-Policy
   source_included: false
@@ -11,4 +22,4 @@ legacy:
   repository: rollinpioneer/dm
   access: read_only
   runtime_dependency: false
-note: This lock records the inspected upstream commit, not an installed runtime.
+note: Local source and data are verified external assets and remain outside Git.

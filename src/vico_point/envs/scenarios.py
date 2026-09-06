@@ -37,9 +37,9 @@ def generate_scenarios(
     rng = Random(seed)
     scenarios: list[Scenario] = []
     for task_index, task in enumerate(tasks):
-        for condition in CONDITIONS:
-            for index in range(scenarios_per_condition):
-                scenario_seed = rng.randrange(2**31)
+        paired_seeds = [rng.randrange(2**31) for _ in range(scenarios_per_condition)]
+        for index, scenario_seed in enumerate(paired_seeds):
+            for condition in CONDITIONS:
                 # Split by source group before any observation variants are created.
                 split = "test" if index >= scenarios_per_condition * 0.8 else "validation"
                 if index < scenarios_per_condition * 0.6:

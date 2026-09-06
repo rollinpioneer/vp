@@ -1,5 +1,5 @@
 stage: V0
-status: interface_ready_upstream_not_included
+status: real_mimiclabs_egl_smoke_passed_recorded_xml_restore_blocked
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 own_commit: 0ee3c2e1581529ce219d79a66c288f26072c6414
 primary_task: bowl_on_plate
@@ -11,8 +11,14 @@ context_points: 39
 history_frames: 8
 action_dim: 7
 action_protocol: first_action
-data_root: external_not_provided
+data_root: third_party/pointbridge/data/mimicgen_data/bowl_on_plate
 legacy_root: read_only_optional
 upstream_training_complete: false
+official_hdf5_shards_verified: 4
+third_party_gitignored: true
+real_egl_environment_smoke: passed
+real_egl_smoke_steps: 2
+real_egl_object_points: 256
+recorded_hdf5_state_restore: blocked_asset_xml_name_mismatch
 synthetic_contract_check: passed
-next_step: checkout_locked_pointbridge_and_run_official_bowl_on_plate
+next_step: obtain_matching_legacy_robocasa_assets_or_migrate_hdf5_model_xml

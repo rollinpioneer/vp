@@ -16,7 +16,7 @@
 - 两个开发任务：`bowl_on_plate`、`mug_on_plate`。
 - 三个训练 seed：`0/1/2`。
 - 每任务每条件默认 50 个固定场景。
-- 场景先按 `source_episode_group_id` 划分，再派生条件；同一原始 episode group 不跨 train/validation/test。
+- E00/E10 使用同一个 simulator seed、初始状态键、点身份键和 scenario ID；`manifests/v1_e00_e10_scenarios.csv` 已冻结 150 对、300 行。
 - 三个开发基线名称已冻结：任务点、预算匹配全场景点、高预算全场景点。
 - 输出配对 CSV、按方法/条件汇总 JSON 和诊断报告。
 
@@ -28,10 +28,16 @@ python scripts/run_v1.py
 
 结果写入 `outputs/v1/`，场景注册表写入 `manifests/scenario_registry.csv`。当前 evaluator 是确定性的合成诊断环境，只用于验证实验 plumbing；报告中的 `scientific_status` 明确标为 `not_a_pointbridge_result`。
 
-## 进入真实 V1 前必须完成
+## 真实可见性实现
 
-1. 获取并验证锁定的 Point Bridge 源码、许可证和依赖环境。
-2. 用官方 `bowl_on_plate` 跑通训练—评测闭环，再接入 `mug_on_plate`。
-3. 用 RGB-D/仿真可见深度同时生成颜色、深度和点遮挡，禁止向策略读取隐藏对象真值。
-4. 为 E01/E11 每个新布局提供可行示范，不能继续使用会穿过障碍的旧动作标签。
-5. 用真实上游回合替换合成 evaluator，并保留输入等级、控制周期、动作解码和异常计数。
+- RGB 和 metric depth 使用同一预冻结图像平面遮挡区域。
+- GT 对象点投影到当前相机并与遮挡后的 depth 做一致性判定。
+- 正式 E10 分支只使用当前可见点或过去可靠位置保持；审计器拒绝 oracle 来源。
+- `E10_ORACLE_HIDDEN_GT` 使用相同 RGB-D 与动作路径，只把隐藏任务点替换为真值，并明确标记为诊断上界。
+- V2 代码骨架记录 mask、遮挡持续时间、误差、identity switch 和重现恢复时间；V2 正式实验未获授权、未完成。
+
+## 尚未完成
+
+1. 完成官方 `bowl_on_plate` 的 300010-step 三种子训练。
+2. 对每个 seed 运行固定 50 对 E00/E10 场景及 oracle 诊断上界。
+3. 在三种子真实结果齐全前，不报告 V1 方法收益或统计结论。

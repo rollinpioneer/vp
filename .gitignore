@@ -25,3 +25,4 @@ checkpoints/
 *.safetensors
 wandb/
 exp_local/
+third_party/pointbridge/

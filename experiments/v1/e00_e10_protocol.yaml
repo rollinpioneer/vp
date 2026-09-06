@@ -1,0 +1,24 @@
+stage: V1
+status: implementation_ready_real_policy_runs_pending
+upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
+task: bowl_on_plate
+training_seeds: [0, 1, 2]
+conditions: [E00, E10]
+diagnostic_upper_bound: E10_ORACLE_HIDDEN_GT
+scenarios_per_condition_per_training_seed: 50
+pairing_keys: [training_seed, scenario_id, simulator_initial_state, object_point_identity]
+control_hz: 20
+occlusion_duration_steps: [5, 10]
+occlusion_duration_seconds: [0.25, 0.5]
+policy_observation:
+  rgb_depth_visible_points_synchronized: true
+  fixed_tensor_strategy: causal_last_reliable_position_hold
+  records_visibility_mask: true
+  records_point_age: true
+  current_hidden_ground_truth_allowed: false
+oracle_observation:
+  same_rgb_depth_and_action_path_as_e10: true
+  hidden_task_point_ground_truth_allowed: true
+  reporting_scope: diagnostic_upper_bound_only
+v2_implementation_scaffold_authorized: true
+v2_formal_experiment_authorized: false
