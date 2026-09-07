@@ -7,10 +7,11 @@
 - 清单：visibility factorial、clean dev/confirm、all-success episode index。
 - 自动化入口：clean baseline、感知审计、阶段识别、目标 mask schedule、频率/相机汇总、上下文输入审计、V1-R 统一决策。
 - 基础回归：18 个单元测试通过，上传大小检查通过，`git diff --check` 通过。
+- 2026-09-07：在本地 MuJoCo 2.3.2 CPU 环境完成真实 Point Bridge seed-0 B0 dev 40/40 rollout；成功率 0.05，模拟器异常和动作解码异常均为 0，初态哈希配对通过。
 
 ## 诚实门槛状态
 
-当前 `clean_baseline_gate` 为 `blocked`，因为独立确认集的真实 Point Bridge rollout CSV 尚未提供。V1-R.3/R.4/R.5/R.6 也没有被旧 V1 输出替代；缺少 RGB-D/GT 感知审计、reference mask schedule 和 LEFT_BLOCK/RIGHT_OPEN 成对场景时，脚本会写入 `blocked` 或 `unresolved`。
+当前 `clean_baseline_gate` 为 `blocked_clean_baseline`：真实 dev 已完成，但 seed-0 B0 仅为 `0.05`，低于预注册的 `0.50` clean 门槛。因此没有用三 seed confirm 评测覆盖 dev 失败。V1-R.3/R.4/R.5/R.6 也没有被旧 V1 输出替代；缺少 RGB-D/GT 感知审计、reference mask schedule 和 LEFT_BLOCK/RIGHT_OPEN 成对场景时，脚本会写入 `blocked` 或 `unresolved`。
 
 因此当前决策为：
 
@@ -35,4 +36,4 @@ PYTHONPATH=src python experiments/v1r/scripts/evaluate_clean_baseline.py \
   --output experiments/v1r/reports/clean_seed0_gate.json
 ```
 
-其他脚本同样只接受离线记录，不读取未来帧、不把 Oracle 点写成非 Oracle 输入，也不上传 checkpoint、HDF5、PKL、视频或 RGB-D 二进制文件。
+其他脚本同样只接受离线记录，不读取未来帧、不把 Oracle 点写成非 Oracle 输入，也不上传 checkpoint、HDF5、PKL、视频或 RGB-D 二进制文件。Point Bridge 上游保持 gitignored；MuJoCo 2.3 的 mesh scale/offset/path 兼容性通过 `patches/pointbridge/0002*` 和 `0003*` 在本地应用。

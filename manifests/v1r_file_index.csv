@@ -6,12 +6,19 @@ experiments/v1r/manifests/clean_baseline_dev.csv,manifest,clean baseline 开发�
 experiments/v1r/manifests/clean_baseline_confirm.csv,manifest,clean baseline 独立确认集清单,uploaded
 experiments/v1r/manifests/all_success_episodes.csv,manifest,四布局成功示范索引，不含 PKL 数据,uploaded
 experiments/v1r/scripts/evaluate_clean_baseline.py,script,独立 clean baseline 评测与门槛生成,uploaded
+experiments/v1r/scripts/run_clean_pointbridge.py,script,使用冻结 checkpoint 执行真实 E00 clean rollout 并记录异常与初态哈希,uploaded
 experiments/v1r/scripts/audit_perception_modes.py,script,真实 RGB-D/GT 感知审计聚合,uploaded
 experiments/v1r/scripts/identify_reference_phases.py,script,离线识别静止接近和运动搬运阶段,uploaded
 experiments/v1r/scripts/build_target_mask_schedules.py,script,根据冻结 reference 投影生成 mask 元数据,uploaded
 experiments/v1r/scripts/benchmark_perception_rates.py,script,5/10/20 Hz 与相机模式汇总,uploaded
 experiments/v1r/scripts/audit_pointbridge_object_sets.py,script,审计上游任务对象和完整场景输入,uploaded
 experiments/v1r/scripts/summarize_v1r.py,script,按预注册规则生成 V1-R 决策和 handoff,uploaded
+experiments/v1r/reports/clean_baseline_gate.json,report,真实 clean baseline gate 结果和未授权原因,uploaded
+experiments/v1r/reports/clean_baseline_dev_seed0.json,report,seed-0 开发集真实 rollout 汇总,uploaded
+scripts/apply_pointbridge_patches.py,script,校验锁定上游并应用本地兼容补丁,uploaded
+patches/pointbridge/0002-mujoco23-mesh-scale-compat.patch,patch,从模型 XML 恢复 MuJoCo 2.3 缺失的 mesh scale/offset,uploaded
+patches/pointbridge/0003-mujoco23-mesh-path-compat.patch,patch,从模型 XML 恢复 MuJoCo 2.3 缺失的 mesh asset path,uploaded
+src/vico_point/envs/mujoco_compat.py,source,MuJoCo 2.3 mesh scale/transform/path XML 兼容辅助函数,uploaded
 src/vico_point/perception/evidence.py,source,PointEvidence 与来源枚举,uploaded
 src/vico_point/perception/cotracker_adapter.py,source,保留 CoTracker 可见性并做多相机三角化,uploaded
 src/vico_point/perception/segment_depth_adapter.py,source,分割深度的当前点与 previous fallback 适配,uploaded

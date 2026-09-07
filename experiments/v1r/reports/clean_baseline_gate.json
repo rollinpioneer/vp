@@ -1,17 +1,20 @@
 {
   "stage": "V1-R.2",
   "status": "blocked_clean_baseline",
+  "evaluation_stage": "dev_precheck",
   "training_seed": 0,
-  "manifest": "experiments/v1r/manifests/clean_baseline_confirm.csv",
-  "manifest_rows": 300,
-  "checkpoint": null,
-  "checkpoint_sha256": null,
-  "success_rate": null,
-  "simulator_exception_count": null,
-  "action_decode_error_count": null,
-  "paired_initial_state_check": "unresolved",
+  "manifest": "experiments/v1r/manifests/clean_baseline_dev.csv",
+  "manifest_rows": 40,
+  "checkpoint": "third_party/pointbridge/exp_local/2026.09.07/v0_pointbridge_bowl_on_plate_seed0/deterministic/010925_hidden_dim_256/snapshot/300000.pt",
+  "checkpoint_sha256": "46c8619a39e816e0d82a627e6b68c725b5e63ee3c57afb47c3897eab2510c7c7",
+  "success_rate": 0.05,
+  "simulator_exception_count": 0,
+  "action_decode_error_count": 0,
+  "paired_initial_state_check": "passed",
+  "confirm_gate_status": "not_run_after_dev_failure",
   "blockers": [
-    "a frozen Point Bridge checkpoint was not supplied",
-    "no independent clean-baseline rollout CSV was supplied"
-  ]
+    "seed-0 B0 dev success rate 0.05 is below the predeclared 0.50 clean-baseline gate",
+    "three-seed confirm evaluation was not used to override the failed dev precheck"
+  ],
+  "next_action": "repair_data_action_or_choose_predeclared_supported_task"
 }

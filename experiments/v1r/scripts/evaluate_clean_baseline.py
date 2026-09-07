@@ -43,6 +43,7 @@ def evaluate(
         "training_seeds": seeds,
         "manifest": str(manifest),
         "manifest_rows": len(manifest_rows),
+        "selected_manifest_rows": sum(1 for row in manifest_rows if int(row["training_seed"]) in seeds),
         "checkpoints": {
             str(seed): str(checkpoints[seed]) if seed in checkpoints else None
             for seed in seeds
@@ -124,6 +125,9 @@ def evaluate(
     )
     if not blockers and len(per_seed) == len(seeds) == 3:
         result["status"] = "passed" if passed else "failed"
+    elif not blockers:
+        result["status"] = "incomplete_multi_seed_evaluation"
+        blockers.append("three training seeds are required for the confirm clean-baseline gate")
     return result
 
 
