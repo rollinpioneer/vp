@@ -153,10 +153,13 @@ def main() -> int:
     args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     args.report.parent.mkdir(parents=True, exist_ok=True)
     blockers = result.get("blockers", [])
+    selected_rows = result.get("selected_manifest_rows", result["manifest_rows"])
+    success_rate = result.get("success_rate")
     args.report.write_text(
         "# V1-R.2 Clean Baseline\n\n"
         f"状态：`{result['status']}`。\n\n"
-        f"确认集行数：{result['manifest_rows']}。\n\n"
+        f"本次评测集行数：{selected_rows}。\n\n"
+        + (f"success_rate：`{success_rate}`。\n\n" if success_rate is not None else "")
         + ("阻塞原因：\n" + "\n".join(f"- {item}" for item in blockers) + "\n" if blockers else "结果已写入 gate JSON。\n"),
         encoding="utf-8",
     )
