@@ -1,0 +1,65 @@
+{
+  "stage": "V1-R.7",
+  "decision": "blocked_clean_baseline",
+  "gates": {
+    "clean_baseline_gate": {
+      "stage": "V1-R.2",
+      "status": "blocked_clean_baseline",
+      "training_seed": 0,
+      "manifest": "experiments/v1r/manifests/clean_baseline_confirm.csv",
+      "manifest_rows": 300,
+      "checkpoint": null,
+      "checkpoint_sha256": null,
+      "success_rate": null,
+      "simulator_exception_count": null,
+      "action_decode_error_count": null,
+      "paired_initial_state_check": "unresolved",
+      "blockers": [
+        "a frozen Point Bridge checkpoint was not supplied",
+        "no independent clean-baseline rollout CSV was supplied"
+      ]
+    },
+    "perception_gate": {
+      "stage": "V1-R.3",
+      "status": "blocked",
+      "perception_reliability_problem_observed": null,
+      "failure_relevance": "unresolved",
+      "criteria_any": {
+        "moving_object_p90_3d_error_m": 0.02,
+        "stale_or_fallback_fraction": 0.05,
+        "identity_switch_fraction": 0.01,
+        "low_visibility_points_with_error_gt_2cm_fraction": 0.05
+      },
+      "blockers": [
+        "no recorded RGB-D/GT perception audit CSV was supplied"
+      ],
+      "groups": []
+    },
+    "visibility_scientific_gate": {
+      "stage": "V1-R",
+      "status": "blocked",
+      "blockers": [
+        "missing gate file: experiments/v1r/reports/visibility_scientific_gate.json"
+      ]
+    },
+    "frequency_camera_gate": {
+      "stage": "V1-R.5",
+      "status": "blocked",
+      "best_simple": null,
+      "oracle_minus_best_simple": null,
+      "blockers": [
+        "no paired frequency/camera rollout CSV was supplied"
+      ],
+      "groups": []
+    },
+    "context_gate": {
+      "stage": "V1-R",
+      "status": "blocked",
+      "blockers": [
+        "missing gate file: experiments/v1r/reports/context_gate.json"
+      ]
+    }
+  },
+  "v2_formal_experiment_authorized": false,
+  "v3_formal_experiment_authorized": false
+}

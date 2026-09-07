@@ -67,7 +67,7 @@ def evaluate(capture: dict[str, np.ndarray], start: int, duration: int) -> tuple
             if not oracle:
                 adapter.audit_no_hidden_truth(adapted)
             visible = float(np.mean(adapted.visible_mask))
-            held = adapted.source.count("causal_hold") / point_count
+            held = adapted.source.count("last_reliable_hold") / point_count
             unknown = adapted.source.count("unknown") / point_count
             visible_fractions.append(visible)
             held_fractions.append(held)
@@ -78,18 +78,18 @@ def evaluate(capture: dict[str, np.ndarray], start: int, duration: int) -> tuple
                     "step": step,
                     "occlusion_active": int(adapted.visibility.occlusion_active),
                     "visible_fraction": visible,
-                    "causal_hold_fraction": held,
+                    "last_reliable_hold_fraction": held,
                     "unknown_fraction": unknown,
                     "max_age_steps": float(np.max(adapted.age_steps[np.isfinite(adapted.age_steps)]))
                     if np.isfinite(adapted.age_steps).any()
                     else "",
-                    "hidden_truth_reads": sum(source.startswith("oracle_gt") for source in adapted.source),
+                    "hidden_truth_reads": sum(source == "oracle_hidden_gt" for source in adapted.source),
                 }
             )
         branch_summary[branch] = {
             "steps": len(visible_fractions),
             "mean_visible_fraction": float(np.mean(visible_fractions)),
-            "mean_causal_hold_fraction": float(np.mean(held_fractions)),
+            "mean_last_reliable_hold_fraction": float(np.mean(held_fractions)),
             "mean_unknown_fraction": float(np.mean(unknown_fractions)),
             "policy_hidden_truth_reads": 0 if not oracle else None,
             "diagnostic_oracle": oracle,

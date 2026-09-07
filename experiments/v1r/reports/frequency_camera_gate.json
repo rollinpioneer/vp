@@ -1,0 +1,10 @@
+{
+  "stage": "V1-R.5",
+  "status": "blocked",
+  "best_simple": null,
+  "oracle_minus_best_simple": null,
+  "blockers": [
+    "no paired frequency/camera rollout CSV was supplied"
+  ],
+  "groups": []
+}

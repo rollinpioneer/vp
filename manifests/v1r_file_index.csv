@@ -1,0 +1,23 @@
+path,kind,description,upload_status
+experiments/v1r/configs/v1r_protocol.yaml,config,V1-R 输入等级来源和控制频率,uploaded
+experiments/v1r/configs/b1_all_success_balanced_sampling.yaml,config,B1 全成功示范布局均衡采样配置,uploaded
+experiments/v1r/manifests/visibility_factorial.csv,manifest,E00/E10/Oracle 按阶段和时长完全交叉的清单,uploaded
+experiments/v1r/manifests/clean_baseline_dev.csv,manifest,clean baseline 开发集清单,uploaded
+experiments/v1r/manifests/clean_baseline_confirm.csv,manifest,clean baseline 独立确认集清单,uploaded
+experiments/v1r/manifests/all_success_episodes.csv,manifest,四布局成功示范索引，不含 PKL 数据,uploaded
+experiments/v1r/scripts/evaluate_clean_baseline.py,script,独立 clean baseline 评测与门槛生成,uploaded
+experiments/v1r/scripts/audit_perception_modes.py,script,真实 RGB-D/GT 感知审计聚合,uploaded
+experiments/v1r/scripts/identify_reference_phases.py,script,离线识别静止接近和运动搬运阶段,uploaded
+experiments/v1r/scripts/build_target_mask_schedules.py,script,根据冻结 reference 投影生成 mask 元数据,uploaded
+experiments/v1r/scripts/benchmark_perception_rates.py,script,5/10/20 Hz 与相机模式汇总,uploaded
+experiments/v1r/scripts/audit_pointbridge_object_sets.py,script,审计上游任务对象和完整场景输入,uploaded
+experiments/v1r/scripts/summarize_v1r.py,script,按预注册规则生成 V1-R 决策和 handoff,uploaded
+src/vico_point/perception/evidence.py,source,PointEvidence 与来源枚举,uploaded
+src/vico_point/perception/cotracker_adapter.py,source,保留 CoTracker 可见性并做多相机三角化,uploaded
+src/vico_point/perception/segment_depth_adapter.py,source,分割深度的当前点与 previous fallback 适配,uploaded
+src/vico_point/perception/masked_point_encoder.py,source,DROP_MASK 简单基线编码器,uploaded
+third_party/pointbridge/,external_source,锁定的 Point Bridge 上游源码,excluded_gitignored
+third_party/pointbridge/data/**/*.hdf5,dataset,官方演示 RGB-D/HDF5 数据,excluded_large_local_only
+third_party/pointbridge/expert_demos/**/*.pkl,dataset,Point Bridge 训练演示 PKL,excluded_large_local_only
+third_party/pointbridge/exp_local/**/*.pt,model_artifact,训练 checkpoint,excluded_large_local_only
+outputs/v1r/,generated_output,V1-R 原始审计/模型输出目录,excluded_gitignored

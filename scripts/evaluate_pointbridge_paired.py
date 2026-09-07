@@ -170,11 +170,11 @@ def _adapt_time_step(
         observation[pixel_key] = np.transpose(adapted.visibility.rgb, (2, 0, 1))
     diagnostics: dict[str, float | int] = {
         "visible_fraction": float(np.mean(adapted.visible_mask)),
-        "causal_hold_fraction": adapted.source.count("causal_hold") / len(adapted.source),
+        "last_reliable_hold_fraction": adapted.source.count("last_reliable_hold") / len(adapted.source),
         "unknown_fraction": sum(source == "unknown" for source in adapted.source)
         / len(adapted.source),
         "finite_fill_count": filled,
-        "hidden_truth_reads": sum(source.startswith("oracle_gt") for source in adapted.source),
+        "hidden_truth_reads": sum(source == "oracle_hidden_gt" for source in adapted.source),
     }
     return time_step._replace(observation=observation), diagnostics
 
@@ -227,7 +227,7 @@ def _run_branch(
         if step < occlusion_start:
             action_prefix.update(np.asarray(action).tobytes())
         visible.append(float(diagnostics["visible_fraction"]))
-        held.append(float(diagnostics["causal_hold_fraction"]))
+        held.append(float(diagnostics["last_reliable_hold_fraction"]))
         unknown.append(float(diagnostics["unknown_fraction"]))
         hidden_reads += int(diagnostics["hidden_truth_reads"])
         finite_fills += int(diagnostics["finite_fill_count"])
@@ -241,7 +241,7 @@ def _run_branch(
             "initial_state_sha256": initial_state_sha256,
             "pre_occlusion_action_sha256": action_prefix.hexdigest(),
             "mean_visible_fraction": float(np.mean(visible)) if visible else 0.0,
-            "mean_causal_hold_fraction": float(np.mean(held)) if held else 0.0,
+            "mean_last_reliable_hold_fraction": float(np.mean(held)) if held else 0.0,
             "mean_unknown_fraction": float(np.mean(unknown)) if unknown else 0.0,
             "finite_fill_count": finite_fills,
             "hidden_truth_reads": hidden_reads,

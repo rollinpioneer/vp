@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from vico_point.envs.visibility import OcclusionWindow, VisibilityResult, visible_points_from_depth
+from vico_point.perception.evidence import PointEvidence, PointSource
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,12 @@ class AdaptedPointObservation:
     age_steps: np.ndarray
     source: tuple[str, ...]
     visibility: VisibilityResult
+    timestamp_seconds: float
+    evidence: PointEvidence
+
+    @property
+    def age_seconds(self) -> np.ndarray:
+        return np.array(self.evidence.age_seconds, copy=True)
 
 
 class CausalPointBridgeAdapter:
@@ -45,6 +52,7 @@ class CausalPointBridgeAdapter:
         condition: str,
         window: OcclusionWindow | None = None,
         oracle_hidden_truth: bool = False,
+        timestamp_seconds: float | None = None,
     ) -> AdaptedPointObservation:
         points = np.asarray(gt_points, dtype=np.float64)
         if points.shape != self._held.shape:
@@ -72,41 +80,59 @@ class CausalPointBridgeAdapter:
                 step=step,
             ).visible_mask
         synthetic_hidden = baseline_visible & ~visibility.visible_mask
-        source: list[str] = []
+        source: list[PointSource] = []
+        confidence = np.full(len(points), np.nan, dtype=np.float64)
+        timestamp = float(step / self.control_hz if timestamp_seconds is None else timestamp_seconds)
         for index, is_visible in enumerate(visibility.visible_mask):
             if is_visible:
                 self._held[index] = points[index]
                 self._age[index] = 0.0
-                source.append("current_visible_depth")
+                source.append(PointSource.DEPTH_CURRENT)
+                confidence[index] = 1.0
             elif oracle_hidden_truth and synthetic_hidden[index]:
                 self._held[index] = points[index]
                 self._age[index] = 0.0
-                source.append("oracle_gt_hidden")
+                source.append(PointSource.ORACLE_HIDDEN_GT)
+                confidence[index] = 1.0
             elif np.isfinite(self._held[index]).all():
                 self._age[index] += 1.0
-                source.append("causal_hold")
+                source.append(PointSource.LAST_RELIABLE_HOLD)
+                confidence[index] = 0.5
             else:
-                source.append("unknown")
+                source.append(PointSource.UNKNOWN)
+        evidence = PointEvidence(
+            xyz=np.array(self._held, copy=True),
+            visible=np.array(visibility.visible_mask, copy=True),
+            confidence=confidence,
+            age_seconds=np.array(self._age / self.control_hz, copy=True),
+            source=tuple(source),
+            timestamp_seconds=timestamp,
+            camera_mask=np.asarray(visibility.visible_mask, dtype=bool)[:, None],
+            point_ids=self.point_ids,
+        )
+        evidence.validate()
         return AdaptedPointObservation(
             policy_points=np.array(self._held, copy=True),
             visible_mask=np.array(visibility.visible_mask, copy=True),
             age_steps=np.array(self._age, copy=True),
-            source=tuple(source),
+            source=tuple(item.value for item in source),
             visibility=visibility,
+            timestamp_seconds=timestamp,
+            evidence=evidence,
         )
 
     def audit_no_hidden_truth(self, observation: AdaptedPointObservation) -> None:
-        forbidden = {"oracle_gt_hidden"}
+        forbidden = {PointSource.ORACLE_HIDDEN_GT.value}
         if forbidden.intersection(observation.source):
             raise RuntimeError("non-oracle policy observation contains simulator truth")
 
 
-def fill_unknown_from_visible_group_centroids(
+def fill_unknown_from_visible_group_centroids_with_sources(
     points: np.ndarray,
     visible_mask: np.ndarray,
     *,
     group_size: int,
-) -> tuple[np.ndarray, int]:
+) -> tuple[np.ndarray, int, tuple[str, ...]]:
     """Replace non-finite policy points without consulting hidden current truth.
 
     Point Bridge has no missing-point mask and cannot consume NaNs. Each missing
@@ -124,6 +150,10 @@ def fill_unknown_from_visible_group_centroids(
         raise ValueError("group_size must evenly divide the point count")
 
     output = np.array(values, copy=True)
+    sources = [
+        PointSource.DEPTH_CURRENT.value if bool(visible[index]) else PointSource.UNKNOWN.value
+        for index in range(len(values))
+    ]
     filled = 0
     for start in range(0, len(output), group_size):
         stop = start + group_size
@@ -138,5 +168,21 @@ def fill_unknown_from_visible_group_centroids(
             else np.zeros(3, dtype=np.float64)
         )
         group[missing] = centroid
+        for index in np.flatnonzero(missing):
+            sources[start + int(index)] = PointSource.GROUP_CENTROID_FILL.value
         filled += int(missing.sum())
+    return output, filled, tuple(sources)
+
+
+def fill_unknown_from_visible_group_centroids(
+    points: np.ndarray,
+    visible_mask: np.ndarray,
+    *,
+    group_size: int,
+) -> tuple[np.ndarray, int]:
+    """Backward-compatible wrapper; use the ``with_sources`` form for audits."""
+
+    output, filled, _ = fill_unknown_from_visible_group_centroids_with_sources(
+        points, visible_mask, group_size=group_size
+    )
     return output, filled

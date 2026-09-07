@@ -86,7 +86,7 @@ class ContractTests(unittest.TestCase):
         )
         adapter.audit_no_hidden_truth(hidden)
         np.testing.assert_allclose(hidden.policy_points, gt)
-        self.assertEqual(hidden.source, ("causal_hold",))
+        self.assertEqual(hidden.source, ("last_reliable_hold",))
 
     def test_unknown_policy_points_use_visible_group_centroid(self):
         points = np.array(
@@ -124,7 +124,7 @@ class ContractTests(unittest.TestCase):
             window=window,
             oracle_hidden_truth=True,
         )
-        self.assertEqual(before.source, ("current_visible_depth",))
+        self.assertEqual(before.source, ("depth_current",))
         hidden = adapter.adapt(
             gt,
             rgb,
@@ -136,7 +136,7 @@ class ContractTests(unittest.TestCase):
             window=window,
             oracle_hidden_truth=True,
         )
-        self.assertEqual(hidden.source, ("oracle_gt_hidden",))
+        self.assertEqual(hidden.source, ("oracle_hidden_gt",))
 
     def test_belief_diagnostics_track_error_switch_and_recovery(self):
         belief = TaskBelief("task-0", "task")

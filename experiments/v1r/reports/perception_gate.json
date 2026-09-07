@@ -1,0 +1,16 @@
+{
+  "stage": "V1-R.3",
+  "status": "blocked",
+  "perception_reliability_problem_observed": null,
+  "failure_relevance": "unresolved",
+  "criteria_any": {
+    "moving_object_p90_3d_error_m": 0.02,
+    "stale_or_fallback_fraction": 0.05,
+    "identity_switch_fraction": 0.01,
+    "low_visibility_points_with_error_gt_2cm_fraction": 0.05
+  },
+  "blockers": [
+    "no recorded RGB-D/GT perception audit CSV was supplied"
+  ],
+  "groups": []
+}

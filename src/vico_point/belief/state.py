@@ -88,7 +88,7 @@ def update_belief(
             belief,
             age=age,
             state=ObservationState.PREDICTED,
-            update_source="causal_hold",
+            update_source="last_reliable_hold",
             visible=False,
             occluded_since=occluded_since,
             occlusion_duration=max(0.0, timestamp - occluded_since),

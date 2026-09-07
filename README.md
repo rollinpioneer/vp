@@ -3,7 +3,7 @@
 这是一个独立的新项目目录。当前已锁定并在本地核验 Point Bridge、MimicLabs 和四个官方 `bowl_on_plate` 数据分片，实现了保存模型 XML 兼容迁移、真实回放 RGB-D/可见点遮挡、因果保持、oracle 隔离和 3×50 配对场景清单。真实 3-step 训练与 checkpoint 门槛、三种子正式策略训练和最短 V1 E00/E10 配对评测均已完成；完整计划中的 `mug_on_plate`、E01/E11 和三基线矩阵不在本次完成声明内。
 
 主文档位于 `docs/视觉稀疏点策略_分阶段实验计划.md` 和同名 Word 文件。
-当前只启动 V0（独立环境与基线）和 V1（问题验证）；其余阶段依据结果逐步推进。
+V0/V1 已完成最短可复现实验路径。V1-R 修复与验证门槛代码已加入，但由于独立 clean rollout、真实感知审计和目标 mask 输入尚未全部提供，当前 V2/V3 正式实验仍未授权。
 
 ## 项目关系
 
@@ -29,6 +29,8 @@
 - `scripts/train_pointbridge_three_seeds.py`：以每布局 44 条平衡成功轨迹启动三 seed 正式训练。
 - `scripts/evaluate_pointbridge_paired.py`：对真实 checkpoint 运行固定初态的 E00/E10/oracle 配对策略评测。
 - `manifests/runtime_gates.yaml`：记录真实回放、可见性、数据生成和训练门槛的小型证据与本地大文件校验值。
+- `experiments/v1r/scripts/`：V1-R clean baseline、感知审计、目标阶段/mask、频率/相机和统一决策入口。
+- `docs/v1r/EXECUTION_STATUS.md`：V1-R 当前门槛状态和真实输入要求。
 
 运行方式不需要安装第三方 Python 依赖：
 

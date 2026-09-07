@@ -1,0 +1,7 @@
+{
+  "stage": "V1-R",
+  "status": "blocked",
+  "blockers": [
+    "missing gate file: experiments/v1r/reports/visibility_scientific_gate.json"
+  ]
+}

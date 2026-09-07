@@ -1,0 +1,17 @@
+{
+  "stage": "V1-R.2",
+  "status": "blocked_clean_baseline",
+  "training_seed": 0,
+  "manifest": "experiments/v1r/manifests/clean_baseline_confirm.csv",
+  "manifest_rows": 300,
+  "checkpoint": null,
+  "checkpoint_sha256": null,
+  "success_rate": null,
+  "simulator_exception_count": null,
+  "action_decode_error_count": null,
+  "paired_initial_state_check": "unresolved",
+  "blockers": [
+    "a frozen Point Bridge checkpoint was not supplied",
+    "no independent clean-baseline rollout CSV was supplied"
+  ]
+}
