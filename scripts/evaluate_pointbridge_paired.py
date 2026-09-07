@@ -77,7 +77,9 @@ def _set_seed(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-def _compose_config(upstream: Path, checkpoint: Path, training_seed: int):
+def _compose_config(
+    upstream: Path, checkpoint: Path, training_seed: int, *, device: str = "cuda"
+):
     from hydra import compose, initialize_config_dir
 
     overrides = [
@@ -85,7 +87,7 @@ def _compose_config(upstream: Path, checkpoint: Path, training_seed: int):
         "suite=mimiclabs",
         "dataloader=mimiclabs",
         "eval=true",
-        "device=cuda",
+        f"device={device}",
         "save_video=false",
         "use_tb=false",
         "batch_size=16",

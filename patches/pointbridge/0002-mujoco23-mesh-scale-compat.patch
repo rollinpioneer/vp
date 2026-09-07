@@ -1,0 +1,27 @@
+diff --git a/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py b/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py
+--- a/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py
++++ b/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py
+@@ -208,11 +208,23 @@
+     mesh_id_to_name = env.sim.model._mesh_id2name
+ 
+     # mesh ID to scale
+-    mesh_id_to_scale = env.sim.model._model.mesh_scale
++    try:
++        mesh_id_to_scale = env.sim.model._model.mesh_scale
++    except AttributeError:
++        from vico_point.envs.mujoco_compat import mesh_scales_from_xml
++
++        mesh_id_to_scale = mesh_scales_from_xml(env.sim.model)
+ 
+     # mesh ID to offsets
+-    mesh_id_to_pos_offset = env.sim.model._model.mesh_pos
+-    mesh_id_to_quat_offset = env.sim.model._model.mesh_quat
++    try:
++        mesh_id_to_pos_offset = env.sim.model._model.mesh_pos
++        mesh_id_to_quat_offset = env.sim.model._model.mesh_quat
++    except AttributeError:
++        from vico_point.envs.mujoco_compat import mesh_transforms_from_xml
++
++        mesh_id_to_pos_offset, mesh_id_to_quat_offset = mesh_transforms_from_xml(
++            env.sim.model
++        )

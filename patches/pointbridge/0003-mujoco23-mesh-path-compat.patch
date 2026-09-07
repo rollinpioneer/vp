@@ -1,0 +1,18 @@
+diff --git a/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py b/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py
+--- a/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py
++++ b/point_bridge/robot_utils/mimiclabs/robosuite_to_trimesh.py
+@@ -227,2 +227,8 @@
+     # mesh ID to index in asset paths
+-    mesh_id_to_path_adr = env.sim.model._model.mesh_pathadr
++    try:
++        mesh_id_to_path_adr = env.sim.model._model.mesh_pathadr
++    except AttributeError:
++        from vico_point.envs.mujoco_compat import mesh_paths_from_xml
++
++        mesh_id_to_path_adr, all_asset_paths = mesh_paths_from_xml(env.sim.model)
++
+@@ -263,2 +263,3 @@
+     # all asset paths (byte string, 0-termination for each string)
+-    all_asset_paths = env.sim.model._model.paths
++    if "all_asset_paths" not in locals():
++        all_asset_paths = env.sim.model._model.paths

@@ -10,7 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_COMMIT = "5d567a62d62b5a97c5960d45024e065349680cda"
 DEFAULT_UPSTREAM = ROOT / "third_party" / "pointbridge"
-PATCHES = (ROOT / "patches" / "pointbridge" / "0001-mimiclabs-saved-state-generator.patch",)
+PATCHES = (
+    ROOT / "patches" / "pointbridge" / "0001-mimiclabs-saved-state-generator.patch",
+    ROOT / "patches" / "pointbridge" / "0002-mujoco23-mesh-scale-compat.patch",
+    ROOT / "patches" / "pointbridge" / "0003-mujoco23-mesh-path-compat.patch",
+)
 
 
 def _run_patch(upstream: Path, patch: Path, *options: str) -> subprocess.CompletedProcess[str]:
