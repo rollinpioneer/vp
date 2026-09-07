@@ -1,0 +1,13 @@
+stage: V1-R.2F
+variant: B0
+description: existing audited 44 episodes per layout
+layouts: [1, 2, 3, 4]
+episodes_by_layout: {1: 44, 2: 44, 3: 44, 4: 44}
+sampling_rule: existing_uniform_episode_sampling
+train_steps: 300010
+batch_size: 16
+network_and_action_head: unchanged_from_v0
+evaluation_protocol: frozen_clean_dev_then_confirm
+eligibility_gate: all_layouts_must_pass_expert_replay
+current_expert_replay_status: failed_layouts_1_2
+formal_training_authorized: false

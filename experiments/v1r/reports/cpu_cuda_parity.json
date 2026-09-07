@@ -1,0 +1,26 @@
+{
+  "stage": "V1-R.2F",
+  "audit": "cpu_cuda_parity",
+  "status": "blocked_unavailable_cuda",
+  "scenarios_requested": 10,
+  "action_tolerance": 1e-05,
+  "hardware": {
+    "torch_version": "2.8.0+cu126",
+    "torch_cuda_version": "12.6",
+    "torch_cuda_available": false,
+    "torch_cuda_device_count": 0,
+    "nvidia_smi": {
+      "returncode": 9,
+      "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+      "stderr": ""
+    }
+  },
+  "blockers": [
+    "torch.cuda.is_available() is false",
+    "nvidia-smi cannot access an NVIDIA driver"
+  ],
+  "deployment_device": "cpu",
+  "deployment_device_protocol_frozen": true,
+  "formal_evaluation_device_constraint": "all formal rollouts must use cpu",
+  "records": []
+}

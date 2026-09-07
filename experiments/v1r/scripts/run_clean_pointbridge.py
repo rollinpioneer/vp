@@ -25,6 +25,17 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_UPSTREAM = ROOT / "third_party" / "pointbridge"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from state_utils import (  # noqa: E402
+    body_state_hash,
+    load_state_bundle,
+    load_state_index,
+    pointbridge_core_env,
+    raw_array_sha256,
+    refresh_pointbridge_observation,
+    robot_pose_hash,
+)
 
 
 def load_legacy_runner():
@@ -80,7 +91,143 @@ def load_rows(path: Path, seed: int, split: str | None) -> list[dict[str, str]]:
     return rows
 
 
-def run_episode(workspace: Any, env: Any, row: dict[str, str], seed: int) -> dict[str, object]:
+def load_state_rows(
+    path: Path, seed: int, split: str | None = None
+) -> list[dict[str, str]]:
+    rows = []
+    for state_row in load_state_index(path).values():
+        row_split = state_row.get("split", "audit")
+        if split is not None and row_split != split:
+            continue
+        rows.append(
+            {
+                "training_seed": str(seed),
+                "scenario_id": state_row["scenario_id"],
+                "task": "bowl_on_plate",
+                "layout": state_row["layout"],
+                "simulator_seed": state_row["simulator_seed"],
+                "initial_state_key": state_row["initial_state_key"],
+                "condition": "E00_CLEAN",
+                "occlusion_duration_steps": "0",
+                "control_hz": "20",
+                "split": row_split,
+            }
+        )
+    return sorted(rows, key=lambda item: item["scenario_id"])
+
+
+def normalized_input_sha256(workspace: Any, observation: dict[str, Any]) -> str:
+    """Hash the normalized arrays consumed by the first network layer."""
+
+    digest = hashlib.sha256()
+    agent = workspace.agent
+    stats = workspace.stats or {}
+    keys = [agent.robot_points_key, agent.object_points_key, agent.proprio_key]
+    for key in keys:
+        if key not in observation:
+            continue
+        stat_key = agent.proprio_key if key == agent.proprio_key else "past_tracks"
+        if stat_key not in stats:
+            continue
+        value = np.asarray(observation[key])
+        minimum = np.asarray(stats[stat_key]["min"])
+        maximum = np.asarray(stats[stat_key]["max"])
+        normalized = (value - minimum) / (maximum - minimum + 1e-5)
+        digest.update(key.encode("utf-8"))
+        digest.update(str(normalized.dtype).encode("ascii"))
+        digest.update(str(normalized.shape).encode("ascii"))
+        digest.update(np.ascontiguousarray(normalized).tobytes())
+    return digest.hexdigest()
+
+
+def _failure_stage(result: dict[str, object]) -> str:
+    if int(result["success"]):
+        return "success"
+    if int(result["action_decode_error"]):
+        return "action_decode"
+    if int(result["simulator_exception"]):
+        return "simulator"
+    if float(result["min_eef_bowl_distance_m"]) > 0.12:
+        return "no_approach"
+    if not int(result["grasped_any"]):
+        return "no_grasp"
+    if int(result["dropped_after_grasp"]):
+        return "post_grasp_drop"
+    if float(result["min_bowl_plate_distance_m"]) > 0.12:
+        return "no_reach_plate"
+    if result["termination_reason"] == "timeout":
+        return "placement_failure"
+    return "unknown"
+
+
+def _phase_observation(env: Any) -> dict[str, float | int]:
+    core = pointbridge_core_env(env)
+    robosuite_env = core._env
+    eef = np.asarray(robosuite_env.sim.data.get_body_xpos("gripper0_eef"))
+    bowl = np.asarray(robosuite_env.sim.data.get_body_xpos("bowl_main"))
+    plate = np.asarray(robosuite_env.sim.data.get_body_xpos("plate_main"))
+    grasped = bool(
+        robosuite_env._check_grasp(
+            robosuite_env.robots[0].gripper,
+            robosuite_env.objects_dict["bowl"],
+        )
+    )
+    return {
+        "eef_bowl_distance_m": float(np.linalg.norm(eef - bowl)),
+        "bowl_plate_distance_m": float(np.linalg.norm(bowl - plate)),
+        "grasped": int(grasped),
+    }
+
+
+def _prepare_episode(
+    env: Any,
+    row: dict[str, str],
+    state_index: dict[str, dict[str, str]] | None,
+) -> tuple[Any, dict[str, object]]:
+    """Reset and, when requested, restore a complete indexed state bundle."""
+
+    time_step = env.reset()
+    metadata: dict[str, object] = {
+        "state_path": "",
+        "expected_initial_state_sha256": "",
+        "actual_initial_state_sha256": "",
+        "initial_state_match": "unresolved",
+        "state_file_sha256": "",
+    }
+    state_row = state_index.get(row["scenario_id"]) if state_index is not None else None
+    if state_row is not None:
+        bundle = load_state_bundle(ROOT, state_row)
+        env.sim.set_state_from_flattened(bundle["sim_state"])
+        env.sim.forward()
+        time_step = refresh_pointbridge_observation(env, time_step, bundle["object_points"])
+        metadata.update(
+            {
+                "state_path": str(bundle["path"].relative_to(ROOT)),
+                "expected_initial_state_sha256": state_row[
+                    "restored_state_sha256"
+                ],
+                "state_file_sha256": bundle["file_sha256"],
+            }
+        )
+    actual = raw_array_sha256(env.sim.get_state().flatten())
+    metadata["actual_initial_state_sha256"] = actual
+    metadata["initial_state_match"] = (
+        "passed"
+        if not metadata["expected_initial_state_sha256"]
+        or metadata["expected_initial_state_sha256"] == actual
+        else "failed"
+    )
+    return time_step, metadata
+
+
+def run_episode(
+    workspace: Any,
+    env: Any,
+    row: dict[str, str],
+    seed: int,
+    state_index: dict[str, dict[str, str]] | None = None,
+    max_steps: int | None = None,
+) -> dict[str, object]:
     import torch
     from point_bridge import utils
 
@@ -95,7 +242,18 @@ def run_episode(workspace: Any, env: Any, row: dict[str, str], seed: int) -> dic
         "layout": row["layout"],
         "simulator_seed": row["simulator_seed"],
         "initial_state_sha256": "",
+        "state_path": "",
+        "state_file_sha256": "",
+        "expected_initial_state_sha256": "",
+        "actual_initial_state_sha256": "",
+        "initial_state_match": "unresolved",
+        "robot_pose_sha256": "",
+        "robot_points_sha256": "",
+        "body_state_sha256": "",
         "point_identity_sha256": "",
+        "normalized_network_input_sha256": "",
+        "first_20_actions_sha256": "",
+        "first_20_actions_json": "",
         "mask_schedule_sha256": "",
         "point_mode": "gt_mesh_points",
         "camera_mode": "EXTERNAL_ONLY",
@@ -130,11 +288,30 @@ def run_episode(workspace: Any, env: Any, row: dict[str, str], seed: int) -> dic
         "action_decode_error": 0,
         "wall_clock_seconds": 0.0,
         "error_type": "",
+        "failure_stage": "unknown",
+        "termination_reason": "unknown",
+        "min_eef_bowl_distance_m": float("inf"),
+        "min_bowl_plate_distance_m": float("inf"),
+        "final_eef_bowl_distance_m": float("inf"),
+        "final_bowl_plate_distance_m": float("inf"),
+        "grasped_any": 0,
+        "dropped_after_grasp": 0,
+        "first_grasp_step": -1,
     }
+    first_actions: list[list[float]] = []
+    first_action_digest = hashlib.sha256()
     try:
-        time_step = env.reset()
-        result["initial_state_sha256"] = hashlib.sha256(np.asarray(env.sim.get_state().flatten()).tobytes()).hexdigest()
+        time_step, state_metadata = _prepare_episode(env, row, state_index)
+        result.update(state_metadata)
+        result["initial_state_sha256"] = result["actual_initial_state_sha256"]
+        result["robot_pose_sha256"] = robot_pose_hash(env)
+        result["body_state_sha256"] = body_state_hash(env)
         point_key = f"{env._object_points_key}_3d"
+        robot_key = f"{env._robot_points_key}_3d"
+        if robot_key in time_step.observation:
+            result["robot_points_sha256"] = array_sha256(
+                time_step.observation[robot_key]
+            )
         if point_key in time_step.observation:
             points = np.asarray(time_step.observation[point_key])
             result["point_identity_sha256"] = array_sha256(points)
@@ -142,13 +319,23 @@ def run_episode(workspace: Any, env: Any, row: dict[str, str], seed: int) -> dic
             result["point_budget_total"] = int(points.reshape(-1, 3).shape[0])
         workspace.agent.buffer_reset()
         steps = 0
-        while not time_step.last():
+        phase = _phase_observation(env)
+        result["min_eef_bowl_distance_m"] = phase["eef_bowl_distance_m"]
+        result["min_bowl_plate_distance_m"] = phase["bowl_plate_distance_m"]
+        while not time_step.last() and (max_steps is None or steps < max_steps):
             try:
+                if steps == 0:
+                    result["normalized_network_input_sha256"] = normalized_input_sha256(
+                        workspace, time_step.observation
+                    )
                 with torch.no_grad(), utils.eval_mode(workspace.agent):
                     action = workspace.agent.act(time_step.observation, workspace.stats, steps, workspace.global_step)
                 action = np.asarray(action)
                 if not np.isfinite(action).all():
                     raise ValueError("policy action contains non-finite values")
+                if steps < 20:
+                    first_actions.append(action.astype(float).tolist())
+                    first_action_digest.update(np.ascontiguousarray(action).tobytes())
             except Exception as exc:
                 result["action_decode_error"] = 1
                 result["error_type"] = f"action:{type(exc).__name__}:{exc}\n{traceback.format_exc()[-2000:]}"
@@ -160,23 +347,52 @@ def run_episode(workspace: Any, env: Any, row: dict[str, str], seed: int) -> dic
                 result["error_type"] = f"simulator:{type(exc).__name__}:{exc}\n{traceback.format_exc()[-2000:]}"
                 break
             steps += 1
+            phase = _phase_observation(env)
+            result["min_eef_bowl_distance_m"] = min(
+                float(result["min_eef_bowl_distance_m"]),
+                float(phase["eef_bowl_distance_m"]),
+            )
+            result["min_bowl_plate_distance_m"] = min(
+                float(result["min_bowl_plate_distance_m"]),
+                float(phase["bowl_plate_distance_m"]),
+            )
+            if int(phase["grasped"]):
+                if not int(result["grasped_any"]):
+                    result["first_grasp_step"] = steps
+                result["grasped_any"] = 1
+            elif int(result["grasped_any"]):
+                result["dropped_after_grasp"] = 1
         result["steps"] = steps
         result["success"] = int(bool(time_step.observation.get("goal_achieved", False)))
+        result["final_eef_bowl_distance_m"] = phase["eef_bowl_distance_m"]
+        result["final_bowl_plate_distance_m"] = phase["bowl_plate_distance_m"]
+        episode_limit = int(getattr(env, "_max_episode_len", 300))
+        if result["success"]:
+            result["termination_reason"] = "success"
+        elif steps >= episode_limit:
+            result["termination_reason"] = "timeout"
+        elif max_steps is not None and steps >= max_steps:
+            result["termination_reason"] = "audit_step_limit"
     except Exception as exc:
         result["simulator_exception"] = 1
         result["error_type"] = f"reset:{type(exc).__name__}:{exc}\n{traceback.format_exc()[-3000:]}"
+    result["first_20_actions_sha256"] = first_action_digest.hexdigest()
+    result["first_20_actions_json"] = json.dumps(first_actions, separators=(",", ":"))
+    result["failure_stage"] = _failure_stage(result)
     result["wall_clock_seconds"] = time.monotonic() - start_time
     return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--state-index", type=Path)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--training-seed", type=int, required=True)
     parser.add_argument("--upstream", type=Path, default=DEFAULT_UPSTREAM)
     parser.add_argument("--split", choices=("dev", "confirm"))
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--max-steps", type=int)
     parser.add_argument("--device", default="cpu", choices=("cpu", "cuda"))
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -184,7 +400,14 @@ def main() -> int:
         parser.error(f"checkpoint does not exist: {args.checkpoint}")
     checkpoint = args.checkpoint.resolve()
     upstream = args.upstream.resolve()
-    rows = load_rows(args.manifest, args.training_seed, args.split)
+    if args.state_index:
+        rows = load_state_rows(
+            args.state_index.resolve(), args.training_seed, args.split
+        )
+    else:
+        if args.manifest is None:
+            parser.error("--manifest is required unless --state-index is supplied")
+        rows = load_rows(args.manifest, args.training_seed, args.split)
     if args.limit is not None:
         rows = rows[: args.limit]
     if not rows:
@@ -202,6 +425,7 @@ def main() -> int:
     cfg.use_tb = False
     old_cwd = Path.cwd()
     output_rows: list[dict[str, object]] = []
+    state_index = load_state_index(args.state_index.resolve()) if args.state_index else None
     os.chdir(upstream)
     try:
         workspace = eval_module.Workspace(cfg)
@@ -214,7 +438,14 @@ def main() -> int:
                     f"manifest layout {row['layout']} is outside the loaded environment set"
                 )
             env = workspace.env[layout_index]
-            result = run_episode(workspace, env, row, args.training_seed)
+            result = run_episode(
+                workspace,
+                env,
+                row,
+                args.training_seed,
+                state_index,
+                max_steps=args.max_steps,
+            )
             result["checkpoint_sha256"] = sha256(checkpoint)
             output_rows.append(result)
             print(f"{index + 1}/{len(rows)} {row['scenario_id']} success={result['success']} exception={result['simulator_exception']} action_error={result['action_decode_error']}", flush=True)
@@ -229,18 +460,28 @@ def main() -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fields = list(output_rows[0])
     with args.output.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(output_rows)
     summary = {
         "stage": "V1-R.2",
-        "status": "complete" if len(output_rows) == len(load_rows(args.manifest, args.training_seed, args.split)) else "partial",
+        "status": "complete" if len(output_rows) == len(rows) else "partial",
         "training_seed": args.training_seed,
         "rows": len(output_rows),
         "success_rate": sum(int(row["success"]) for row in output_rows) / len(output_rows),
         "simulator_exception_count": sum(int(row["simulator_exception"]) for row in output_rows),
         "action_decode_error_count": sum(int(row["action_decode_error"]) for row in output_rows),
         "checkpoint_sha256": sha256(checkpoint),
+        "initial_state_match_count": sum(row["initial_state_match"] == "passed" for row in output_rows),
+        "initial_state_match_status": (
+            "passed"
+            if all(row["initial_state_match"] == "passed" for row in output_rows)
+            else "failed_or_unresolved"
+        ),
+        "failure_stages": {
+            stage: sum(row["failure_stage"] == stage for row in output_rows)
+            for stage in sorted({str(row["failure_stage"]) for row in output_rows})
+        },
     }
     args.output.with_suffix(".json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))

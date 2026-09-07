@@ -1,0 +1,12 @@
+{
+  "stage": "V1-R.2F",
+  "status": "complete",
+  "states": 140,
+  "dev_states": 40,
+  "confirm_states": 100,
+  "training_seed_sharing": "one_state_file_per_scenario_shared_by_seeds_0_1_2",
+  "confirm_rollouts_executed": false,
+  "index": "experiments/v1r/manifests/clean_state_index.csv",
+  "checkpoint_sha256": "46c8619a39e816e0d82a627e6b68c725b5e63ee3c57afb47c3897eab2510c7c7",
+  "upstream_git_revision": "5d567a62d62b5a97c5960d45024e065349680cda"
+}

@@ -1,3 +1,12 @@
 decision: blocked_clean_baseline
+v1r_runtime_repairs: passed
+clean_baseline_scientific_gate: blocked
+initial_state_pairing_audit: passed
+runner_parity_audit: passed
+cpu_cuda_parity_audit: blocked_unavailable_cuda
+deployment_device: cpu
+expert_replay_audit: failed
+per_layout_failure_analysis: complete
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
+next_stage: v1r_2f_clean_baseline_root_cause_repair

@@ -1,12 +1,18 @@
-stage: V1-R.2
+stage: V1-R.2F
 variant: B1
 description: all audited successful episodes with layout-first balanced sampling
 source_manifest: experiments/v1r/manifests/all_success_episodes.csv
 layouts: [1, 2, 3, 4]
 episodes_by_layout: {1: 256, 2: 44, 3: 114, 4: 286}
 sampler: vico_point.data.layout_balanced_sampler.LayoutBalancedSampler
+sampler_function: vico_point.data.layout_balanced_sampler.make_weighted_sampler
 sampling_rule: choose_layout_uniformly_then_episode_within_layout
 train_steps: 300010
 batch_size: 16
 seed_policy: compare_seed_0_on_dev_then_freeze_for_seeds_0_1_2
 formal_v2_authorized: false
+formal_training_authorized: false
+network_and_action_head: unchanged_from_v0
+evaluation_protocol: frozen_clean_dev_then_confirm
+eligibility_gate: all_layouts_must_pass_expert_replay
+current_expert_replay_status: failed_layouts_1_2

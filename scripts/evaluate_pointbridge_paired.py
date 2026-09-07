@@ -252,6 +252,93 @@ def _run_branch(
     )
 
 
+def _run_frozen_clean_branch(
+    workspace: Any,
+    env: Any,
+    *,
+    state: np.ndarray,
+    object_points: dict[str, np.ndarray],
+    expected_state_sha256: str,
+    max_steps: int | None = None,
+) -> dict[str, Any]:
+    """Run the legacy evaluator loop on an explicitly frozen clean state.
+
+    This is an audit-only entry point.  It deliberately bypasses the E10
+    visibility adapter because the comparison target is Point Bridge's
+    official clean evaluation input.
+    """
+
+    import torch
+    from point_bridge import utils
+
+    audit_dir = ROOT / "experiments" / "v1r" / "scripts"
+    if str(audit_dir) not in sys.path:
+        sys.path.insert(0, str(audit_dir))
+    from state_utils import (  # type: ignore
+        body_state_hash,
+        raw_array_sha256,
+        refresh_pointbridge_observation,
+        robot_pose_hash,
+    )
+
+    time_step = env.reset()
+    env.sim.set_state_from_flattened(state)
+    env.sim.forward()
+    time_step = refresh_pointbridge_observation(env, time_step, object_points)
+    actual_state_sha256 = raw_array_sha256(env.sim.get_state().flatten())
+    point_key = f"{env._object_points_key}_3d"
+    robot_key = f"{env._robot_points_key}_3d"
+    initial_robot_pose_sha256 = robot_pose_hash(env)
+    initial_body_state_sha256 = body_state_hash(env)
+    initial_robot_points_sha256 = hashlib.sha256(
+        np.ascontiguousarray(time_step.observation[robot_key]).tobytes()
+    ).hexdigest()
+    initial_object_points_sha256 = hashlib.sha256(
+        np.ascontiguousarray(time_step.observation[point_key]).tobytes()
+    ).hexdigest()
+    normalized_digest = hashlib.sha256()
+    agent = workspace.agent
+    for key in (robot_key, point_key, agent.proprio_key):
+        stat_key = agent.proprio_key if key == agent.proprio_key else "past_tracks"
+        value = np.asarray(time_step.observation[key])
+        stats = workspace.stats[stat_key]
+        normalized = (value - np.asarray(stats["min"])) / (
+            np.asarray(stats["max"]) - np.asarray(stats["min"]) + 1e-5
+        )
+        normalized_digest.update(key.encode("utf-8"))
+        normalized_digest.update(str(normalized.dtype).encode("ascii"))
+        normalized_digest.update(str(normalized.shape).encode("ascii"))
+        normalized_digest.update(np.ascontiguousarray(normalized).tobytes())
+    actions: list[np.ndarray] = []
+    workspace.agent.buffer_reset()
+    step = 0
+    while not time_step.last() and (max_steps is None or step < max_steps):
+        with torch.no_grad(), utils.eval_mode(workspace.agent):
+            action = workspace.agent.act(
+                time_step.observation,
+                workspace.stats,
+                step,
+                workspace.global_step,
+            )
+        action = np.asarray(action)
+        if step < 20:
+            actions.append(action.copy())
+        time_step = env.step(action)
+        step += 1
+    return {
+        "initial_state_sha256": actual_state_sha256,
+        "initial_state_match": actual_state_sha256 == expected_state_sha256,
+        "robot_pose_sha256": initial_robot_pose_sha256,
+        "robot_points_sha256": initial_robot_points_sha256,
+        "object_points_sha256": initial_object_points_sha256,
+        "body_state_sha256": initial_body_state_sha256,
+        "normalized_network_input_sha256": normalized_digest.hexdigest(),
+        "first_20_actions": [action.astype(float).tolist() for action in actions],
+        "steps": step,
+        "success": int(bool(time_step.observation.get("goal_achieved", False))),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("checkpoint", type=Path)

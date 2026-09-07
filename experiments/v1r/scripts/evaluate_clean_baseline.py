@@ -23,11 +23,49 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def summarize_audits(
+    audit_results: dict[str, dict[str, object]] | None,
+) -> dict[str, dict[str, object]]:
+    field_names = {
+        "runner_parity": (
+            "status",
+            "device",
+            "scenarios",
+            "passed_scenarios",
+            "source_old_outcomes",
+            "path_success",
+        ),
+        "cpu_cuda_parity": (
+            "status",
+            "deployment_device",
+            "deployment_device_protocol_frozen",
+            "formal_evaluation_device_constraint",
+            "blockers",
+        ),
+        "expert_replay": (
+            "status",
+            "checked",
+            "passed",
+            "per_layout",
+            "restored_initial_state_matches",
+            "failed_layouts",
+            "failed_records_diverging_at_step_1",
+            "failure_localization",
+        ),
+    }
+    return {
+        name: {key: payload[key] for key in field_names[name] if key in payload}
+        for name, payload in (audit_results or {}).items()
+        if name in field_names
+    }
+
+
 def evaluate(
     manifest: Path,
     checkpoints: dict[int, Path],
     rollouts: list[Path],
     requested_seeds: list[int] | None,
+    audit_results: dict[str, dict[str, object]] | None = None,
 ) -> dict[str, object]:
     with manifest.open(newline="", encoding="utf-8") as handle:
         manifest_rows = list(csv.DictReader(handle))
@@ -37,9 +75,14 @@ def evaluate(
         raise ValueError("clean baseline manifest contains non-clean rows")
     manifest_seeds = sorted({int(row["training_seed"]) for row in manifest_rows})
     seeds = sorted(requested_seeds if requested_seeds is not None else manifest_seeds)
+    manifest_splits = sorted({row.get("split", "") for row in manifest_rows})
+    evaluation_stage = (
+        "dev_precheck" if seeds == [0] and manifest_splits == ["dev"] else "confirm"
+    )
     result: dict[str, object] = {
         "stage": "V1-R.2",
         "status": "blocked_clean_baseline",
+        "evaluation_stage": evaluation_stage,
         "training_seeds": seeds,
         "manifest": str(manifest),
         "manifest_rows": len(manifest_rows),
@@ -54,12 +97,22 @@ def evaluate(
             else None
             for seed in seeds
         },
+        "rollouts": [str(path) for path in rollouts],
+        "rollout_sha256": {
+            str(path): sha256(path) if path.is_file() else None for path in rollouts
+        },
         "success_rate": None,
         "pooled_success_rate": None,
         "per_seed": {},
         "simulator_exception_count": None,
         "action_decode_error_count": None,
         "paired_initial_state_check": "unresolved",
+        "audit_gates": summarize_audits(audit_results),
+        "thresholds": {
+            "pooled_success_rate_min": 0.50,
+            "seeds_at_or_above_0_45_min": 2,
+            "per_seed_success_rate_min": 0.35,
+        },
         "blockers": [],
     }
     blockers = result["blockers"]
@@ -99,10 +152,27 @@ def evaluate(
     result["pooled_success_rate"] = result["success_rate"]
     result["simulator_exception_count"] = sum(int(row["simulator_exception"]) for row in selected)
     result["action_decode_error_count"] = sum(int(row["action_decode_error"]) for row in selected)
-    result["paired_initial_state_check"] = "passed" if all(row.get("initial_state_sha256") for row in selected) else "unresolved"
+    state_checks = []
+    for row in selected:
+        expected = row.get("expected_initial_state_sha256", "")
+        actual = row.get("actual_initial_state_sha256", "")
+        explicit = row.get("initial_state_match", "")
+        state_checks.append(
+            bool(expected)
+            and bool(actual)
+            and expected == actual
+            and explicit in {"1", "true", "True", "passed"}
+        )
+    result["paired_initial_state_check"] = (
+        "passed" if state_checks and all(state_checks) else "failed_or_unresolved"
+    )
     per_seed: dict[str, dict[str, object]] = {}
     for seed in seeds:
-        seed_rows = [row for (row_seed, _), row in rollout_rows.items() if row_seed == seed]
+        seed_rows = [
+            row
+            for row in selected
+            if int(row.get("training_seed", "-1")) == seed
+        ]
         if not seed_rows:
             continue
         per_seed[str(seed)] = {
@@ -113,6 +183,19 @@ def evaluate(
         }
     result["per_seed"] = per_seed
     seed_rates = [float(item["success_rate"]) for item in per_seed.values()]
+    audits = audit_results or {}
+    runner_parity_passed = audits.get("runner_parity", {}).get("status") == "passed"
+    cpu_cuda_status = audits.get("cpu_cuda_parity", {}).get("status")
+    deployment_protocol_frozen = bool(
+        audits.get("cpu_cuda_parity", {}).get("deployment_device_protocol_frozen", False)
+    )
+    device_audit_passed = cpu_cuda_status == "passed" or deployment_protocol_frozen
+    expert_replay_passed = audits.get("expert_replay", {}).get("status") == "passed"
+    integrity_passed = (
+        result["simulator_exception_count"] == 0
+        and result["action_decode_error_count"] == 0
+        and result["paired_initial_state_check"] == "passed"
+    )
     passed = (
         not blockers
         and len(per_seed) == len(seeds) == 3
@@ -122,9 +205,42 @@ def evaluate(
         and result["simulator_exception_count"] == 0
         and result["action_decode_error_count"] == 0
         and result["paired_initial_state_check"] == "passed"
+        and runner_parity_passed
+        and device_audit_passed
+        and expert_replay_passed
     )
-    if not blockers and len(per_seed) == len(seeds) == 3:
+    if evaluation_stage == "dev_precheck":
+        dev_passed = (
+            not blockers
+            and len(per_seed) == 1
+            and float(result["pooled_success_rate"]) >= 0.50
+            and integrity_passed
+            and runner_parity_passed
+            and device_audit_passed
+            and expert_replay_passed
+        )
+        result["status"] = "dev_precheck_passed" if dev_passed else "blocked_clean_baseline"
+        result["confirm_gate_status"] = "not_run"
+        if float(result["pooled_success_rate"]) < 0.50:
+            blockers.append(
+                f"seed-0 dev success rate {result['pooled_success_rate']:.3f} is below the predeclared 0.50 threshold"
+            )
+        if not integrity_passed:
+            blockers.append("simulator/action/initial-state integrity checks did not all pass")
+        if not runner_parity_passed:
+            blockers.append("runner parity audit is not passed")
+        if not device_audit_passed:
+            blockers.append("CPU/CUDA parity is not passed and no deployment device protocol is frozen")
+        if not expert_replay_passed:
+            blockers.append("expert replay audit is not passed")
+    elif not blockers and len(per_seed) == len(seeds) == 3:
         result["status"] = "passed" if passed else "failed"
+        if not runner_parity_passed:
+            blockers.append("runner parity audit is not passed")
+        if not device_audit_passed:
+            blockers.append("CPU/CUDA parity is not passed and no deployment device protocol is frozen")
+        if not expert_replay_passed:
+            blockers.append("expert replay audit is not passed")
     elif not blockers:
         result["status"] = "incomplete_multi_seed_evaluation"
         blockers.append("three training seeds are required for the confirm clean-baseline gate")
@@ -139,6 +255,9 @@ def main() -> int:
     parser.add_argument("--training-seed", type=int, action="append")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path, default=Path("experiments/v1r/reports/clean_baseline_report.md"))
+    parser.add_argument("--runner-parity", type=Path)
+    parser.add_argument("--cpu-cuda-parity", type=Path)
+    parser.add_argument("--expert-replay", type=Path)
     args = parser.parse_args()
     checkpoint_paths = args.checkpoint or []
     requested_seeds = args.training_seed
@@ -148,7 +267,21 @@ def main() -> int:
         (requested_seeds[index] if requested_seeds and len(requested_seeds) == len(checkpoint_paths) else index): path
         for index, path in enumerate(checkpoint_paths)
     }
-    result = evaluate(args.manifest, checkpoints, args.rollouts or [], requested_seeds)
+    audit_results = {}
+    for name, path in (
+        ("runner_parity", args.runner_parity),
+        ("cpu_cuda_parity", args.cpu_cuda_parity),
+        ("expert_replay", args.expert_replay),
+    ):
+        if path is not None:
+            audit_results[name] = json.loads(path.read_text(encoding="utf-8"))
+    result = evaluate(
+        args.manifest,
+        checkpoints,
+        args.rollouts or [],
+        requested_seeds,
+        audit_results,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     args.report.parent.mkdir(parents=True, exist_ok=True)

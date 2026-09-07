@@ -1,12 +1,26 @@
 path,kind,description,upload_status
+docs/v1r/EXECUTION_STATUS.md,documentation,V1-R.2F 已执行审计结果根因与后续授权状态,uploaded
 experiments/v1r/configs/v1r_protocol.yaml,config,V1-R 输入等级来源和控制频率,uploaded
+experiments/v1r/configs/b0_44_per_layout.yaml,config,B0 每布局 44 条既有示范且受专家回放门槛约束,uploaded
 experiments/v1r/configs/b1_all_success_balanced_sampling.yaml,config,B1 全成功示范布局均衡采样配置,uploaded
 experiments/v1r/manifests/visibility_factorial.csv,manifest,E00/E10/Oracle 按阶段和时长完全交叉的清单,uploaded
 experiments/v1r/manifests/clean_baseline_dev.csv,manifest,clean baseline 开发集清单,uploaded
 experiments/v1r/manifests/clean_baseline_confirm.csv,manifest,clean baseline 独立确认集清单,uploaded
 experiments/v1r/manifests/all_success_episodes.csv,manifest,四布局成功示范索引，不含 PKL 数据,uploaded
+experiments/v1r/manifests/clean_state_index.csv,manifest,140 个 clean 完整模拟器状态文件名路径和 SHA-256 索引,uploaded
+experiments/v1r/manifests/clean_state_index.json,manifest,140 个 clean 完整模拟器状态的机器可读索引,uploaded
+experiments/v1r/manifests/runner_parity_state_index.csv,manifest,10 个新旧 runner 对齐状态文件名路径来源结果和 SHA-256 索引,uploaded
+experiments/v1r/manifests/runner_parity_state_index.json,manifest,10 个新旧 runner 对齐状态的机器可读索引,uploaded
 experiments/v1r/scripts/evaluate_clean_baseline.py,script,独立 clean baseline 评测与门槛生成,uploaded
 experiments/v1r/scripts/run_clean_pointbridge.py,script,使用冻结 checkpoint 执行真实 E00 clean rollout 并记录异常与初态哈希,uploaded
+experiments/v1r/scripts/materialize_clean_states.py,script,生成独立 clean dev/confirm 场景随机种子清单,uploaded
+experiments/v1r/scripts/materialize_clean_manifest_states.py,script,保存 clean manifest 对应完整模拟器状态和对象点,uploaded
+experiments/v1r/scripts/state_utils.py,script,完整状态文件加载哈希校验恢复和观测刷新辅助函数,uploaded
+experiments/v1r/scripts/verify_initial_states.py,script,严格核验状态文件清单引用三 seed 共用状态及重复恢复,uploaded
+experiments/v1r/scripts/audit_runner_parity.py,script,逐场景比较 legacy 新 runner 和官方 Point Bridge 入口,uploaded
+experiments/v1r/scripts/audit_cpu_cuda_parity.py,script,比较 CPU/CUDA 动作或记录 CUDA 不可用阻塞,uploaded
+experiments/v1r/scripts/replay_expert_trajectories.py,script,每布局回放五条专家成功轨迹并定位环境动作链差异,uploaded
+experiments/v1r/scripts/summarize_clean_failures.py,script,按布局汇总 clean 成功率与失败阶段,uploaded
 experiments/v1r/scripts/audit_perception_modes.py,script,真实 RGB-D/GT 感知审计聚合,uploaded
 experiments/v1r/scripts/identify_reference_phases.py,script,离线识别静止接近和运动搬运阶段,uploaded
 experiments/v1r/scripts/build_target_mask_schedules.py,script,根据冻结 reference 投影生成 mask 元数据,uploaded
@@ -15,16 +29,42 @@ experiments/v1r/scripts/audit_pointbridge_object_sets.py,script,审计上游任�
 experiments/v1r/scripts/summarize_v1r.py,script,按预注册规则生成 V1-R 决策和 handoff,uploaded
 experiments/v1r/reports/clean_baseline_gate.json,report,真实 clean baseline gate 结果和未授权原因,uploaded
 experiments/v1r/reports/clean_baseline_dev_seed0.json,report,seed-0 开发集真实 rollout 汇总,uploaded
+experiments/v1r/reports/clean_baseline_dev_report.md,report,冻结 clean dev 布局成功率失败阶段和门槛摘要,uploaded
+experiments/v1r/reports/clean_baseline_report.md,report,严格 clean gate 状态和阻塞原因摘要,uploaded
+experiments/v1r/reports/initial_state_report.json,report,150 个完整状态的严格静态及 CPU 重复恢复审计,uploaded
+experiments/v1r/reports/initial_state_report.md,report,完整初态审计摘要,uploaded
+experiments/v1r/reports/runner_parity_report.json,report,10 个冻结状态三 runner 全字段对齐记录,uploaded
+experiments/v1r/reports/runner_parity_report.md,report,三 runner 对齐和成功率摘要,uploaded
+experiments/v1r/reports/cpu_cuda_parity.json,report,CPU/CUDA 可用性动作差异和正式设备协议,uploaded
+experiments/v1r/reports/cpu_cuda_parity_report.md,report,CPU/CUDA 审计摘要,uploaded
+experiments/v1r/reports/expert_replay_report.json,report,四布局 20 条专家轨迹回放逐条记录,uploaded
+experiments/v1r/reports/expert_replay_report.md,report,专家回放布局结果和根因定位摘要,uploaded
+experiments/v1r/reports/layout_failure_report.json,report,冻结 clean dev 的布局成功率和失败阶段统计,uploaded
+experiments/v1r/reports/layout_failure_report.md,report,冻结 clean dev 布局失败摘要,uploaded
+experiments/v1r/reports/v1r_2f_root_cause.yaml,report,V1-R.2F 根因定位和训练授权结论,uploaded
+experiments/v1r/reports/v1r_gate_summary.json,report,V1-R 全门槛和 V1-R.2F 审计摘要,uploaded
+experiments/v1r/reports/v1r_final_report.md,report,V1-R 最终决策摘要,uploaded
+experiments/v1r/v1r_decision.yaml,decision,V1-R 当前门槛授权状态和下一阶段,uploaded
+experiments/v1r/v2_handoff.yaml,decision,V2 未授权 handoff,uploaded
+experiments/v1r/v3_handoff.yaml,decision,V3 未授权 handoff,uploaded
 scripts/apply_pointbridge_patches.py,script,校验锁定上游并应用本地兼容补丁,uploaded
+scripts/evaluate_pointbridge_paired.py,script,legacy Point Bridge 评测与冻结状态对齐审计入口,uploaded
 patches/pointbridge/0002-mujoco23-mesh-scale-compat.patch,patch,从模型 XML 恢复 MuJoCo 2.3 缺失的 mesh scale/offset,uploaded
 patches/pointbridge/0003-mujoco23-mesh-path-compat.patch,patch,从模型 XML 恢复 MuJoCo 2.3 缺失的 mesh asset path,uploaded
 src/vico_point/envs/mujoco_compat.py,source,MuJoCo 2.3 mesh scale/transform/path XML 兼容辅助函数,uploaded
+src/vico_point/envs/mimiclabs_compat.py,source,MimicLabs 保存 XML 的 MuJoCo 2.3 兼容迁移,uploaded
 src/vico_point/perception/evidence.py,source,PointEvidence 与来源枚举,uploaded
 src/vico_point/perception/cotracker_adapter.py,source,保留 CoTracker 可见性并做多相机三角化,uploaded
 src/vico_point/perception/segment_depth_adapter.py,source,分割深度的当前点与 previous fallback 适配,uploaded
 src/vico_point/perception/masked_point_encoder.py,source,DROP_MASK 简单基线编码器,uploaded
+tests/test_contracts.py,test,XML 兼容与既有系统契约回归测试,uploaded
+tests/test_v1r_audits.py,test,冻结状态严格匹配门槛阈值 runner 汇总和平衡采样测试,uploaded
 third_party/pointbridge/,external_source,锁定的 Point Bridge 上游源码,excluded_gitignored
 third_party/pointbridge/data/**/*.hdf5,dataset,官方演示 RGB-D/HDF5 数据,excluded_large_local_only
 third_party/pointbridge/expert_demos/**/*.pkl,dataset,Point Bridge 训练演示 PKL,excluded_large_local_only
 third_party/pointbridge/exp_local/**/*.pt,model_artifact,训练 checkpoint,excluded_large_local_only
 outputs/v1r/,generated_output,V1-R 原始审计/模型输出目录,excluded_gitignored
+outputs/v1r/clean_state_store/*.npz,state_bundle,140 个 clean 完整模拟器状态与固定对象点；文件名和哈希见 clean_state_index.csv,excluded_gitignored
+outputs/v1r/state_store/*.npz,state_bundle,10 个 runner parity 完整模拟器状态与固定对象点；文件名和哈希见 runner_parity_state_index.csv,excluded_gitignored
+outputs/v1r/clean_baseline_dev_seed0_frozen.csv,generated_result,冻结 seed-0 clean dev 40 场逐回合原始遥测,excluded_gitignored
+outputs/v1r/clean_baseline_dev_seed0_frozen.json,generated_result,冻结 seed-0 clean dev 原始运行汇总,excluded_gitignored

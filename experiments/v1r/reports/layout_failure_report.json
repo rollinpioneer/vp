@@ -1,0 +1,47 @@
+{
+  "stage": "V1-R.2F",
+  "audit": "per_layout_failure_analysis",
+  "status": "complete",
+  "rollout_csv": "outputs/v1r/clean_baseline_dev_seed0_frozen.csv",
+  "rollout_csv_sha256": "d86e6615801c498a32eb9e50881c5edb43f45eec0b5d171ecd1855ce15981cdd",
+  "rows": 40,
+  "layouts": [
+    {
+      "layout": 1,
+      "scenarios": 10,
+      "successes": 0,
+      "success_rate": 0.0
+    },
+    {
+      "layout": 2,
+      "scenarios": 10,
+      "successes": 0,
+      "success_rate": 0.0
+    },
+    {
+      "layout": 3,
+      "scenarios": 10,
+      "successes": 0,
+      "success_rate": 0.0
+    },
+    {
+      "layout": 4,
+      "scenarios": 10,
+      "successes": 2,
+      "success_rate": 0.2
+    }
+  ],
+  "failure_stages": {
+    "no_approach": 11,
+    "no_grasp": 24,
+    "post_grasp_drop": 3
+  },
+  "termination_reasons": {
+    "timeout": 38
+  },
+  "phase_thresholds_m": {
+    "approach": 0.12,
+    "bowl_to_plate": 0.12
+  },
+  "fine_phase_telemetry_available": true
+}

@@ -103,7 +103,7 @@ def _detect_bowl_variant(xml: str) -> str:
 
 
 def migrate_saved_model_xml(xml: str) -> str:
-    """Add only non-physical metadata nodes required by current robosuite mappings.
+    """Apply non-physical compatibility fixes for saved MimicLabs XML.
 
     The saved model's meshes, bodies, joints, collision parameters, masses and
     poses remain untouched. The function is idempotent.
@@ -111,6 +111,10 @@ def migrate_saved_model_xml(xml: str) -> str:
 
     bowl_variant = _detect_bowl_variant(xml)
     root = ET.fromstring(xml)
+    for texture in root.findall(".//texture[@colorspace]"):
+        texture.attrib.pop("colorspace", None)
+    for light in root.findall(".//light[@type]"):
+        light.attrib.pop("type", None)
     existing = {
         element.attrib["name"]
         for element in root.iter()

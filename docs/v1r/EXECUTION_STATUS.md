@@ -6,34 +6,51 @@
 - V1-R.1：统一 `PointEvidence` 来源、时间年龄、Oracle 边界和 CoTracker/segment-depth 适配器。
 - 清单：visibility factorial、clean dev/confirm、all-success episode index。
 - 自动化入口：clean baseline、感知审计、阶段识别、目标 mask schedule、频率/相机汇总、上下文输入审计、V1-R 统一决策。
-- 基础回归：18 个单元测试通过，上传大小检查通过，`git diff --check` 通过。
-- 2026-09-07：在本地 MuJoCo 2.3.2 CPU 环境完成真实 Point Bridge seed-0 B0 dev 40/40 rollout；成功率 0.05，模拟器异常和动作解码异常均为 0，初态哈希配对通过。
+- 完整初态：保存 140 个 clean dev/confirm 状态和 10 个 runner parity 状态；150/150 在 CPU 上重复恢复两次并严格匹配，三 training seed 引用相同状态文件和 SHA-256。
+- runner parity：旧 runner 5 个历史成功、5 个历史失败场景均用完整冻结状态复跑；legacy、新 runner、官方 Point Bridge 入口 10/10 对齐，前 20 步动作最大绝对差为 0.0，三者成功率均为 0.10。
+- CPU/CUDA：当前环境没有可用 CUDA 设备，审计状态为 `blocked_unavailable_cuda`；不宣称 CPU/CUDA parity 通过，正式部署设备协议冻结为 CPU。
+- 专家回放：初态 20/20 精确恢复；布局 1/2 各 0/5，布局 3/4 各 5/5。10 条失败记录从第 1 步开始偏离，定位到布局 1/2 的动作执行或环境契约链。
+- 冻结 clean dev：seed-0 40/40 rollout 完成，成功率 0.05；布局 1/2/3 各 0/10，布局 4 为 2/10。模拟器异常和动作解码异常均为 0，40/40 初态严格匹配。
+- 失败阶段：`no_approach=11`、`no_grasp=24`、`post_grasp_drop=3`；38 个失败回合超时。
+- 基础回归：24 个单元测试通过，上传大小检查通过，`git diff --check` 通过。
 
 ## 诚实门槛状态
 
-当前 `clean_baseline_gate` 为 `blocked_clean_baseline`：真实 dev 已完成，但 seed-0 B0 仅为 `0.05`，低于预注册的 `0.50` clean 门槛。因此没有用三 seed confirm 评测覆盖 dev 失败。V1-R.3/R.4/R.5/R.6 也没有被旧 V1 输出替代；缺少 RGB-D/GT 感知审计、reference mask schedule 和 LEFT_BLOCK/RIGHT_OPEN 成对场景时，脚本会写入 `blocked` 或 `unresolved`。
+当前 `clean_baseline_gate` 为 `blocked_clean_baseline`：真实冻结 dev 已完成，但 seed-0 仅为 `0.05`，低于预注册的 `0.50` clean 门槛；专家回放也未通过布局 1/2。因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
 因此当前决策为：
 
 ```yaml
 decision: blocked_clean_baseline
+v1r_runtime_repairs: passed
+initial_state_pairing_audit: passed
+runner_parity_audit: passed
+cpu_cuda_parity_audit: blocked_unavailable_cuda
+deployment_device: cpu
+expert_replay_audit: failed
+clean_baseline_scientific_gate: blocked
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
 ```
 
-旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有被写入新门槛结果。
+根因不是新 runner：三条执行路径在同一完整状态上完全一致。当前需要先修复布局 1/2 的专家动作/环境契约，再重新执行 clean dev；布局 3 的专家回放成功但策略为 0/10，说明训练数据覆盖或策略泛化仍需单独处理。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 
-真实运行时，把独立 clean rollout CSV 传给：
+完整逐场景证据位于 `experiments/v1r/reports/`。实际 `.npz` 状态和原始 rollout CSV 保持在 gitignored 的 `outputs/v1r/`；精确文件名、用途和 SHA-256 分别记录在状态索引及 `manifests/not_uploaded_files.csv`。
+
+重新执行 gate 时，把独立 clean rollout CSV 和三项审计传给：
 
 ```bash
 PYTHONPATH=src python experiments/v1r/scripts/evaluate_clean_baseline.py \
-  --manifest experiments/v1r/manifests/clean_baseline_confirm.csv \
+  --manifest experiments/v1r/manifests/clean_baseline_dev.csv \
   --checkpoint /path/to/frozen_seed0.pt \
-  --rollouts /path/to/clean_seed0_rollouts.csv \
+  --rollouts /path/to/frozen_clean_dev.csv \
   --training-seed 0 \
-  --output experiments/v1r/reports/clean_seed0_gate.json
+  --runner-parity experiments/v1r/reports/runner_parity_report.json \
+  --cpu-cuda-parity experiments/v1r/reports/cpu_cuda_parity.json \
+  --expert-replay experiments/v1r/reports/expert_replay_report.json \
+  --output experiments/v1r/reports/clean_baseline_gate.json
 ```
 
-其他脚本同样只接受离线记录，不读取未来帧、不把 Oracle 点写成非 Oracle 输入，也不上传 checkpoint、HDF5、PKL、视频或 RGB-D 二进制文件。Point Bridge 上游保持 gitignored；MuJoCo 2.3 的 mesh scale/offset/path 兼容性通过 `patches/pointbridge/0002*` 和 `0003*` 在本地应用。
+其他脚本同样只接受离线记录，不读取未来帧、不把 Oracle 点写成非 Oracle 输入，也不上传 checkpoint、HDF5、PKL、视频、状态 `.npz` 或 RGB-D 二进制文件。Point Bridge 上游保持 gitignored；MuJoCo 2.3 的 mesh scale/offset/path 兼容性通过 `patches/pointbridge/0002*` 和 `0003*` 在本地应用，保存 XML 中不受 MuJoCo 2.3 支持的 `texture colorspace` 和 `light type` 也会被兼容迁移移除。

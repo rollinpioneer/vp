@@ -1,32 +1,18 @@
 {
   "stage": "V1-R.2",
-  "status": "incomplete_multi_seed_evaluation",
-  "training_seeds": [
-    0
-  ],
-  "manifest": "experiments/v1r/manifests/clean_baseline_dev.csv",
-  "manifest_rows": 120,
-  "selected_manifest_rows": 40,
-  "checkpoints": {
-    "0": "third_party/pointbridge/exp_local/2026.09.07/v0_pointbridge_bowl_on_plate_seed0/deterministic/010925_hidden_dim_256/snapshot/300000.pt"
-  },
-  "checkpoint_sha256": {
-    "0": "46c8619a39e816e0d82a627e6b68c725b5e63ee3c57afb47c3897eab2510c7c7"
-  },
+  "status": "complete",
+  "training_seed": 0,
+  "rows": 40,
   "success_rate": 0.05,
-  "pooled_success_rate": 0.05,
-  "per_seed": {
-    "0": {
-      "rows": 40,
-      "success_rate": 0.05,
-      "simulator_exception_count": 0,
-      "action_decode_error_count": 0
-    }
-  },
   "simulator_exception_count": 0,
   "action_decode_error_count": 0,
-  "paired_initial_state_check": "passed",
-  "blockers": [
-    "three training seeds are required for the confirm clean-baseline gate"
-  ]
+  "checkpoint_sha256": "46c8619a39e816e0d82a627e6b68c725b5e63ee3c57afb47c3897eab2510c7c7",
+  "initial_state_match_count": 40,
+  "initial_state_match_status": "passed",
+  "failure_stages": {
+    "no_approach": 11,
+    "no_grasp": 24,
+    "post_grasp_drop": 3,
+    "success": 2
+  }
 }

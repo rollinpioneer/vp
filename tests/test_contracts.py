@@ -169,8 +169,9 @@ class ContractTests(unittest.TestCase):
         for variant, bbox_size in expected_bbox_sizes.items():
             with self.subTest(variant=variant):
                 xml = f"""<mujoco><asset>
-                <texture file='/assets/objaverse/bowl/{variant}/visual/image0.png'/>
+                <texture file='/assets/objaverse/bowl/{variant}/visual/image0.png' colorspace='sRGB'/>
                 </asset><worldbody>
+                <light name='key' type='directional' pos='0 0 1'/>
                 <body name='plate_main'><geom name='plate_g0' type='box' size='1 1 1'/></body>
                 <body name='bowl_main'><geom name='bowl_g0' type='box' size='1 1 1'/></body>
                 </worldbody></mujoco>"""
@@ -182,6 +183,8 @@ class ContractTests(unittest.TestCase):
                 self.assertIn(bbox_size, migrated)
                 self.assertIn("plate_horizontal_radius_site", migrated)
                 self.assertEqual(migrated.count("plate_g0"), 1)
+                self.assertNotIn("colorspace", migrated)
+                self.assertNotIn('type="directional"', migrated)
 
 
 if __name__ == "__main__":

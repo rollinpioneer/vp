@@ -10,7 +10,8 @@ directory structure.
 - Datasets, RGB-D recordings, videos, model weights, cached features, archives,
   and experiment output directories are not stored in Git.
 - The current tracked tree contains no file above 10 MiB. The largest tracked
-  file is `manifests/scenario_registry.csv`, approximately 44 KiB.
+  file is `experiments/v1r/manifests/visibility_factorial.csv`, approximately
+  496 KiB.
 - `docs/视觉稀疏点策略_分阶段实验计划.docx` is approximately 36 KiB and is
   intentionally uploaded because it is a small source document, not a large
   binary artifact.
@@ -20,6 +21,11 @@ upload are recorded in `manifests/not_uploaded_files.csv`, including their type,
 purpose, and exclusion reason. Future externally hosted assets should add a
 filename, URL or storage identifier, byte size, and SHA-256 checksum to that
 manifest before being used for a reproducible run.
+
+The 140 clean-state bundles and 10 runner-parity state bundles remain under
+`outputs/v1r/`. Their exact filenames, scenario identities, and SHA-256 values
+are tracked in `experiments/v1r/manifests/clean_state_index.csv` and
+`experiments/v1r/manifests/runner_parity_state_index.csv`.
 
 ## Pre-push check
 
