@@ -39,6 +39,29 @@ def max_abs_difference(left: Any, right: Any) -> float | None:
     return float(np.max(np.abs(left_array - right_array)))
 
 
+def controller_for(env: Any) -> Any:
+    controller = env.robots[0].controller
+    if isinstance(controller, dict):
+        if len(controller) != 1:
+            raise ValueError("replay expects exactly one arm controller")
+        controller = next(iter(controller.values()))
+    return controller
+
+
+def synchronize_runtime_state(env: Any) -> None:
+    """Align robosuite's stateful caches after restoring a saved simulator state."""
+    gripper = env.robots[0].gripper
+    gripper.current_action = np.zeros(gripper.dof, dtype=np.float64)
+    controller = controller_for(env)
+    controller.update(force=True)
+    controller.update_initial_joints(controller.joint_pos)
+
+
+def reset_runtime_state(env: Any, state: Any, model_xml: str) -> None:
+    env.reset_to({"states": state, "model": model_xml})
+    synchronize_runtime_state(env)
+
+
 def add_upstream_paths(upstream: Path) -> None:
     paths = (
         upstream,
@@ -100,13 +123,13 @@ def replay_demo(env: Any, demo: Any, layout: int, demo_key: str) -> dict[str, An
         "generator_first_divergence_step": None,
         "exception": "",
     }
-    env.reset_to({"states": states[-1], "model": migrated_xml})
+    reset_runtime_state(env, states[-1], migrated_xml)
     record["saved_final_success"] = bool(env._check_success())
     _, saved_reward, _, _ = env.step(actions[-1])
     record["saved_final_action_success"] = bool(env._check_success())
     record["saved_final_action_reward"] = float(saved_reward)
 
-    env.reset_to({"states": states[0], "model": migrated_xml})
+    reset_runtime_state(env, states[0], migrated_xml)
     restored_initial_state = env.sim.get_state().flatten()
     restored_initial = raw_array_sha256(restored_initial_state)
     record["restored_initial_state_sha256"] = restored_initial
@@ -132,7 +155,7 @@ def replay_demo(env: Any, demo: Any, layout: int, demo_key: str) -> dict[str, An
     )
     record["generator_max_state_abs_diff"] = max(state_differences, default=0.0)
 
-    env.reset_to({"states": states[0], "model": migrated_xml})
+    reset_runtime_state(env, states[0], migrated_xml)
     reward = float(env.reward())
     for action in actions:
         _, reward, _, _ = env.step(action)

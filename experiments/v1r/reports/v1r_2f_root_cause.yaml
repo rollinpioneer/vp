@@ -46,6 +46,26 @@ expert_replay:
     4: 5/5
   failed_records_diverging_at_step_1: 10
   failure_localization: action_execution_or_environment_contract_after_exact_state_restore
+  cache_isolation_recheck:
+    status: complete
+    date: 2026-09-07
+    targeted_scope:
+      - layout_1_demo_0
+      - layout_2_demo_0
+      - layout_3_demo_3
+    diagnostic_transitions: 20
+    panda_gripper_current_action_reset: true
+    osc_current_and_nullspace_reference_synchronized: true
+    formal_replay_rechecked: true
+    formal_replay_checked: 20
+    formal_replay_passed: 10
+    formal_replay_per_layout:
+      1: 0/5
+      2: 0/5
+      3: 5/5
+      4: 5/5
+    conclusion: cache_contamination_fixed_but_layout_1_2_failure_remains
+  absolute_target_counterfactual_adopted: false
 
 clean_dev:
   status: blocked_clean_baseline
@@ -76,14 +96,18 @@ predeclared_thresholds:
 root_cause_conclusion:
   runner_mismatch_ruled_out: true
   incomplete_seed_only_state_identification_repaired: true
+  replay_cache_contamination_repaired: true
+  layout_1_2_failure_after_cache_repair: true
+  absolute_target_counterfactual_adopted: false
   layout_1_2_expert_action_environment_contract_mismatch_present: true
   clean_policy_generalization_failure_present: true
   rationale: >-
     All three clean execution paths are identical on the same complete states,
-    while exact expert replay fails only on layouts 1 and 2 and the frozen
-    policy fails on layouts 1, 2, and 3. The remaining failure is therefore not
-    a new-runner discrepancy; environment/action compatibility for layouts 1/2
-    and policy/data coverage across layouts must be repaired before retraining.
+    while exact expert replay still fails only on layouts 1 and 2 after runtime
+    cache isolation, and the frozen policy fails on layouts 1, 2, and 3. The
+    remaining failure is therefore not a new-runner discrepancy or audit cache
+    contamination; environment/action compatibility for layouts 1/2 and
+    policy/data coverage across layouts must be repaired before retraining.
 
 authorization:
   confirm_rollouts_run: false

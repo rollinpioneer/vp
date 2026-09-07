@@ -7,6 +7,7 @@ import numpy as np
 
 from experiments.v1r.scripts.evaluate_clean_baseline import evaluate
 from experiments.v1r.scripts.audit_runner_parity import path_success_summary
+from experiments.v1r.scripts.diagnose_expert_replay import reset_gripper_cache
 from experiments.v1r.scripts.state_utils import (
     load_state_bundle,
     load_state_index,
@@ -16,6 +17,25 @@ from vico_point.data.layout_balanced_sampler import layout_balanced_weights
 
 
 class V1RAuditTests(unittest.TestCase):
+    def test_diagnostic_reset_clears_stateful_gripper_cache(self):
+        class Gripper:
+            dof = 1
+
+            def __init__(self):
+                self.current_action = np.array([0.75])
+
+        class Robot:
+            gripper = Gripper()
+
+        class Env:
+            robots = [Robot()]
+
+        env = Env()
+        reset_gripper_cache(env)
+        np.testing.assert_array_equal(env.robots[0].gripper.current_action, [0.0])
+        reset_gripper_cache(env, [-0.25])
+        np.testing.assert_array_equal(env.robots[0].gripper.current_action, [-0.25])
+
     def test_runner_path_success_summary_reports_each_runner(self):
         records = [
             {
