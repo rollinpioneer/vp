@@ -7,7 +7,10 @@ import numpy as np
 
 from experiments.v1r.scripts.evaluate_clean_baseline import evaluate
 from experiments.v1r.scripts.audit_runner_parity import path_success_summary
-from experiments.v1r.scripts.diagnose_expert_replay import reset_gripper_cache
+from experiments.v1r.scripts.diagnose_expert_replay import (
+    attach_first_explanatory_difference,
+    reset_gripper_cache,
+)
 from experiments.v1r.scripts.state_utils import (
     load_state_bundle,
     load_state_index,
@@ -17,6 +20,42 @@ from vico_point.data.layout_balanced_sampler import layout_balanced_weights
 
 
 class V1RAuditTests(unittest.TestCase):
+    def test_targeted_diagnostic_localizes_first_delta_execution_difference(self):
+        transitions = []
+        for index in range(3):
+            action = [0.1 * (index + 1), 0.2, 0.0, 0.0, 0.0, 0.0, 0.0]
+            if index == 2:
+                action[0] = 1.0
+            transitions.append(
+                {
+                    "action_index": index,
+                    "action": action,
+                    "actual_vs_saved_controller_target_errors": {
+                        "position_l2_m": 0.0 if index == 0 else 0.001 * index,
+                        "orientation_angle_rad": 0.0,
+                    },
+                    "actual_vs_reference_errors": {
+                        "eef_position_l2_m": 0.001 * (index + 1),
+                        "eef_orientation_angle_rad": 0.0,
+                        "eef_linear_velocity_l2_m_per_s": 0.0,
+                        "eef_angular_velocity_l2_rad_per_s": 0.0,
+                        "gripper_qpos_l2_m": 0.0,
+                        "bowl_position_l2_m": 0.0,
+                    },
+                    "controller_target_tracking_errors": {
+                        "position_l2_m": 0.01,
+                    },
+                }
+            )
+        replay = {"controller_use_delta": True, "transitions": transitions}
+        attach_first_explanatory_difference(replay, 3)
+        evidence = replay["first_explanatory_difference"]
+        self.assertTrue(evidence["candidate_supported"])
+        self.assertEqual(
+            evidence["first_translation_saturation"]["action_index"], 2
+        )
+        self.assertTrue(evidence["delta_target_error_propagation"]["supported"])
+
     def test_diagnostic_reset_clears_stateful_gripper_cache(self):
         class Gripper:
             dof = 1

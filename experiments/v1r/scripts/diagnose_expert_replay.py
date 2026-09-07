@@ -180,6 +180,125 @@ def target_tracking_errors(actual: dict[str, Any], target: dict[str, Any]) -> di
     }
 
 
+def first_translation_saturation(transitions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Find the first saved translation command that reaches the input limit."""
+    for transition in transitions:
+        translation_action = np.asarray(transition["action"][:3], dtype=np.float64)
+        if np.max(np.abs(translation_action)) >= 1.0 - 1e-12:
+            return {
+                "action_index": transition["action_index"],
+                "translation_action": as_list(translation_action),
+                "translation_action_abs_max": float(np.max(np.abs(translation_action))),
+            }
+    return {
+        "action_index": None,
+        "translation_action": None,
+        "translation_action_abs_max": None,
+    }
+
+
+def attach_first_explanatory_difference(
+    replay: dict[str, Any], diagnostic_steps: int
+) -> None:
+    """Record the first execution mismatch and test delta-target error carry-over."""
+    transitions = replay["transitions"][:diagnostic_steps]
+    if not transitions:
+        replay["first_explanatory_difference"] = {
+            "candidate_supported": False,
+            "reason": "no diagnostic transitions",
+        }
+        return
+
+    first = transitions[0]
+    first_target_errors = first["actual_vs_saved_controller_target_errors"]
+    first_state_errors = first["actual_vs_reference_errors"]
+    first_tracking = first["controller_target_tracking_errors"]
+
+    propagation_residuals = []
+    for previous, current in zip(transitions, transitions[1:]):
+        target_error = current["actual_vs_saved_controller_target_errors"][
+            "position_l2_m"
+        ]
+        previous_state_error = previous["actual_vs_reference_errors"][
+            "eef_position_l2_m"
+        ]
+        propagation_residuals.append(abs(target_error - previous_state_error))
+
+    saturation = first_translation_saturation(transitions)
+    max_propagation_residual_m = max(propagation_residuals, default=0.0)
+    target_matches_saved = (
+        first_target_errors["position_l2_m"] <= 1e-6
+        and first_target_errors["orientation_angle_rad"] <= 1e-6
+    )
+    propagation_supported = (
+        replay["controller_use_delta"]
+        and len(propagation_residuals) > 0
+        and max_propagation_residual_m <= 1e-6
+    )
+    replay["first_explanatory_difference"] = {
+        "candidate_supported": bool(
+            replay["controller_use_delta"]
+            and target_matches_saved
+            and first_state_errors["eef_position_l2_m"] > 1e-6
+            and propagation_supported
+        ),
+        "action_index": first["action_index"],
+        "state_transition": "state[0] + action[0] -> state[1]",
+        "mechanism": (
+            "action_0_target_matches_saved_target_but_post_step_EEF_state_diverges; "
+            "delta_OSC_uses_the_diverged_current_EEF_as_the_next_target_origin"
+        ),
+        "action_0_target_position_error_m": first_target_errors["position_l2_m"],
+        "action_0_target_orientation_error_rad": first_target_errors[
+            "orientation_angle_rad"
+        ],
+        "action_0_post_step_eef_position_error_m": first_state_errors[
+            "eef_position_l2_m"
+        ],
+        "action_0_post_step_eef_position_error_mm": first_state_errors[
+            "eef_position_l2_m"
+        ]
+        * 1000.0,
+        "action_0_post_step_eef_orientation_error_rad": first_state_errors[
+            "eef_orientation_angle_rad"
+        ],
+        "action_0_post_step_eef_linear_velocity_error_m_per_s": first_state_errors[
+            "eef_linear_velocity_l2_m_per_s"
+        ],
+        "action_0_post_step_eef_angular_velocity_error_rad_per_s": first_state_errors[
+            "eef_angular_velocity_l2_rad_per_s"
+        ],
+        "action_0_post_step_bowl_position_error_m": first_state_errors[
+            "bowl_position_l2_m"
+        ],
+        "action_0_post_step_gripper_qpos_error_m": first_state_errors[
+            "gripper_qpos_l2_m"
+        ],
+        "action_0_target_tracking_position_m": first_tracking["position_l2_m"],
+        "action_0_target_tracking_position_mm": first_tracking["position_l2_m"]
+        * 1000.0,
+        "early_translation_action_abs_max": [
+            float(np.max(np.abs(np.asarray(item["action"][:3], dtype=np.float64))))
+            for item in transitions[:8]
+        ],
+        "early_target_tracking_position_mm": [
+            item["controller_target_tracking_errors"]["position_l2_m"] * 1000.0
+            for item in transitions[:8]
+        ],
+        "first_translation_saturation": saturation,
+        "delta_target_error_propagation": {
+            "checked_transitions": len(propagation_residuals),
+            "max_abs_residual_m": max_propagation_residual_m,
+            "max_abs_residual_mm": max_propagation_residual_m * 1000.0,
+            "supported": bool(propagation_supported),
+        },
+        "initial_joint_reference": (
+            "set once to restored state[0] arm joints before action[0] and held fixed "
+            "during continuous replay"
+        ),
+    }
+
+
 def saved_target_alignment(demo: Any, controller_config: dict[str, Any], steps: int) -> dict[str, Any]:
     actions = np.asarray(demo["actions"][:steps], dtype=np.float64)
     eef_pose = np.asarray(demo["datagen_info/eef_pose"][:steps], dtype=np.float64)
@@ -268,7 +387,9 @@ def replay_mode(
     transitions = []
     reward = float(env.reward())
     for action_index, action in enumerate(actions):
+        time_before = float(getattr(env, "cur_time", np.nan))
         _, reward, _, _ = env.step(action)
+        time_after = float(getattr(env, "cur_time", np.nan))
         if action_index < steps:
             actual = direct_telemetry(env)
             controller = controller_for(env)
@@ -287,6 +408,7 @@ def replay_mode(
                     "action_index": action_index,
                     "source_state_index": action_index,
                     "reference_next_state_index": action_index + 1,
+                    "actual_control_interval_s": time_after - time_before,
                     "action": as_list(action),
                     "gripper_command": float(action[-1]),
                     "actual_controller_target": target,
@@ -443,6 +565,15 @@ def diagnose_case(suite: Any, upstream: Path, layout: int, demo_key: str, steps:
             attach_restored_references(before, references)
             attach_restored_references(after, references)
             attach_restored_references(absolute, references)
+            attach_first_explanatory_difference(before, steps)
+            attach_first_explanatory_difference(after, steps)
+            attach_first_explanatory_difference(absolute, steps)
+            control_freq = float(getattr(env, "control_freq", 20.0))
+            expected_control_interval_s = 1.0 / control_freq
+            actual_intervals = [
+                item["actual_control_interval_s"]
+                for item in after["transitions"]
+            ]
             return {
                 "layout": layout,
                 "demo_key": demo_key,
@@ -450,6 +581,27 @@ def diagnose_case(suite: Any, upstream: Path, layout: int, demo_key: str, steps:
                 "diagnostic_transitions": steps,
                 "dataset": str(dataset_path.relative_to(ROOT)),
                 "controller_config": controller_configs[0],
+                "time_alignment": {
+                    "control_freq_hz": control_freq,
+                    "saved_action_interval_s": expected_control_interval_s,
+                    "actual_control_intervals_s": actual_intervals,
+                    "actual_interval_max_abs_error_s": max(
+                        (
+                            abs(interval - expected_control_interval_s)
+                            for interval in actual_intervals
+                        ),
+                        default=float("inf"),
+                    ),
+                    "supported": bool(
+                        actual_intervals
+                        and max(
+                            abs(interval - expected_control_interval_s)
+                            for interval in actual_intervals
+                        )
+                        <= 1e-12
+                    ),
+                    "state_action_pairing": "state[t] + action[t] -> state[t+1]",
+                },
                 "action_semantics_and_alignment": saved_target_alignment(
                     demo, controller_configs[0], steps
                 ),
@@ -468,6 +620,9 @@ def summarize(cases: list[dict[str, Any]]) -> dict[str, Any]:
         before = case["continuous_before_repair"]
         after = case["continuous_with_controller_sync"]
         absolute = case["continuous_with_saved_absolute_targets"]
+        evidence = after["first_explanatory_difference"]
+        propagation = evidence["delta_target_error_propagation"]
+        time_alignment = case["time_alignment"]
         summaries.append(
             {
                 "layout": case["layout"],
@@ -490,6 +645,36 @@ def summarize(cases: list[dict[str, Any]]) -> dict[str, Any]:
                 "absolute_target_first_position_divergence_action_index": absolute[
                     "first_eef_position_divergence_action_index"
                 ],
+                "first_explanatory_difference": evidence,
+                "first_action_target_position_error_m": evidence[
+                    "action_0_target_position_error_m"
+                ],
+                "first_action_eef_position_error_mm": evidence[
+                    "action_0_post_step_eef_position_error_mm"
+                ],
+                "first_action_target_tracking_position_mm": evidence[
+                    "action_0_target_tracking_position_mm"
+                ],
+                "first_translation_saturation_action_index": evidence[
+                    "first_translation_saturation"
+                ]["action_index"],
+                "max_first_diagnostic_eef_position_error_mm": max(
+                    item["actual_vs_reference_errors"]["eef_position_l2_m"]
+                    for item in after["transitions"]
+                )
+                * 1000.0,
+                "max_first_diagnostic_target_tracking_position_mm": max(
+                    item["controller_target_tracking_errors"]["position_l2_m"]
+                    for item in after["transitions"]
+                )
+                * 1000.0,
+                "delta_target_error_propagation_supported": propagation[
+                    "supported"
+                ],
+                "delta_target_error_propagation_max_residual_mm": propagation[
+                    "max_abs_residual_mm"
+                ],
+                "time_alignment_supported": time_alignment["supported"],
             }
         )
     return {
@@ -506,7 +691,13 @@ def summarize(cases: list[dict[str, Any]]) -> dict[str, Any]:
             < 1e-12
             for case in cases
         ),
-        "time_alignment_supported": True,
+        "time_alignment_supported": all(
+            case["time_alignment"]["supported"] for case in cases
+        ),
+        "first_explanatory_difference_supported": all(
+            item["first_explanatory_difference"]["candidate_supported"]
+            for item in summaries
+        ),
         "controller_cache_mismatch_present": any(
             item["initial_cached_position_error_m"] > 1e-6
             or item["initial_cached_orientation_error_rad"] > 1e-6
@@ -522,6 +713,13 @@ def summarize(cases: list[dict[str, Any]]) -> dict[str, Any]:
 
 def write_markdown(path: Path, result: dict[str, Any]) -> None:
     summary = result["summary"]
+    runtime = result.get("runtime", {})
+    runtime_line = ""
+    if runtime:
+        runtime_line = (
+            f"Runtime: robosuite `{runtime.get('robosuite_version', 'unknown')}`, "
+            f"MuJoCo `{runtime.get('mujoco_version', 'unknown')}`.\n\n"
+        )
     rows = [
         "| layout | demo | stale pos (m) | stale ori (rad) | delta baseline | delta + sync | saved absolute target |",
         "|---:|---|---:|---:|---|---|---|",
@@ -532,12 +730,56 @@ def write_markdown(path: Path, result: dict[str, Any]) -> None:
             "{initial_cached_orientation_error_rad:.9g} | {before_success} | "
             "{after_success} | {absolute_target_success} |".format(**item)
         )
+    evidence_rows = [
+        "| layout | action 0 target err (mm) | action 0 EEF err (mm) | "
+        "action 0 target tracking (mm) | first translation saturation | "
+        "max EEF err in first 20 (mm) | carry-over residual (mm) |",
+        "|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for item in summary["cases"]:
+        saturation = item["first_translation_saturation_action_index"]
+        saturation_text = "none" if saturation is None else str(saturation)
+        evidence_rows.append(
+            f"| {item['layout']} | {item['first_action_target_position_error_m'] * 1000:.6g} | "
+            f"{item['first_action_eef_position_error_mm']:.6g} | "
+            f"{item['first_action_target_tracking_position_mm']:.6g} | "
+            f"{saturation_text} | {item['max_first_diagnostic_eef_position_error_mm']:.6g} | "
+            f"{item['delta_target_error_propagation_max_residual_mm']:.6g} |"
+        )
+    time_alignment_rows = [
+        "| layout | expected action interval (s) | actual interval max error (s) | supported |",
+        "|---:|---:|---:|---|",
+    ]
+    for case, item in zip(result["cases"], summary["cases"]):
+        alignment = case["time_alignment"]
+        time_alignment_rows.append(
+            f"| {item['layout']} | {alignment['saved_action_interval_s']:.12g} | "
+            f"{alignment['actual_interval_max_abs_error_s']:.12g} | "
+            f"{alignment['supported']} |"
+        )
+    carry_over_note = (
+        "The strict delta-target carry-over check is supported for this runtime."
+        if summary["first_explanatory_difference_supported"]
+        else "The first-step execution mismatch is present, but the strict delta-target carry-over check is not asserted for this runtime."
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "# V1-R Expert Replay Targeted Diagnosis\n\n"
-        "Scope: layout 1 `demo_0`, layout 2 `demo_0`, and layout 3 `demo_3`; "
+        + runtime_line
+        + "Scope: layout 1 `demo_0`, layout 2 `demo_0`, and layout 3 `demo_3`; "
         f"first {result['diagnostic_transitions']} transitions plus full success replay.\n\n"
         + "\n".join(rows)
+        + "\n\n## First Explanatory Difference\n\n"
+        + "The first mismatch is action execution after exact state restoration, not action decoding: "
+        "after controller synchronization, action 0 produces the saved controller target, but the "
+        "post-step EEF state diverges. In delta OSC, the next target is based on that actual EEF, "
+        "so the target error from action 1 onward carries the previous EEF error.\n\n"
+        + "\n".join(evidence_rows)
+        + "\n\n"
+        + "`initial_joint` is set once from restored `state[0]` and held fixed during continuous replay; "
+        "it is not updated per frame.\n\n"
+        + "## Time Alignment\n\n"
+        + "\n".join(time_alignment_rows)
         + "\n\n"
         + "- Action semantics: saved configuration is delta OSC; `actions_abs` is absent.\n"
         + "- Time alignment: collection stores `state[t]` before executing `action[t]`; "
@@ -548,6 +790,9 @@ def write_markdown(path: Path, result: dict[str, Any]) -> None:
         + "- Absolute-target check: `datagen_info/target_pose` is converted to the "
         "world-frame absolute OSC representation used by robosuite, without changing "
         "position/orientation scaling or the saved gripper command.\n"
+        + "- Runtime qualification: "
+        + carry_over_note
+        + "\n"
         + "- Units: position m, orientation angle rad, linear velocity m/s, angular "
         "velocity rad/s, Panda finger joint position m.\n\n"
         + "The JSON companion contains per-frame restored references, continuous replay "
@@ -587,6 +832,10 @@ def main() -> int:
     result = {
         "stage": "V1-R.2F-targeted-diagnosis",
         "diagnostic_transitions": args.steps,
+        "runtime": {
+            "robosuite_version": getattr(suite, "__version__", "unknown"),
+            "mujoco_version": __import__("mujoco").__version__,
+        },
         "summary": summarize(cases),
         "cases": cases,
     }
