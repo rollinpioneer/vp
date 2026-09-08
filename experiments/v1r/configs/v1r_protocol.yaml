@@ -1,8 +1,23 @@
 stage: V1-R
-status: authorized_in_progress
+status: blocked_pointbridge_absolute_pose_contract
+latest_completed_stage: V1-R.2G
 baseline_commit: a07eb4cb7a2f688657d3c9a86c768c58d0b51cf0
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 control_hz: 20
+formal_runtime:
+  robosuite: 1.4.1
+  mujoco: 3.3.5
+pointbridge_absolute_pose_contract:
+  status: failed
+  decision_case: B
+  action_mode: pose
+  control_delta: false
+  act_subsample: 1
+  layouts: [1, 2, 3, 4]
+  episodes_per_layout: 5
+  checked: 20
+  passed: 13
+  b0_b1_training_authorized: false
 input_levels: [O, P, V]
 point_sources:
   - gt_current

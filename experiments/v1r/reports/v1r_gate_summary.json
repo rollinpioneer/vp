@@ -1,7 +1,35 @@
 {
-  "stage": "V1-R.7",
-  "decision": "blocked_clean_baseline",
+  "stage": "V1-R.2G",
+  "latest_completed_stage": "V1-R.2G",
+  "decision": "blocked_pointbridge_absolute_pose_contract",
   "gates": {
+    "pointbridge_absolute_pose_contract_gate": {
+      "stage": "V1-R.2G",
+      "status": "failed",
+      "decision_case": "B",
+      "formal_runtime": {
+        "robosuite": "1.4.1",
+        "mujoco": "3.3.5"
+      },
+      "official_environment_entrypoint": "point_bridge.suite.mimiclabs.make",
+      "controller": "OSC_POSE",
+      "control_delta": false,
+      "control_freq_hz": 20,
+      "checked": 20,
+      "passed": 13,
+      "restored_initial_state_matches": 20,
+      "simulator_exceptions": 0,
+      "translation_boundary_hit_steps": 0,
+      "rotation_boundary_hit_steps": 0,
+      "per_layout": {
+        "1": {"checked": 5, "passed": 1},
+        "2": {"checked": 5, "passed": 3},
+        "3": {"checked": 5, "passed": 4},
+        "4": {"checked": 5, "passed": 5}
+      },
+      "b0_b1_training_authorized": false,
+      "next_stage": "repair_absolute_transform_OSC_frequency_gripper_and_saved_state_compatibility_without_retraining"
+    },
     "clean_baseline_gate": {
       "stage": "V1-R.2",
       "status": "blocked_clean_baseline",
@@ -113,7 +141,8 @@
       },
       "blockers": [
         "seed-0 dev success rate 0.050 is below the predeclared 0.50 threshold",
-        "expert replay audit is not passed"
+        "expert replay audit is not passed",
+        "Point Bridge absolute-pose contract gate is not passed"
       ],
       "confirm_gate_status": "not_run"
     },
@@ -159,6 +188,20 @@
     }
   },
   "audits": {
+    "pointbridge_absolute_pose_contract_audit": {
+      "status": "failed",
+      "decision_case": "B",
+      "checked": 20,
+      "passed": 13,
+      "native_label_alignment_matches": 20,
+      "restored_initial_state_matches": 20,
+      "telemetry_steps": 3832,
+      "failure_stages": {
+        "no_grasp": 7,
+        "success": 13
+      },
+      "evidence": "experiments/v1r/reports/pointbridge_absolute_pose_contract.json"
+    },
     "initial_state_pairing_audit": {
       "status": "passed",
       "clean_states": 140,
@@ -282,6 +325,7 @@
       "rollout_csv_sha256": "d86e6615801c498a32eb9e50881c5edb43f45eec0b5d171ecd1855ce15981cdd"
     }
   },
+  "b0_b1_training_authorized": false,
   "v2_formal_experiment_authorized": false,
   "v3_formal_experiment_authorized": false
 }

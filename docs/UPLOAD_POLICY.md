@@ -10,9 +10,9 @@ directory structure.
 - Datasets, RGB-D recordings, videos, model weights, cached features, archives,
   and experiment output directories are not stored in Git.
 - The current tracked tree contains no file above 10 MiB. The largest tracked
-  files are the targeted replay diagnostic JSON reports, approximately 2.5 MiB
-  each; they contain metadata and bounded first-20-step telemetry, not raw
-  datasets or model artifacts.
+  file is the V1-R.2G absolute-pose contract JSON, approximately 5.4 MiB; it
+  contains 3,832 compact action-target / EEF telemetry rows, not raw images,
+  datasets, runtime packages, or model artifacts.
 - `docs/视觉稀疏点策略_分阶段实验计划.docx` is approximately 36 KiB and is
   intentionally uploaded because it is a small source document, not a large
   binary artifact.

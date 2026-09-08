@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R context alias gate is not passed
+reason: V1-R.2G Point Bridge absolute-pose contract and the downstream context alias gate are not passed

@@ -22,3 +22,7 @@
 在限定诊断的三条轨迹中，动作 0 生成的实际控制目标与保存目标一致；首个差异出现在执行 `state[0] + action[0] -> state[1]` 后的 EEF 状态。MuJoCo 3.1.1 下，布局 1/2/3 的 EEF 位置误差分别为 `0.221022 mm`、`0.405555 mm`、`0.0603514 mm`。从动作 1 开始，delta OSC 以实际 EEF 为下一目标的基准，目标位置误差递推残差分别不超过 `0.000004724 mm`、`0.000016379 mm`、`0.000001516 mm`；布局 1/2 的早期跟踪距离更大，且首次平移动作饱和分别出现在动作 2 和动作 0，布局 3 前 20 步没有平移动作饱和。
 
 时间对齐为 `20 Hz`、每个动作 `0.05 s`，配对关系为 `state[t] + action[t] -> state[t+1]`。OSC 的 `initial_joint` 只在恢复 `state[0]` 后同步一次，并在连续回放期间保持不变。四个 bowl 变体的非 XML 网格、纹理和碰撞文件与官方 Objaverse 归档逐字节匹配；当前没有证据证明资产不一致是根因。
+
+## V1-R.2G 后续门槛
+
+旧报告检查的是原始 delta 动作，不代表 Point Bridge 部署动作契约。后续 V1-R.2G 已在 robosuite `1.4.1`、MuJoCo `3.3.5` 下用原生 `BCDataset` 绝对位姿标签和官方 `control_delta=False` 环境完成 20 条回放；布局 1/2/3/4 分别为 1/5、3/5、4/5、5/5，整体 13/20。训练归一化标签按 Point Bridge 路径转为 `float32`，部署反归一化动作保持 `float64`。当前权威门槛和逐步证据见 `v1r_2g_pointbridge_absolute_pose_contract.yaml` 与 `pointbridge_absolute_pose_contract.json`，决策为情况 B，仍禁止重新训练。

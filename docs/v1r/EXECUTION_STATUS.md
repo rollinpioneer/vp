@@ -1,4 +1,4 @@
-# V1-R 执行状态（2026-09-07）
+# V1-R 执行状态（2026-09-08）
 
 ## 已完成
 
@@ -11,30 +11,36 @@
 - CPU/CUDA：当前环境没有可用 CUDA 设备，审计状态为 `blocked_unavailable_cuda`；不宣称 CPU/CUDA parity 通过，正式部署设备协议冻结为 CPU。
 - 专家回放：修复 `reset_to()` 后 Panda 夹爪增量缓存及 OSC 参考关节的审计隔离；重新检查现有 20 条轨迹后，初态仍 20/20 精确恢复，布局 1/2 各 0/5，布局 3/4 各 5/5，整体仍 10/20。10 条失败记录从第 1 步开始偏离，说明缓存污染不是布局 1/2 的充分根因。
 - 目标诊断严格限定为布局 1 `demo_0`、布局 2 `demo_0`、布局 3 `demo_3` 的前 20 步；delta OSC、时间对齐和目标重建均得到支持。首个可解释差异定位在 `state[0] + action[0] -> state[1]`：动作 0 的实际控制目标与保存目标一致，但执行后 EEF 已出现偏差；从动作 1 开始，delta OSC 将该偏差递推进下一控制目标。MuJoCo 3.1.1 中三条轨迹的动作 1 目标递推残差均不超过 `0.000017 mm`。绝对目标仅保留为跨运行时诊断对照，不改变数据动作契约，也未调整坐标或动作倍率。
+- V1-R.2G Point Bridge 绝对位姿契约：直接实例化原生 `BCDataset`，使用 `act_subsample=1`、`eef_states[1:]`、`gripper_states[1:]`、末动作重复、SciPy 四元数转换和 Point Bridge 原生 6D 旋转；标签再经过 `BCDataset.preprocess['actions']` 与 `PB.act` pose 分支反归一化。没有运行策略网络或语言网络。
+- V1-R.2G 正式回放运行于 robosuite `1.4.1`、MuJoCo `3.3.5`，由 `point_bridge.suite.mimiclabs.make()` 创建 `OSC_POSE`、`control_delta=False`、20 Hz、10 维绝对动作环境。四布局各 5 条，20/20 精确恢复 PKL 初态，标签对齐 20/20，无模拟器异常；布局 1/2/3/4 分别通过 1/5、3/5、4/5、5/5，整体 13/20。
+- 绝对位姿回放共记录 3,832 个执行步。每步均包含绝对目标、实际 EEF 位姿、平移/旋转跟踪误差、控制边界状态、抓取和任务成功。归一化标签按训练路径转为 `float32`，部署反归一化动作保持 `float64`。7 条失败均为 `no_grasp`；绝对 OSC 未配置平移或旋转 goal limits，边界命中均为 0。门槛按预注册决策落入情况 B，不能重新训练。
 - 冻结 clean dev：seed-0 40/40 rollout 完成，成功率 0.05；布局 1/2/3 各 0/10，布局 4 为 2/10。模拟器异常和动作解码异常均为 0，40/40 初态严格匹配。
 - 失败阶段：`no_approach=11`、`no_grasp=24`、`post_grasp_drop=3`；38 个失败回合超时。
-- 基础回归：缓存隔离测试加入后完整测试 `25/25` 通过；上传大小检查通过（159 个待跟踪文件均不超过 10 MiB），`git diff --check` 和 Python 语法检查通过。
+- 基础回归：当前完整测试 `35/35` 通过；上传大小检查通过（164 个待跟踪文件均不超过 10 MiB），`git diff --check` 和 Python 语法检查通过。
 
 ## 诚实门槛状态
 
-当前 `clean_baseline_gate` 为 `blocked_clean_baseline`：真实冻结 dev 已完成，但 seed-0 仅为 `0.05`，低于预注册的 `0.50` clean 门槛；专家回放也未通过布局 1/2。因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
+当前 `pointbridge_absolute_pose_contract_gate` 为 `failed`，决策为情况 B。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
 因此当前决策为：
 
 ```yaml
-decision: blocked_clean_baseline
-v1r_runtime_repairs: passed
-initial_state_pairing_audit: passed
-runner_parity_audit: passed
-cpu_cuda_parity_audit: blocked_unavailable_cuda
-deployment_device: cpu
-expert_replay_audit: failed
-clean_baseline_scientific_gate: blocked
+decision: blocked_pointbridge_absolute_pose_contract
+v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
+runner_parity: passed
+initial_state_restoration: passed
+pointbridge_absolute_pose_contract_gate: failed
+clean_baseline_gate: blocked
+b0_b1_training_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
+next_stage: repair_absolute_transform_OSC_frequency_gripper_and_saved_state_compatibility_without_retraining
+formal_runtime:
+  robosuite: 1.4.1
+  mujoco: 3.3.5
 ```
 
-根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。首个可解释差异是动作执行后的 EEF 偏差，而不是动作解码；四个 bowl 变体的非 XML 网格、纹理和碰撞文件也与官方归档逐字节匹配，暂无资产不一致证据。当前需要先修复布局 1/2 的专家动作/环境契约，再重新执行 clean dev；布局 3 的专家回放成功但策略为 0/10，说明训练数据覆盖或策略泛化仍需单独处理。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
+根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 进一步证明，即使使用 Point Bridge 原生绝对标签链，布局 1/2 仍不能全部完成，布局 3 也只有 4/5；因此不能把原始 delta 回放失败当成重新训练的唯一前置阻塞，也不能把当前问题转写为纯策略泛化问题。下一步只检查绝对坐标变换、绝对 OSC、控制周期、夹爪命令和保存状态/目标兼容性，不重新训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 
@@ -55,3 +61,18 @@ PYTHONPATH=src python experiments/v1r/scripts/evaluate_clean_baseline.py \
 ```
 
 其他脚本同样只接受离线记录，不读取未来帧、不把 Oracle 点写成非 Oracle 输入，也不上传 checkpoint、HDF5、PKL、视频、状态 `.npz` 或 RGB-D 二进制文件。Point Bridge 上游保持 gitignored；MuJoCo 2.3 的 mesh scale/offset/path 兼容性通过 `patches/pointbridge/0002*` 和 `0003*` 在本地应用，保存 XML 中不受 MuJoCo 2.3 支持的 `texture colorspace` 和 `light type` 也会被兼容迁移移除。
+
+V1-R.2G 的正式命令为：
+
+```bash
+/home/xushijie/.conda/envs/mimicgen/bin/python -m pip install \
+  --target /tmp/v1r_mujoco335 --no-deps mujoco==3.3.5
+
+env PYTHONPATH=/tmp/v1r_mujoco335 MUJOCO_GL=egl \
+  HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+  /home/xushijie/.conda/envs/mimicgen/bin/python \
+  experiments/v1r/scripts/validate_pointbridge_absolute_pose.py \
+  --output experiments/v1r/reports/pointbridge_absolute_pose_contract.json \
+  --report experiments/v1r/reports/pointbridge_absolute_pose_contract.md \
+  --gate-output experiments/v1r/reports/v1r_2g_pointbridge_absolute_pose_contract.yaml
+```

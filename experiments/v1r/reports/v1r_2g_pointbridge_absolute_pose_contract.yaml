@@ -1,18 +1,12 @@
-decision: blocked_pointbridge_absolute_pose_contract
-latest_completed_stage: V1-R.2G
+stage: V1-R.2G
+name: Point Bridge absolute-pose action contract validation
+status: failed
+decision_case: B
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
-v1r_runtime_repairs: passed
 runner_parity: passed
 initial_state_restoration: passed
 pointbridge_absolute_pose_contract_gate: failed
 clean_baseline_gate: blocked
-clean_baseline_scientific_gate: blocked
-initial_state_pairing_audit: passed
-runner_parity_audit: passed
-cpu_cuda_parity_audit: blocked_unavailable_cuda
-deployment_device: cpu
-expert_replay_audit: failed
-per_layout_failure_analysis: complete
 b0_b1_training_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
@@ -20,16 +14,26 @@ next_stage: repair_absolute_transform_OSC_frequency_gripper_and_saved_state_comp
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
-pointbridge_absolute_pose_contract:
-  decision_case: B
+evidence:
   checked: 20
   passed: 13
   restored_initial_state_matches: 20
-  simulator_exceptions: 0
   translation_boundary_hit_steps: 0
   rotation_boundary_hit_steps: 0
   per_layout:
-    1: {checked: 5, passed: 1}
-    2: {checked: 5, passed: 3}
-    3: {checked: 5, passed: 4}
-    4: {checked: 5, passed: 5}
+    1:
+      checked: 5
+      passed: 1
+      success_rate: 0.200000
+    2:
+      checked: 5
+      passed: 3
+      success_rate: 0.600000
+    3:
+      checked: 5
+      passed: 4
+      success_rate: 0.800000
+    4:
+      checked: 5
+      passed: 5
+      success_rate: 1.000000

@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R clean baseline and/or scientific gates are not passed
+reason: V1-R.2G Point Bridge absolute-pose contract failed (case B), and the clean baseline gate remains blocked
