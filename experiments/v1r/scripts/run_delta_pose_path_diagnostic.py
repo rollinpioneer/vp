@@ -54,7 +54,19 @@ ACTION_SOURCE_BY_CONDITION = {
     "D_pointbridge_normalized": "shared_minmax_float32_inverse_float64",
     "E_capture_float32": "raw_issued_actions_float32",
     "F_pointbridge_float32": "raw_issued_actions_float32",
+    "G_pointbridge_float32_label_float64_controller": "raw_float32_label_promoted_to_float64_controller",
 }
+
+
+def float32_labels_to_float64_controller(actions: Any) -> tuple[np.ndarray, np.ndarray, float]:
+    """Apply the proposed model/controller precision boundary without normalization."""
+
+    raw = np.asarray(actions, dtype=np.float64)
+    if raw.ndim != 2 or raw.shape[1] != 7:
+        raise ValueError(f"delta_pose actions must have shape (T, 7), got {raw.shape}")
+    labels = raw.astype(np.float32)
+    controller_actions = labels.astype(np.float64)
+    return labels, controller_actions, float(np.max(np.abs(controller_actions - raw)))
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from capture_sequential_success_demos import (  # noqa: E402

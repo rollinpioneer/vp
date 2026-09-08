@@ -1,0 +1,50 @@
+{
+  "stage": "V1-R.2J-N",
+  "status": "completed_numeric_candidate_failed",
+  "scope": "four_selected_records_only",
+  "candidate": {
+    "label": "raw_actions.astype(float32)",
+    "controller_input": "label_float32.astype(float64)",
+    "dataset_minmax_normalization": false,
+    "action_shape": [7]
+  },
+  "runtime": {
+    "robosuite": "1.4.1",
+    "mujoco": "3.3.5",
+    "control_freq_hz": 20,
+    "entrypoint": "point_bridge.suite.mimiclabs.make",
+    "action_mode": "delta_pose"
+  },
+  "gate": {"checked": 4, "passed": 3, "required_passed": 4, "status": "failed"},
+  "records": [
+    {"layout": 1, "demo_key": "demo_18", "success": false, "failure_stage": "contact_without_grasp"},
+    {"layout": 2, "demo_key": "demo_27", "success": true, "failure_stage": "success"},
+    {"layout": 3, "demo_key": "demo_10", "success": true, "failure_stage": "success"},
+    {"layout": 4, "demo_key": "demo_2", "success": true, "failure_stage": "success"}
+  ],
+  "comparison_to_direct_float32_pointbridge": {
+    "bottom_actions_max_abs_difference": 0.0,
+    "controller_goal_position_max_abs_difference": 0.0,
+    "controller_goal_orientation_matrix_max_abs_difference": 0.0,
+    "eef_position_max_abs_difference": 0.0,
+    "bowl_position_max_abs_difference": 0.0,
+    "per_record_success_identical": true
+  },
+  "decision": {
+    "all_20_expansion_authorized": false,
+    "all_20_expansion_run": false,
+    "selected_label_contract": null,
+    "b0_b1_training_authorized": false,
+    "seed0_training_authorized": false,
+    "confirm_rollouts_authorized": false,
+    "v2_formal_experiment_authorized": false,
+    "v3_formal_experiment_authorized": false,
+    "next_stage": "V1-R.2K_quantized_at_source_sequential_data"
+  },
+  "local_artifact": {
+    "path": "outputs/v1r/delta_numeric_contract_2j_n/selected_results.json",
+    "sha256": "8c681548419e4f5f50059fe8f73de82ec1efb6d76555b369d80d18c1bebbabc8",
+    "size_bytes": 1490795,
+    "uploaded": false
+  }
+}

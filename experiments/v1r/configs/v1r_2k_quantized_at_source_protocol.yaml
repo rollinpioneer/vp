@@ -1,0 +1,45 @@
+stage: V1-R.2K
+status: planned_not_started
+name: quantized-at-source sequential demonstration data
+supersedes_old_data: false
+old_v1r_2i_results_remain: completed_label_contract_failed
+formal_runtime:
+  robosuite: 1.4.1
+  mujoco: 3.3.5
+  control_freq_hz: 20
+  controller: OSC_POSE
+  control_delta: true
+numeric_contract:
+  expert_candidate_action: source_hdf5_float64_delta
+  saved_label: expert_candidate_action.astype(float32)
+  controller_command: saved_label.astype(float64)
+  dataset_minmax_normalization: false
+  command_that_generates_state_is_saved: true
+capture:
+  layouts: [1, 2, 3, 4]
+  accepted_per_layout: 5
+  candidate_sources:
+    - outputs/v0_success_audit_shard1.json
+    - outputs/v0_success_audit_shard2.json
+    - outputs/v0_success_audit_shard3.json
+    - outputs/v0_success_audit_shard4.json
+  candidate_order: numeric_demo_index_ascending_within_layout
+  stop_candidate_on: first_task_success_or_source_action_exhaustion
+  stop_layout_on: five_accepted_trajectories
+  record_all_attempts: true
+  stable_grasp_is_acceptance_filter: false
+  intermediate_state_restore: false
+  output_version: sequential_success_demos_2k_quantized_at_source
+verification:
+  restore_each_saved_initial_state_once: true
+  execute_saved_float32_label_promoted_to_float64: true
+  strict_execution_gate: 20/20
+  training_data_reader_and_deployment_decoder_must_share_implementation: true
+authorization:
+  selected_label_contract: null
+  b0_b1_training_authorized: false
+  seed0_training_authorized: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+  note: Passing 20/20 authorizes contract freezing and a separate seed-0 decision only; it does not authorize V2 or V3.

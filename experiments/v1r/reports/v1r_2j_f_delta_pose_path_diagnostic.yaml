@@ -19,7 +19,8 @@ invariants:
 decision:
   execution_entrypoint_is_direct_trigger: false
   direct_float32_is_irrelevant: false
-  minmax_float32_inverse_is_sufficient_for_all_three_failures: false
+  observed_minmax_path_failed_all_three_selected_failure_records: true
+  minmax_is_necessary_for_demo18_failure: false
   selected_label_contract: null
   b0_b1_training_authorized: false
   confirm_rollouts_authorized: false

@@ -76,7 +76,8 @@
   "conclusion": {
     "execution_entrypoint_is_direct_trigger": false,
     "direct_float32_is_irrelevant": false,
-    "minmax_float32_inverse_is_sufficient_for_all_three_failures": false,
+    "observed_minmax_path_failed_all_three_selected_failure_records": true,
+    "minmax_is_necessary_for_demo18_failure": false,
     "interpretation": "The environment entrypoint is isolated: A/C, B/D, E/F match across capture and Point Bridge paths. Direct float32 already changes demo_18 from success to failure; the min-max -> float32 -> inverse path additionally changes demo_10 and demo_2 to failure. No action contract is frozen.",
     "selected_label_contract": null,
     "b0_b1_training_authorized": false,

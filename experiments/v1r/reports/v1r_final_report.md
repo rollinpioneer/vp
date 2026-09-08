@@ -1,8 +1,8 @@
 # V1-R 执行结果
 
-- decision: `blocked_sequential_label_contract`
-- status: `completed_delta_pose_contract_failed`
-- latest completed stage: `V1-R.2J-F`
+- decision: `blocked_numeric_action_contract`
+- status: `completed_numeric_candidate_failed`
+- latest completed stage: `V1-R.2J-N`
 - clean baseline success rate: `0.05`
 - scientific claim status: 未授权；未通过或不可执行的门槛保持 blocked/failed。
 - legacy V1 结果未被覆盖，confirm 未用于覆盖 dev 失败。
@@ -22,6 +22,13 @@
 - `demo_18` 在直接 `float32` 下已经失败；min-max -> `float32` -> inverse 又额外使 `demo_10` 和 `demo_2` 失败。失败阶段均为 `contact_without_grasp`。
 - 结论：问题已收窄为数值动作表示/精度敏感性，但还没有通过 `20/20` 的训练数值合同；`selected_label_contract: null`，所有训练和下游方法实验继续未授权。
 - 证据：`experiments/v1r/reports/delta_pose_path_diagnostic_2j_f.json`、`delta_pose_path_diagnostic_2j_f.md`、`v1r_2j_f_delta_pose_path_diagnostic.yaml`。
+
+## V1-R.2J-N numeric contract candidate
+
+- 仅在 Point Bridge 入口测试 `raw.astype(float32).astype(float64)`，不做 min-max；四条定点轨迹结果为 `3/4`，失败仍是布局 1 `demo_18` 的 `contact_without_grasp`。
+- 候选与直接 float32 Point Bridge 路径的底层动作、控制目标和物理轨迹逐值一致，因此控制器入口 dtype 不是修复。按固定规则没有运行全 20 条。
+- 本机 robosuite `1.4.1` 的 `math.isclose` 分支存在，但四条数据中没有旋转零值分支决策变化，该假设在当前样本上不成立。
+- 下一阶段为 V1-R.2K quantized-at-source 独立数据版本；旧 20 条合同失败结果不覆盖，训练及 V2/V3 继续未授权。
 
 ## V1-R.2J evidence hashes
 

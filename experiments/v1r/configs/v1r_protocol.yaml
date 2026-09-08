@@ -1,6 +1,6 @@
 stage: V1-R
-status: completed_delta_pose_contract_failed
-latest_completed_stage: V1-R.2J-F
+status: completed_numeric_candidate_failed
+latest_completed_stage: V1-R.2J-N
 baseline_commit: a07eb4cb7a2f688657d3c9a86c768c58d0b51cf0
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 control_hz: 20
@@ -86,6 +86,16 @@ v1r_2j_contract_reconstruction:
     environment_entrypoint_is_direct_trigger: false
     numeric_path_diagnosis: direct_float32_already_breaks_demo_18; minmax_float32_inverse_additionally_breaks_demo_10_and_demo_2
     selected_label_contract: null
+  delta_numeric_candidate:
+    stage: V1-R.2J-N
+    status: completed_numeric_candidate_failed
+    candidate: raw_float32_label_promoted_to_float64_controller_without_minmax
+    gate: {checked: 4, passed: 3, required_passed: 4}
+    direct_float32_pointbridge_trace_exact_match: true
+    all_20_expansion_authorized: false
+    all_20_expansion_run: false
+    orientation_zero_branch_decision_changes: 0
+    selected_label_contract: null
   selected_label_contract: null
   seed0_training_authorized: false
   policy_training_or_inference: false
@@ -104,4 +114,4 @@ point_sources:
   - oracle_hidden_gt
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
+next_stage: V1-R.2K_quantized_at_source_sequential_data

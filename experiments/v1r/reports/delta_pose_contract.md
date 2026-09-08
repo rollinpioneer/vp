@@ -54,3 +54,7 @@ The delta-pose fallback is executable in the official runtime for 17/20 demonstr
 The follow-up 24-replay numeric-path diagnostic used four frozen demonstrations and compared both environment entrypoints with raw `float64`, raw `float32`, and shared min-max -> `float32` -> inverse `float64` actions. Results were A/C `4/4`, E/F `3/4`, and B/D `1/4`; the environment entrypoint was equivalent for each numeric condition. Direct `float32` already failed `demo_18`, while the min-max roundtrip additionally failed `demo_10` and `demo_2`. The formal 20-demo contract remains failed and training remains blocked.
 
 Compact evidence: `experiments/v1r/reports/delta_pose_path_diagnostic_2j_f.json`.
+
+## V1-R.2J-N follow-up
+
+The proposed raw float32 label promoted to float64 controller input reached `3/4`; `demo_18` still failed. Its bottom actions, controller goals, EEF path, and bowl path exactly matched the prior direct-float32 Point Bridge replay, so the all-20 expansion was not run. The installed robosuite `1.4.1` zero-orientation branch was present, but no tested step changed its branch decision. The next stage is separately versioned quantized-at-source sequential data.

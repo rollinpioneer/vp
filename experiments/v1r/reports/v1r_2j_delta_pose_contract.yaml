@@ -21,7 +21,7 @@ seed0_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_action: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
+next_action: V1-R.2K_quantized_at_source_sequential_data
 
 path_diagnostic:
   stage: V1-R.2J-F
@@ -37,3 +37,15 @@ path_diagnostic:
   environment_entrypoint_is_direct_trigger: false
   numeric_path_diagnosis: direct_float32_already_breaks_demo_18; minmax_float32_inverse_additionally_breaks_demo_10_and_demo_2
   selected_label_contract: null
+
+numeric_candidate_follow_up:
+  stage: V1-R.2J-N
+  status: completed_numeric_candidate_failed
+  candidate: raw_float32_label_promoted_to_float64_controller_without_minmax
+  gate: {checked: 4, passed: 3, required_passed: 4}
+  failure: layout_1_demo_18
+  direct_float32_pointbridge_trace_exact_match: true
+  orientation_zero_branch_decision_changes: 0
+  all_20_expansion_run: false
+  selected_label_contract: null
+  next_stage: V1-R.2K_quantized_at_source_sequential_data

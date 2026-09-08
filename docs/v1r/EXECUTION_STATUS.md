@@ -1,4 +1,4 @@
-# V1-R 执行状态（2026-09-08）
+# V1-R 执行状态（2026-09-09）
 
 ## 已完成
 
@@ -27,7 +27,9 @@
 - `delta_pose` 的初态恢复、共享 min-max 归一化往返、夹爪符号保持和官方 delta runtime 均为 `20/20`，但正式任务执行回放为 `17/20`；失败为布局 1 `demo_18`、布局 3 `demo_10`、布局 4 `demo_2`。该接口保留为未验证备用 patch，不得作为训练合同。
 - V1-R.2J-F 在四条冻结演示上完成 24 次数值路径诊断：A/C 原始 `float64` 均为 `4/4`，E/F 原始 `float32` 均为 `3/4`，B/D 共享 min-max -> `float32` -> inverse 均为 `1/4`。采集环境与 Point Bridge `delta_pose` 入口在对应数值条件下底层动作数组和结果一致，执行入口不是直接触发因素。
 - 该诊断进一步收窄了原因：`demo_18` 对直接 `float32` 已敏感；min-max -> `float32` -> inverse 在此样本集上又使 `demo_10` 和 `demo_2` 失败。所有失败均为 `contact_without_grasp`。这证明数值动作路径存在精度敏感性，但尚未形成可用于训练的数值合同。
-- 基础回归：当前完整测试 `64/64` 通过；上传大小检查通过（198 个待跟踪文件均不超过 10 MiB），`git diff --check`、CSV/JSON/YAML 结构检查和 Python 语法检查通过。
+- V1-R.2J-N 仅在 Point Bridge 入口测试 `raw -> float32 label -> float64 controller` 候选：布局 1 `demo_18` 失败，其余三条成功，结果 `3/4`，未达到扩展到 20 条的固定前置条件。该路径与 2J-F 的直接 float32 路径在底层动作、控制目标、EEF、碗轨迹及成败上逐值一致，单独统一控制器输入 dtype 不能修复问题。
+- 本机 robosuite `1.4.1` 确实包含 `math.isclose` 朝向更新分支，但四条轨迹中 raw/direct-float32/min-max 三种路径均无全零旋转步骤，分支决策变化为 0；“零变非零触发朝向更新”在本轮样本上被否定。下一阶段为独立版本 V1-R.2K，从采集第一步即执行固定 float32 标签到 float64 控制器解码路径，旧 20 条失败结果保持不变。
+- 基础回归：完整测试 `68/68` 通过；206 个已跟踪或待跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
 
 ## 诚实门槛状态
 
@@ -36,9 +38,9 @@ V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_
 因此当前决策为：
 
 ```yaml
-decision: blocked_sequential_label_contract
-status: completed_delta_pose_contract_failed
-latest_completed_stage: V1-R.2J-F
+decision: blocked_numeric_action_contract
+status: completed_numeric_candidate_failed
+latest_completed_stage: V1-R.2J-N
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 runner_parity: passed
 initial_state_restoration: passed
@@ -53,21 +55,22 @@ delta_pose_normalization_gate: passed
 delta_pose_gripper_sign_gate: passed
 delta_pose_official_runtime_gate: passed
 delta_pose_execution_replay_gate: failed
+delta_numeric_candidate_gate: failed
 selected_label_contract: null
 clean_baseline_gate: blocked
 b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
+next_stage: V1-R.2K_quantized_at_source_sequential_data
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
 ```
 
-2J/2J-F 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
+2J/2J-F/2J-N 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J 则显示绝对标签候选仍最高 17/20，delta 备用接口也只有 17/20；V1-R.2J-F 进一步确认数值精度路径是当前待修复边界。当前仍没有可冻结的训练动作合同；下一步仅限在同一 20 条演示上重建数值动作合同，不能回到旧 PKL，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
+根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J/2J-F/2J-N 将阻塞收窄到数值动作路径，并排除了执行入口、控制器输入 dtype 和当前样本中的旋转零值分支。当前仍没有可冻结的训练动作合同；下一步是独立的 V1-R.2K quantized-at-source 数据版本，不能把旧失败轨迹改写为通过，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 

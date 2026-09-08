@@ -1,0 +1,26 @@
+name: V1-R.2J-N numeric action contract candidate
+stage: V1-R.2J-N
+status: completed_numeric_candidate_failed
+scope: four_selected_records_only
+candidate:
+  label: raw_actions.astype(float32)
+  controller_input: label_float32.astype(float64)
+  dataset_minmax_normalization: false
+gate: {checked: 4, passed: 3, required_passed: 4, status: failed}
+failure: layout_1_demo_18
+failure_stage: contact_without_grasp
+comparison_to_direct_float32_pointbridge:
+  bottom_actions_max_abs_difference: 0.0
+  controller_goals_max_abs_difference: 0.0
+  eef_positions_max_abs_difference: 0.0
+  bowl_positions_max_abs_difference: 0.0
+  outcomes_identical: true
+all_20_expansion_authorized: false
+all_20_expansion_run: false
+selected_label_contract: null
+b0_b1_training_authorized: false
+seed0_training_authorized: false
+confirm_rollouts_authorized: false
+v2_formal_experiment_authorized: false
+v3_formal_experiment_authorized: false
+next_stage: V1-R.2K_quantized_at_source_sequential_data

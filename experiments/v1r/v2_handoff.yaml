@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2J-F completed a 24-replay numeric path diagnostic on four frozen V1-R.2I demonstrations; raw float64 reached 4/4, raw float32 3/4, and shared min-max -> float32 -> inverse 1/4 in both capture and Point Bridge environments. The full 20-demo delta contract remains 17/20; no label contract is selected and training remains blocked.
+reason: V1-R.2J-N tested the only promoted-float64 numeric candidate on four frozen records and reached 3/4; the required 4/4 prerequisite failed, so the 20-record expansion was not run. V1-R.2K is planned as separately versioned quantized-at-source data; no label contract is selected and training remains blocked.

@@ -1,0 +1,2 @@
+local_path,size_bytes,type,description,reason,sha256
+outputs/v1r/delta_numeric_contract_2j_n/selected_results.json,1490795,generated_runtime_diagnostic,"V1-R.2J-N four-record telemetry for raw float32 labels promoted to float64 controller commands","Full simulator telemetry remains local; compact JSON, Markdown, and YAML reports are tracked",8c681548419e4f5f50059fe8f73de82ec1efb6d76555b369d80d18c1bebbabc8

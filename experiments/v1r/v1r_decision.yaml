@@ -1,6 +1,6 @@
-decision: blocked_sequential_label_contract
-status: completed_delta_pose_contract_failed
-latest_completed_stage: V1-R.2J-F
+decision: blocked_numeric_action_contract
+status: completed_numeric_candidate_failed
+latest_completed_stage: V1-R.2J-N
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -16,6 +16,7 @@ delta_pose_normalization_gate: passed
 delta_pose_gripper_sign_gate: passed
 delta_pose_official_runtime_gate: passed
 delta_pose_execution_replay_gate: failed
+delta_numeric_candidate_gate: failed
 selected_label_contract: null
 clean_baseline_gate: blocked
 clean_baseline_scientific_gate: blocked
@@ -26,10 +27,11 @@ deployment_device: cpu
 expert_replay_audit: failed
 per_layout_failure_analysis: complete
 b0_b1_training_authorized: false
+seed0_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
+next_stage: V1-R.2K_quantized_at_source_sequential_data
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -134,6 +136,20 @@ v1r_2j_executable_absolute_and_delta_contracts:
     numeric_path_diagnosis: direct_float32_already_breaks_demo_18; minmax_float32_inverse_additionally_breaks_demo_10_and_demo_2
     selected_label_contract: null
     next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
+  delta_numeric_candidate:
+    stage: V1-R.2J-N
+    status: completed_numeric_candidate_failed
+    candidate: raw_float32_label_promoted_to_float64_controller_without_minmax
+    checked: 4
+    passed: 3
+    failure: layout_1_demo_18
+    failure_stage: contact_without_grasp
+    direct_float32_pointbridge_trace_exact_match: true
+    all_20_expansion_authorized: false
+    all_20_expansion_run: false
+    orientation_zero_branch_decision_changes: 0
+    selected_label_contract: null
+    next_stage: V1-R.2K_quantized_at_source_sequential_data
   selected_label_contract: null
   b0_b1_training_authorized: false
   seed0_training_authorized: false

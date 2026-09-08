@@ -1,0 +1,46 @@
+{
+  "stage": "V1-R.2J-N",
+  "status": "completed",
+  "source_telemetry": {
+    "path": "outputs/v1r/delta_pose_path_diagnostic_2j_f/results_24.json",
+    "sha256": "cf36ac6f395eb1e4fc2cf7608193ed1557b3f0e12cf69014099eb0f13d27a318"
+  },
+  "installed_osc": {
+    "robosuite_version": "1.4.1",
+    "path": "/home/xushijie/.conda/envs/mimicgen/lib/python3.9/site-packages/robosuite/controllers/osc.py",
+    "sha256": "cfa62a0e719bc53ef0c701efa66f7b3e2272d4fca2150ec73c05bb145eba85cb",
+    "math_isclose_orientation_branch_present": true
+  },
+  "orientation_branch_check": {
+    "raw_all_zero_rotation_steps": 0,
+    "direct_float32_all_zero_rotation_steps": 0,
+    "minmax_roundtrip_all_zero_rotation_steps": 0,
+    "raw_to_direct_float32_branch_decision_changes": 0,
+    "raw_to_minmax_roundtrip_branch_decision_changes": 0,
+    "raw_zero_rotation_component_to_nonzero_changes": 0,
+    "conclusion": "The math.isclose zero/nonzero orientation-update branch is not activated differently by any tested action in the four selected trajectories."
+  },
+  "meaningful_divergence_thresholds": {
+    "position_max_abs_m": [1e-6, 1e-4, 1e-3],
+    "orientation_angle_rad": [1e-6, 1e-4, 1e-3]
+  },
+  "records": {
+    "layout_1_demo_18": {
+      "minmax_roundtrip": {"first_eef_gt_1e-6": 111, "first_eef_gt_1e-4": 165, "first_eef_gt_1e-3": 176, "first_goal_orientation_gt_1e-6": 94, "first_goal_orientation_gt_1e-4": 166, "first_goal_orientation_gt_1e-3": 171},
+      "direct_float32": {"first_eef_gt_1e-6": 110, "first_eef_gt_1e-4": 166, "first_eef_gt_1e-3": null, "first_goal_orientation_gt_1e-6": 94, "first_goal_orientation_gt_1e-4": 167, "first_goal_orientation_gt_1e-3": 176}
+    },
+    "layout_2_demo_27": {
+      "minmax_roundtrip": {"eef_ever_gt_1e-6": false, "goal_orientation_ever_gt_1e-6": false},
+      "direct_float32": {"eef_ever_gt_1e-6": false, "goal_orientation_ever_gt_1e-6": false}
+    },
+    "layout_3_demo_10": {
+      "minmax_roundtrip": {"first_eef_gt_1e-6": 80, "first_eef_gt_1e-4": 85, "first_eef_gt_1e-3": 89, "first_goal_orientation_gt_1e-6": 81, "first_goal_orientation_gt_1e-4": 89, "first_goal_orientation_gt_1e-3": 90, "max_eef_difference_m": 0.057955355369641026, "max_bowl_difference_m": 0.14694370309714413},
+      "direct_float32": {"eef_ever_gt_1e-6": false, "goal_orientation_ever_gt_1e-6": false}
+    },
+    "layout_4_demo_2": {
+      "minmax_roundtrip": {"eef_ever_gt_1e-6": false, "first_bowl_gt_1e-6": 167, "goal_orientation_ever_gt_1e-6": false},
+      "direct_float32": {"first_eef_gt_1e-6": 167, "first_bowl_gt_1e-6": 167, "goal_orientation_ever_gt_1e-6": false}
+    }
+  },
+  "interpretation": "The zero-value branch hypothesis is falsified for these records. Demo_10 shows contact-amplified divergence beginning near action 80; demo_18 accumulates late divergence under both float32 paths; demo_2 changes outcome at the terminal boundary without a milliradian orientation divergence."
+}
