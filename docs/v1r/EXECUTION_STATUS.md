@@ -17,36 +17,45 @@
 - V1-R.2H 在同一 20 条轨迹和同一初态上完成 P0/P1 位姿目标与 G0/G1 夹爪时序的 2x2 定点实验。A/B/C/D 分别为 `13/20`、`9/20`、`13/20`、`11/20`；A 逐轨迹精确复现 V1-R.2G，80/80 初态严格恢复，模拟器异常为 0，全部固定项检查通过。
 - B 未修复 A 的 7 条失败且回退 4 条成功；C 修复 2/7 并回退 2 条；D 修复 1/7 并回退 3 条。四组均未达到直接专家标签的严格 `20/20` 门槛，因此结果为 `result_4_no_group_reaches_20_of_20`，不能把问题归结为简单的位姿来源或夹爪单帧索引修复。
 - 抓取邻域证据覆盖全部 80 次运行：记录原始/实际闭合时刻、闭合距离、夹爪关节、首次接触、稳定抓取、最长抓取持续、闭合空抓、闭合前后各 5 步 EEF 位置误差和最终成功。只有布局 3 `demo_6` 在 C/D 下出现至少 5 步稳定抓取；G0 的闭合偏移统一为 `-1` 步，G1 统一为 `0` 步。
+- V1-R.2I 新增独立顺序采集入口，不调用 `scripts/generate_pointbridge_pkls.py`，也不应用逐帧保存状态补丁。每个候选只在回合开始恢复一次完整初态，后续全部状态由正式环境连续 `env.step()` 产生；41/41 候选初态严格匹配，中途状态恢复为 0，模拟器异常为 0。
+- 四布局各获得 5 条连续任务成功演示。布局 1/2/3/4 分别执行 22/9/5/5 个候选后达到 5/5；20 条工件分别保存实际 7 维控制命令、执行后模拟器状态、实测 EEF 位姿、同一步夹爪命令和控制器绝对目标。
+- 新演示的实际命令回放为 `20/20`，说明这批数据自身可以从完整初态连续复现。训练标签回放分开执行：S0 原始 Point Bridge 下一位姿/下一夹爪标签为 `3/20`，S1 同一步控制器绝对目标/夹爪标签为 `16/20`；两者均未达到严格 `20/20`，因此未选择动作标签合同，也未重建训练 PKL 或启动 seed 0。
+- 20 条任务成功演示中，连续五步 `_check_grasp=True` 的诊断为 0/20；该条件按协议保持非门槛，不能覆盖任务成功和实际命令回放结论。这 20 条只用于动作合同验证，不代表未来训练数据覆盖充分。
 - 冻结 clean dev：seed-0 40/40 rollout 完成，成功率 0.05；布局 1/2/3 各 0/10，布局 4 为 2/10。模拟器异常和动作解码异常均为 0，40/40 初态严格匹配。
 - 失败阶段：`no_approach=11`、`no_grasp=24`、`post_grasp_drop=3`；38 个失败回合超时。
-- 基础回归：当前完整测试 `43/43` 通过；上传大小检查通过（170 个待跟踪文件均不超过 10 MiB），`git diff --check`、CSV/JSON 结构检查和 Python 语法检查通过。
+- 基础回归：当前完整测试 `50/50` 通过；上传大小检查通过（178 个待跟踪文件均不超过 10 MiB），`git diff --check`、CSV/JSON/YAML 结构检查和 Python 语法检查通过。
 
 ## 诚实门槛状态
 
-当前 `pose_gripper_factorial_gate` 为 `failed`，结果为预注册的情况 4。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
+V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_gate` 和 `s1_label_replay_gate` 均为 `failed`。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
 因此当前决策为：
 
 ```yaml
-decision: blocked_pose_gripper_factorial
-latest_completed_stage: V1-R.2H
+decision: blocked_sequential_label_contract
+latest_completed_stage: V1-R.2I
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 runner_parity: passed
 initial_state_restoration: passed
 pointbridge_absolute_pose_contract_gate: failed
 pose_gripper_factorial_gate: failed
+sequential_success_demo_capture_gate: passed
+actual_command_replay_gate: passed
+s0_label_replay_gate: failed
+s1_label_replay_gate: failed
+selected_label_contract: null
 clean_baseline_gate: blocked
 b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: regenerate_sequential_success_demos_in_formal_runtime_and_stop_using_current_pkl_for_training
+next_stage: diagnose_and_reconstruct_executable_absolute_label_contract_on_same_20_sequential_demos
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
 ```
 
-根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。当前本地 PKL 来自逐帧恢复保存状态，不能证明状态序列在正式运行时可连续执行，因此停止把它作为正式训练数据。下一步必须在 robosuite `1.4.1`、MuJoCo `3.3.5` 的正式运行时中顺序执行或重新生成成功演示，只从真实连续成功轨迹构造 Point Bridge 标签。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
+根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现，但当前 S0/S1 绝对标签转换仍分别只有 3/20 和 16/20。下一步仅限在同一 20 条新演示上定位并重建可执行的绝对标签合同；不能回到旧 PKL，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 
@@ -97,3 +106,26 @@ env PYTHONPATH=/tmp/v1r_mujoco335 MUJOCO_GL=egl \
 ```
 
 该命令因科学门槛失败返回退出码 `2`；这表示实验已完成但四组均未通过，不是运行异常。
+
+V1-R.2I 的正式命令为：
+
+```bash
+env PYTHONPATH=/tmp/v1r_mujoco335 MUJOCO_GL=egl \
+  HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+  /home/xushijie/.conda/envs/mimicgen/bin/python -u \
+  experiments/v1r/scripts/capture_sequential_success_demos.py \
+  --target-per-layout 5 \
+  --candidate-manifest outputs/v0_success_audit_shard1.json \
+  --candidate-manifest outputs/v0_success_audit_shard2.json \
+  --candidate-manifest outputs/v0_success_audit_shard3.json \
+  --candidate-manifest outputs/v0_success_audit_shard4.json
+
+env PYTHONPATH=/tmp/v1r_mujoco335 MUJOCO_GL=egl \
+  HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+  /home/xushijie/.conda/envs/mimicgen/bin/python -u \
+  experiments/v1r/scripts/verify_sequential_success_demos.py \
+  --manifest outputs/v1r/sequential_success_demos_2i/manifest.json \
+  --output outputs/v1r/sequential_success_demos_2i/verification.json
+```
+
+采集和实际命令回放成功；S0/S1 标签门槛失败是科学结论，不是运行异常。精简报告位于 `experiments/v1r/reports/sequential_success_demos.*`，逐文件未上传索引位于 `experiments/v1r/manifests/sequential_success_demo_artifact_index.csv`。

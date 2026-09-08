@@ -1,5 +1,5 @@
 path,kind,description,upload_status
-docs/v1r/EXECUTION_STATUS.md,documentation,V1-R.2H 已执行结果、当前阻塞和后续授权状态,uploaded
+docs/v1r/EXECUTION_STATUS.md,documentation,V1-R.2I 顺序演示与标签回放结果、当前阻塞和后续授权状态,uploaded
 experiments/v1r/configs/v1r_protocol.yaml,config,V1-R 输入等级来源和控制频率,uploaded
 experiments/v1r/configs/b0_44_per_layout.yaml,config,B0 每布局 44 条既有示范且受专家回放门槛约束,uploaded
 experiments/v1r/configs/b1_all_success_balanced_sampling.yaml,config,B1 全成功示范布局均衡采样配置,uploaded
@@ -11,6 +11,7 @@ experiments/v1r/manifests/clean_state_index.csv,manifest,140 个 clean 完整模
 experiments/v1r/manifests/clean_state_index.json,manifest,140 个 clean 完整模拟器状态的机器可读索引,uploaded
 experiments/v1r/manifests/runner_parity_state_index.csv,manifest,10 个新旧 runner 对齐状态文件名路径来源结果和 SHA-256 索引,uploaded
 experiments/v1r/manifests/runner_parity_state_index.json,manifest,10 个新旧 runner 对齐状态的机器可读索引,uploaded
+experiments/v1r/manifests/sequential_success_demo_artifact_index.csv,manifest,V1-R.2I 原始 JSON、20 个 NPZ 和 20 个 XML 的精确文件名类型用途大小及 SHA-256,uploaded
 experiments/v1r/scripts/evaluate_clean_baseline.py,script,独立 clean baseline 评测与门槛生成,uploaded
 experiments/v1r/scripts/run_clean_pointbridge.py,script,使用冻结 checkpoint 执行真实 E00 clean rollout 并记录异常与初态哈希,uploaded
 experiments/v1r/scripts/materialize_clean_states.py,script,生成独立 clean dev/confirm 场景随机种子清单,uploaded
@@ -23,6 +24,9 @@ experiments/v1r/scripts/replay_expert_trajectories.py,script,每布局回放五�
 experiments/v1r/scripts/diagnose_expert_replay.py,script,限定三条专家轨迹并定位首个执行差异、目标递推、时间对齐和分离误差,uploaded
 experiments/v1r/scripts/validate_pointbridge_absolute_pose.py,script,用原生 BCDataset 标签和官方绝对 OSC 环境执行四布局各五条 V1-R.2G 契约验证,uploaded
 experiments/v1r/scripts/run_pointbridge_pose_gripper_factorial.py,script,在相同 20 条轨迹上执行 P0/P1 位姿目标与 G0/G1 夹爪时序的 V1-R.2H 2x2 定点实验,uploaded
+experiments/v1r/scripts/capture_sequential_success_demos.py,script,V1-R.2I 从完整初态连续执行 HDF5 delta 命令并保存实际转移和控制目标,uploaded
+experiments/v1r/scripts/verify_sequential_success_demos.py,script,V1-R.2I 分别回放实际命令、S0 原始标签和 S1 控制器目标标签,uploaded
+experiments/v1r/scripts/summarize_sequential_success_demos.py,script,从 gitignored 原始工件生成可上传报告门槛和逐文件索引,uploaded
 experiments/v1r/scripts/summarize_clean_failures.py,script,按布局汇总 clean 成功率与失败阶段,uploaded
 experiments/v1r/scripts/audit_perception_modes.py,script,真实 RGB-D/GT 感知审计聚合,uploaded
 experiments/v1r/scripts/identify_reference_phases.py,script,离线识别静止接近和运动搬运阶段,uploaded
@@ -53,10 +57,13 @@ experiments/v1r/reports/pointbridge_pose_gripper_factorial.json,report,V1-R.2H �
 experiments/v1r/reports/pointbridge_pose_gripper_factorial.csv,report,V1-R.2H 80 次回放的闭合时刻、接触、抓取和闭合前后 5 步位置误差表,uploaded
 experiments/v1r/reports/pointbridge_pose_gripper_factorial.md,report,V1-R.2H 2x2 定点实验结果、逐轨迹抓取表和结果 4 决策摘要,uploaded
 experiments/v1r/reports/v1r_2h_pose_gripper_factorial.yaml,report,V1-R.2H 四组门槛、训练授权和下一阶段状态,uploaded
+experiments/v1r/reports/sequential_success_demos.json,report,V1-R.2I 20 条顺序成功演示和三道回放门槛的精简机器可读证据,uploaded
+experiments/v1r/reports/sequential_success_demos.md,report,V1-R.2I 顺序采集逐布局结果、S0/S1 标签回放和未授权结论,uploaded
+experiments/v1r/reports/v1r_2i_sequential_success_gate.yaml,report,V1-R.2I 实际命令通过但 S0/S1 标签合同失败的门槛状态,uploaded
 experiments/v1r/reports/layout_failure_report.json,report,冻结 clean dev 的布局成功率和失败阶段统计,uploaded
 experiments/v1r/reports/layout_failure_report.md,report,冻结 clean dev 布局失败摘要,uploaded
 experiments/v1r/reports/v1r_2f_root_cause.yaml,report,V1-R.2F 根因定位和训练授权结论,uploaded
-experiments/v1r/reports/v1r_gate_summary.json,report,V1-R 全门槛、V1-R.2G 契约和 V1-R.2H 定点实验摘要,uploaded
+experiments/v1r/reports/v1r_gate_summary.json,report,V1-R 全门槛及 V1-R.2G/2H/2I 动作合同实验摘要,uploaded
 experiments/v1r/reports/v1r_final_report.md,report,V1-R 最终决策摘要,uploaded
 experiments/v1r/v1r_decision.yaml,decision,V1-R 当前门槛授权状态和下一阶段,uploaded
 experiments/v1r/v2_handoff.yaml,decision,V2 未授权 handoff,uploaded
@@ -75,6 +82,7 @@ tests/test_contracts.py,test,XML 兼容与既有系统契约回归测试,uploade
 tests/test_v1r_audits.py,test,冻结状态严格匹配门槛阈值 runner 汇总和平衡采样测试,uploaded
 tests/test_v1r_pointbridge_absolute_pose.py,test,V1-R.2G 标签对齐归一化控制边界和 A/B/C 决策回归测试,uploaded
 tests/test_v1r_pose_gripper_factorial.py,test,V1-R.2H 位姿往返、因素隔离、闭合窗口、稳定抓取和严格门槛回归测试,uploaded
+tests/test_v1r_sequential_success_demos.py,test,V1-R.2I 单次初态恢复、动作模式、候选筛选及 S0/S1 门槛回归测试,uploaded
 third_party/pointbridge/,external_source,锁定的 Point Bridge 上游源码,excluded_gitignored
 third_party/pointbridge/data/**/*.hdf5,dataset,官方演示 RGB-D/HDF5 数据,excluded_large_local_only
 third_party/pointbridge/expert_demos/**/*.pkl,dataset,Point Bridge 训练演示 PKL,excluded_large_local_only
@@ -84,3 +92,4 @@ outputs/v1r/clean_state_store/*.npz,state_bundle,140 个 clean 完整模拟器�
 outputs/v1r/state_store/*.npz,state_bundle,10 个 runner parity 完整模拟器状态与固定对象点；文件名和哈希见 runner_parity_state_index.csv,excluded_gitignored
 outputs/v1r/clean_baseline_dev_seed0_frozen.csv,generated_result,冻结 seed-0 clean dev 40 场逐回合原始遥测,excluded_gitignored
 outputs/v1r/clean_baseline_dev_seed0_frozen.json,generated_result,冻结 seed-0 clean dev 原始运行汇总,excluded_gitignored
+outputs/v1r/sequential_success_demos_2i/,generated_runtime,V1-R.2I 20 条 NPZ/XML 及原始采集验证 JSON；精确文件名和哈希见 sequential_success_demo_artifact_index.csv,excluded_gitignored

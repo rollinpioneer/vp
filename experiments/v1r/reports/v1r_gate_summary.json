@@ -1,8 +1,57 @@
 {
-  "stage": "V1-R.2H",
-  "latest_completed_stage": "V1-R.2H",
-  "decision": "blocked_pose_gripper_factorial",
+  "stage": "V1-R.2I",
+  "latest_completed_stage": "V1-R.2I",
+  "decision": "blocked_sequential_label_contract",
   "gates": {
+    "sequential_success_demo_gate": {
+      "stage": "V1-R.2I",
+      "status": "completed_label_contract_failed",
+      "decision": "blocked_sequential_label_contract",
+      "formal_runtime": {
+        "robosuite": "1.4.1",
+        "mujoco": "3.3.5"
+      },
+      "controller": "OSC_POSE",
+      "capture_control_delta": true,
+      "label_replay_control_delta": false,
+      "control_freq_hz": 20,
+      "action_source": "official_hdf5_delta_actions",
+      "continuous_env_step_only": true,
+      "attempted": 41,
+      "accepted": 20,
+      "restored_initial_state_matches": 41,
+      "intermediate_state_restore_count": 0,
+      "simulator_exceptions": 0,
+      "formal_threshold": {
+        "checked_per_gate": 20,
+        "required_passed_per_gate": 20
+      },
+      "gates": {
+        "actual_command_replay": {"status": "passed", "checked": 20, "passed": 20},
+        "s0_label_replay": {"status": "failed", "checked": 20, "passed": 3},
+        "s1_label_replay": {"status": "failed", "checked": 20, "passed": 16}
+      },
+      "per_layout": {
+        "1": {"checked": 5, "actual_command_passed": 5, "s0_passed": 1, "s1_passed": 4},
+        "2": {"checked": 5, "actual_command_passed": 5, "s0_passed": 0, "s1_passed": 5},
+        "3": {"checked": 5, "actual_command_passed": 5, "s0_passed": 1, "s1_passed": 3},
+        "4": {"checked": 5, "actual_command_passed": 5, "s0_passed": 1, "s1_passed": 4}
+      },
+      "stable_grasp_is_acceptance_filter": false,
+      "accepted_with_stable_grasp_observed": 0,
+      "selected_label_contract": null,
+      "b0_b1_training_authorized": false,
+      "confirm_rollouts_authorized": false,
+      "v2_formal_experiment_authorized": false,
+      "v3_formal_experiment_authorized": false,
+      "next_stage": "diagnose_and_reconstruct_executable_absolute_label_contract_on_same_20_sequential_demos",
+      "evidence": [
+        "experiments/v1r/reports/sequential_success_demos.json",
+        "experiments/v1r/reports/sequential_success_demos.md",
+        "experiments/v1r/reports/v1r_2i_sequential_success_gate.yaml",
+        "experiments/v1r/manifests/sequential_success_demo_artifact_index.csv"
+      ]
+    },
     "pose_gripper_factorial_gate": {
       "stage": "V1-R.2H",
       "status": "failed",
@@ -230,7 +279,7 @@
       "blockers": [
         "seed-0 dev success rate 0.050 is below the predeclared 0.50 threshold",
         "expert replay audit is not passed",
-        "V1-R.2H pose-target/gripper-alignment factorial gate is not passed"
+        "V1-R.2I actual-command replay passed 20/20, but S0/S1 label replay passed only 3/20 and 16/20"
       ],
       "confirm_gate_status": "not_run"
     },
@@ -276,6 +325,21 @@
     }
   },
   "audits": {
+    "sequential_success_demo_audit": {
+      "status": "completed_label_contract_failed",
+      "attempted_candidates": 41,
+      "accepted_continuous_successes": 20,
+      "restored_initial_state_matches": 41,
+      "intermediate_state_restore_count": 0,
+      "simulator_exceptions": 0,
+      "actual_command_replay_passed": 20,
+      "s0_label_replay_passed": 3,
+      "s1_label_replay_passed": 16,
+      "selected_label_contract": null,
+      "stable_grasp_is_acceptance_filter": false,
+      "accepted_with_stable_grasp_observed": 0,
+      "evidence": "experiments/v1r/reports/sequential_success_demos.json"
+    },
     "pose_gripper_factorial_audit": {
       "status": "failed",
       "outcome": "result_4_no_group_reaches_20_of_20",

@@ -1,6 +1,6 @@
 stage: V1-R
-status: blocked_pose_gripper_factorial
-latest_completed_stage: V1-R.2H
+status: blocked_sequential_label_contract
+latest_completed_stage: V1-R.2I
 baseline_commit: a07eb4cb7a2f688657d3c9a86c768c58d0b51cf0
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 control_hz: 20
@@ -32,6 +32,23 @@ pose_gripper_factorial:
     D: {pose: P1, gripper: G1, passed: 11, checked: 20}
   b0_b1_training_authorized: false
   confirm_rollouts_authorized: false
+sequential_success_demonstrations:
+  status: completed_label_contract_failed
+  action_source: official_hdf5_delta_actions
+  continuous_env_step_only: true
+  layouts: [1, 2, 3, 4]
+  episodes_per_layout: 5
+  attempted: 41
+  accepted: 20
+  restored_initial_state_matches: 41
+  intermediate_state_restore_count: 0
+  simulator_exceptions: 0
+  actual_command_replay: {status: passed, checked: 20, successes: 20}
+  s0_label_replay: {status: failed, checked: 20, successes: 3}
+  s1_label_replay: {status: failed, checked: 20, successes: 16}
+  selected_label_contract: null
+  b0_b1_training_authorized: false
+  confirm_rollouts_authorized: false
 input_levels: [O, P, V]
 point_sources:
   - gt_current
@@ -47,4 +64,4 @@ point_sources:
   - oracle_hidden_gt
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: regenerate_sequential_success_demos_in_formal_runtime_and_stop_using_current_pkl_for_training
+next_stage: diagnose_and_reconstruct_executable_absolute_label_contract_on_same_20_sequential_demos

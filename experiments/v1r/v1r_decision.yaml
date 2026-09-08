@@ -1,11 +1,16 @@
-decision: blocked_pose_gripper_factorial
-latest_completed_stage: V1-R.2H
+decision: blocked_sequential_label_contract
+latest_completed_stage: V1-R.2I
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
 initial_state_restoration: passed
 pointbridge_absolute_pose_contract_gate: failed
 pose_gripper_factorial_gate: failed
+sequential_success_demo_capture_gate: passed
+actual_command_replay_gate: passed
+s0_label_replay_gate: failed
+s1_label_replay_gate: failed
+selected_label_contract: null
 clean_baseline_gate: blocked
 clean_baseline_scientific_gate: blocked
 initial_state_pairing_audit: passed
@@ -18,7 +23,7 @@ b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: regenerate_sequential_success_demos_in_formal_runtime_and_stop_using_current_pkl_for_training
+next_stage: diagnose_and_reconstruct_executable_absolute_label_contract_on_same_20_sequential_demos
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -74,3 +79,13 @@ pose_gripper_factorial:
       passed: 11
       baseline_failures_repaired: 1
       baseline_successes_regressed: 3
+sequential_success_demonstrations:
+  attempted: 41
+  accepted: 20
+  restored_initial_state_matches: 41
+  simulator_exceptions: 0
+  intermediate_state_restore_count: 0
+  actual_command_replay: {checked: 20, passed: 20}
+  s0_label_replay: {checked: 20, passed: 3}
+  s1_label_replay: {checked: 20, passed: 16}
+  decision: actual_commands_pass_but_no_absolute_label_contract_passes

@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2H pose-target/gripper-alignment factorial failed, sequential formal-runtime demonstrations have not been regenerated, and the downstream context alias gate is not passed
+reason: V1-R.2I sequential demonstrations now replay their actual commands 20/20, but neither S0 nor S1 passes the strict label contract and the downstream context alias gate is not passed

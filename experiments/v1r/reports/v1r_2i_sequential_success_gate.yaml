@@ -1,0 +1,24 @@
+name: V1-R.2I sequential success demonstration and label contract gate
+stage: V1-R.2I
+status: completed_label_contract_failed
+decision: blocked_sequential_label_contract
+formal_runtime:
+  robosuite: 1.4.1
+  mujoco: 3.3.5
+  control_freq_hz: 20
+capture:
+  attempted: 41
+  accepted: 20
+  restored_initial_state_matches: 41
+  intermediate_state_restore_count: 0
+  simulator_exceptions: 0
+gates:
+  actual_command_replay: {status: passed, checked: 20, successes: 20}
+  s0_label_replay: {status: failed, checked: 20, successes: 3}
+  s1_label_replay: {status: failed, checked: 20, successes: 16}
+selected_label_contract: null
+b0_b1_training_authorized: false
+confirm_rollouts_authorized: false
+v2_formal_experiment_authorized: false
+v3_formal_experiment_authorized: false
+next_action: diagnose_and_reconstruct_an_executable_absolute_label_contract_on_the_same_20_sequential_demos

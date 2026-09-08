@@ -1,7 +1,7 @@
 # V1-R 执行结果
 
-- decision: `blocked_pose_gripper_factorial`
-- latest completed stage: `V1-R.2H`
+- decision: `blocked_sequential_label_contract`
+- latest completed stage: `V1-R.2I`
 - clean baseline success rate: `0.05`
 - scientific claim status: 未授权；未通过或不可执行的门槛保持 blocked/failed。
 - legacy V1 结果未被覆盖，confirm 未用于覆盖 dev 失败。
@@ -35,6 +35,20 @@
 - 抓取证据：80/80 记录首次接触和闭合前后 5 步窗口；只有布局 3 `demo_6` 在 C/D 下出现至少 5 步稳定抓取。G0 闭合偏移恒为 `-1`，G1 恒为 `0`，但修正夹爪单帧时序没有改善总体结果。
 - 决策：`result_4_no_group_reaches_20_of_20`，`pose_gripper_factorial_gate=failed`。B0/B1 训练、confirm、V2 和 V3 均未授权；停止使用当前逐帧保存状态生成的 PKL 作为正式训练数据。
 - 下一阶段：在相同正式运行时中顺序执行或重新生成成功演示，只保留当前环境里真实连续成功的轨迹，再从这些轨迹构造 Point Bridge 训练标签。
+
+## V1-R.2I sequential success demonstrations
+
+- 独立入口：不调用旧 PKL 生成器；每个候选仅恢复一次初态，后续全部使用连续 `env.step()`。41/41 初态严格恢复，中途状态恢复为 0，模拟器异常为 0。
+- 采集结果：布局 1/2/3/4 各 5 条连续任务成功演示，共 20 条；分别执行 22/9/5/5 个候选达到目标。
+- 实际命令回放：四布局均为 `5/5`，合计 `20/20`，通过新数据自身可复现门槛。
+- 标签回放：S0 为 `3/20`，布局 1/2/3/4 分别 `1/0/1/1`；S1 为 `16/20`，分别 `4/5/3/4`。两者均未达到严格 `20/20`，不选择训练标签合同。
+- 边界：20 条均达到任务成功，但连续五步稳定抓取诊断为 0/20；该诊断不作为准入过滤。20 条仅是合同验证样本，不宣称训练覆盖充分。
+- 决策：V1-R.2I 实验完成，`sequential_success_demo_capture_gate` 和 `actual_command_replay_gate` 通过，S0/S1 标签门槛失败。B0/B1 训练、confirm、V2、V3 继续未授权；下一步只在同一 20 条数据上诊断并重建可执行绝对标签合同。
+
+## V1-R.2I evidence hashes
+
+- local capture manifest: `87b4ac57bd02c8ab77ef81e5e22cfafb777f3682b7c4c8c0092083c15ac1786f`
+- local replay verification: `8227453583f7a424da61fc8a4cdb98a058dfd5af61a73090ec5928b6eed94679`
 
 ## V1-R.2H evidence hashes
 
