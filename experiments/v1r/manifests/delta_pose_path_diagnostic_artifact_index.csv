@@ -1,0 +1,2 @@
+local_path,size_bytes,type,description,reason,sha256
+outputs/v1r/delta_pose_path_diagnostic_2j_f/results_24.json,9539543,generated_runtime_diagnostic,"V1-R.2J-F 24 replay telemetry for raw float64, raw float32, and shared min-max float32 inverse across capture and Point Bridge environments","Full simulator telemetry remains local and is not uploaded; compact result is tracked in experiments/v1r/reports/delta_pose_path_diagnostic_2j_f.json",cf36ac6f395eb1e4fc2cf7608193ed1557b3f0e12cf69014099eb0f13d27a318

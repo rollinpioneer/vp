@@ -1,0 +1,94 @@
+{
+  "stage": "V1-R.2J-F",
+  "status": "completed_diagnostic_contract_still_failed",
+  "diagnostic": "delta_pose_execution_path_2x3",
+  "scope": {
+    "same_v1r_2i_demonstrations": true,
+    "selected_records": [
+      "layout_1_demo_18",
+      "layout_2_demo_27",
+      "layout_3_demo_10",
+      "layout_4_demo_2"
+    ],
+    "replays": 24,
+    "policy_training_or_inference": false,
+    "intermediate_state_restore": false,
+    "formal_20_demo_gate_changed": false
+  },
+  "runtime": {
+    "robosuite": "1.4.1",
+    "mujoco": "3.3.5",
+    "control_freq_hz": 20,
+    "action_mode": "delta_pose",
+    "normalization_source": "all_20_v1r_2i_issued_actions",
+    "deployment_dtype": "float64"
+  },
+  "conditions": {
+    "A_capture_raw": {"environment": "capture_env_args", "values": "raw_float64", "checked": 4, "passed": 4},
+    "B_capture_normalized": {"environment": "capture_env_args", "values": "shared_minmax_float32_inverse_float64", "checked": 4, "passed": 1},
+    "C_pointbridge_raw": {"environment": "pointbridge_delta_pose", "values": "raw_float64", "checked": 4, "passed": 4},
+    "D_pointbridge_normalized": {"environment": "pointbridge_delta_pose", "values": "shared_minmax_float32_inverse_float64", "checked": 4, "passed": 1},
+    "E_capture_float32": {"environment": "capture_env_args", "values": "raw_float32", "checked": 4, "passed": 3},
+    "F_pointbridge_float32": {"environment": "pointbridge_delta_pose", "values": "raw_float32", "checked": 4, "passed": 3}
+  },
+  "per_record": {
+    "layout_1_demo_18": {
+      "A_capture_raw": true,
+      "B_capture_normalized": false,
+      "C_pointbridge_raw": true,
+      "D_pointbridge_normalized": false,
+      "E_capture_float32": false,
+      "F_pointbridge_float32": false
+    },
+    "layout_2_demo_27": {
+      "A_capture_raw": true,
+      "B_capture_normalized": true,
+      "C_pointbridge_raw": true,
+      "D_pointbridge_normalized": true,
+      "E_capture_float32": true,
+      "F_pointbridge_float32": true
+    },
+    "layout_3_demo_10": {
+      "A_capture_raw": true,
+      "B_capture_normalized": false,
+      "C_pointbridge_raw": true,
+      "D_pointbridge_normalized": false,
+      "E_capture_float32": true,
+      "F_pointbridge_float32": true
+    },
+    "layout_4_demo_2": {
+      "A_capture_raw": true,
+      "B_capture_normalized": false,
+      "C_pointbridge_raw": true,
+      "D_pointbridge_normalized": false,
+      "E_capture_float32": true,
+      "F_pointbridge_float32": true
+    }
+  },
+  "invariants": {
+    "bottom_step_count_matches_outer": "24/24",
+    "capture_vs_pointbridge_raw_bottom_actions_identical": true,
+    "capture_vs_pointbridge_normalized_bottom_actions_identical": true,
+    "capture_vs_pointbridge_float32_bottom_actions_identical": true,
+    "normalized_action_max_abs_error_range": [5.817164500099281e-08, 5.956897428799346e-08],
+    "failure_stage_for_all_failed_replays": "contact_without_grasp"
+  },
+  "conclusion": {
+    "execution_entrypoint_is_direct_trigger": false,
+    "direct_float32_is_irrelevant": false,
+    "minmax_float32_inverse_is_sufficient_for_all_three_failures": false,
+    "interpretation": "The environment entrypoint is isolated: A/C, B/D, E/F match across capture and Point Bridge paths. Direct float32 already changes demo_18 from success to failure; the min-max -> float32 -> inverse path additionally changes demo_10 and demo_2 to failure. No action contract is frozen.",
+    "selected_label_contract": null,
+    "b0_b1_training_authorized": false,
+    "confirm_rollouts_authorized": false,
+    "v2_formal_experiment_authorized": false,
+    "v3_formal_experiment_authorized": false,
+    "next_stage": "reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training"
+  },
+  "local_artifact": {
+    "path": "outputs/v1r/delta_pose_path_diagnostic_2j_f/results_24.json",
+    "sha256": "cf36ac6f395eb1e4fc2cf7608193ed1557b3f0e12cf69014099eb0f13d27a318",
+    "size_bytes": 9539543,
+    "uploaded": false
+  }
+}

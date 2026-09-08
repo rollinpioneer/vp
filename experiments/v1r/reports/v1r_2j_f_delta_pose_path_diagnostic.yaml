@@ -1,0 +1,33 @@
+name: V1-R.2J-F delta-pose execution-path diagnostic
+stage: V1-R.2J-F
+status: completed_diagnostic_contract_still_failed
+formal_threshold: 20/20
+diagnostic_replays: 24
+same_v1r_2i_demonstrations: true
+policy_training_or_inference: false
+conditions:
+  A_capture_raw: {environment: capture_env_args, values: raw_float64, checked: 4, passed: 4}
+  B_capture_normalized: {environment: capture_env_args, values: shared_minmax_float32_inverse_float64, checked: 4, passed: 1}
+  C_pointbridge_raw: {environment: pointbridge_delta_pose, values: raw_float64, checked: 4, passed: 4}
+  D_pointbridge_normalized: {environment: pointbridge_delta_pose, values: shared_minmax_float32_inverse_float64, checked: 4, passed: 1}
+  E_capture_float32: {environment: capture_env_args, values: raw_float32, checked: 4, passed: 3}
+  F_pointbridge_float32: {environment: pointbridge_delta_pose, values: raw_float32, checked: 4, passed: 3}
+invariants:
+  bottom_step_count_matches_outer: 24/24
+  environment_path_equal_for_raw_normalized_and_float32: true
+  failure_stage: contact_without_grasp
+decision:
+  execution_entrypoint_is_direct_trigger: false
+  direct_float32_is_irrelevant: false
+  minmax_float32_inverse_is_sufficient_for_all_three_failures: false
+  selected_label_contract: null
+  b0_b1_training_authorized: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
+local_result:
+  path: outputs/v1r/delta_pose_path_diagnostic_2j_f/results_24.json
+  sha256: cf36ac6f395eb1e4fc2cf7608193ed1557b3f0e12cf69014099eb0f13d27a318
+  size_bytes: 9539543
+  uploaded: false

@@ -21,4 +21,19 @@ seed0_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_action: diagnose_delta_pose_contract_failure_on_same_20_sequential_demos_without_training
+next_action: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
+
+path_diagnostic:
+  stage: V1-R.2J-F
+  status: completed_diagnostic_contract_still_failed
+  diagnostic_replays: 24
+  conditions:
+    A_capture_raw: {checked: 4, passed: 4}
+    B_capture_normalized: {checked: 4, passed: 1}
+    C_pointbridge_raw: {checked: 4, passed: 4}
+    D_pointbridge_normalized: {checked: 4, passed: 1}
+    E_capture_float32: {checked: 4, passed: 3}
+    F_pointbridge_float32: {checked: 4, passed: 3}
+  environment_entrypoint_is_direct_trigger: false
+  numeric_path_diagnosis: direct_float32_already_breaks_demo_18; minmax_float32_inverse_additionally_breaks_demo_10_and_demo_2
+  selected_label_contract: null

@@ -25,7 +25,9 @@
 - 失败阶段：`no_approach=11`、`no_grasp=24`、`post_grasp_drop=3`；38 个失败回合超时。
 - V1-R.2J 在同一 20 条 V1-R.2I 工件上完成绝对动作合同重建和 7 维 `delta_pose` 备用接口验证。绝对合同基础结果为 S0-old `3/20`、S0-transition `3/20`、S1-PB `16/20`、S1-world `17/20`；统一尾段诊断为 `11/20`、`9/20`、`18/20`、`18/20`，均未通过 `20/20`。
 - `delta_pose` 的初态恢复、共享 min-max 归一化往返、夹爪符号保持和官方 delta runtime 均为 `20/20`，但正式任务执行回放为 `17/20`；失败为布局 1 `demo_18`、布局 3 `demo_10`、布局 4 `demo_2`。该接口保留为未验证备用 patch，不得作为训练合同。
-- 基础回归：当前完整测试 `50/50` 通过；上传大小检查通过（178 个待跟踪文件均不超过 10 MiB），`git diff --check`、CSV/JSON/YAML 结构检查和 Python 语法检查通过。
+- V1-R.2J-F 在四条冻结演示上完成 24 次数值路径诊断：A/C 原始 `float64` 均为 `4/4`，E/F 原始 `float32` 均为 `3/4`，B/D 共享 min-max -> `float32` -> inverse 均为 `1/4`。采集环境与 Point Bridge `delta_pose` 入口在对应数值条件下底层动作数组和结果一致，执行入口不是直接触发因素。
+- 该诊断进一步收窄了原因：`demo_18` 对直接 `float32` 已敏感；min-max -> `float32` -> inverse 在此样本集上又使 `demo_10` 和 `demo_2` 失败。所有失败均为 `contact_without_grasp`。这证明数值动作路径存在精度敏感性，但尚未形成可用于训练的数值合同。
+- 基础回归：当前完整测试 `64/64` 通过；上传大小检查通过（198 个待跟踪文件均不超过 10 MiB），`git diff --check`、CSV/JSON/YAML 结构检查和 Python 语法检查通过。
 
 ## 诚实门槛状态
 
@@ -36,7 +38,7 @@ V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_
 ```yaml
 decision: blocked_sequential_label_contract
 status: completed_delta_pose_contract_failed
-latest_completed_stage: V1-R.2J
+latest_completed_stage: V1-R.2J-F
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 runner_parity: passed
 initial_state_restoration: passed
@@ -57,15 +59,15 @@ b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: diagnose_delta_pose_contract_failure_on_same_20_sequential_demos_without_training
+next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
 ```
 
-2J 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
+2J/2J-F 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J 则显示绝对标签候选仍最高 17/20，delta 备用接口也只有 17/20。当前仍没有可冻结的训练动作合同；下一步仅限在同一 20 条演示上继续诊断 delta/执行差异，不能回到旧 PKL，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
+根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J 则显示绝对标签候选仍最高 17/20，delta 备用接口也只有 17/20；V1-R.2J-F 进一步确认数值精度路径是当前待修复边界。当前仍没有可冻结的训练动作合同；下一步仅限在同一 20 条演示上重建数值动作合同，不能回到旧 PKL，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 

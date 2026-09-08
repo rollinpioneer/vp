@@ -1,6 +1,6 @@
 decision: blocked_sequential_label_contract
 status: completed_delta_pose_contract_failed
-latest_completed_stage: V1-R.2J
+latest_completed_stage: V1-R.2J-F
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -29,7 +29,7 @@ b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: diagnose_delta_pose_contract_failure_on_same_20_sequential_demos_without_training
+next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -118,6 +118,22 @@ v1r_2j_executable_absolute_and_delta_contracts:
     official_delta_runtime: {checked: 20, passed: 20}
     execution_replay: {checked: 20, passed: 17}
     failures: [layout_1_demo_18, layout_3_demo_10, layout_4_demo_2]
+  delta_pose_path_diagnostic:
+    stage: V1-R.2J-F
+    status: completed_diagnostic_contract_still_failed
+    same_selected_demonstrations: [layout_1_demo_18, layout_2_demo_27, layout_3_demo_10, layout_4_demo_2]
+    diagnostic_replays: 24
+    conditions:
+      A_capture_raw: {checked: 4, passed: 4}
+      B_capture_normalized: {checked: 4, passed: 1}
+      C_pointbridge_raw: {checked: 4, passed: 4}
+      D_pointbridge_normalized: {checked: 4, passed: 1}
+      E_capture_float32: {checked: 4, passed: 3}
+      F_pointbridge_float32: {checked: 4, passed: 3}
+    environment_entrypoint_is_direct_trigger: false
+    numeric_path_diagnosis: direct_float32_already_breaks_demo_18; minmax_float32_inverse_additionally_breaks_demo_10_and_demo_2
+    selected_label_contract: null
+    next_stage: reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training
   selected_label_contract: null
   b0_b1_training_authorized: false
   seed0_training_authorized: false

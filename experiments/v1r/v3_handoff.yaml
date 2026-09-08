@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2J completed without a 20/20 absolute or delta action contract; S0/S1 absolute replay reached 3/20, 3/20, 16/20, and 17/20, and delta replay reached 17/20, so downstream experiments remain unauthorized
+reason: V1-R.2J-F completed without a 20/20 absolute or delta action contract. The four-record numeric diagnostic isolated environment-entry equivalence and precision sensitivity, but did not freeze a training-safe action contract; downstream experiments remain unauthorized.

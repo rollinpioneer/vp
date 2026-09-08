@@ -1,6 +1,6 @@
 {
-  "stage": "V1-R.2I",
-  "latest_completed_stage": "V1-R.2I",
+  "stage": "V1-R.2J-F",
+  "latest_completed_stage": "V1-R.2J-F",
   "decision": "blocked_sequential_label_contract",
   "gates": {
     "sequential_success_demo_gate": {
@@ -504,6 +504,24 @@
         "timeout": 38
       },
       "rollout_csv_sha256": "d86e6615801c498a32eb9e50881c5edb43f45eec0b5d171ecd1855ce15981cdd"
+    },
+    "delta_pose_path_diagnostic": {
+      "stage": "V1-R.2J-F",
+      "status": "completed_diagnostic_contract_still_failed",
+      "diagnostic_replays": 24,
+      "same_selected_demonstrations": true,
+      "conditions": {
+        "A_capture_raw": {"checked": 4, "passed": 4},
+        "B_capture_normalized": {"checked": 4, "passed": 1},
+        "C_pointbridge_raw": {"checked": 4, "passed": 4},
+        "D_pointbridge_normalized": {"checked": 4, "passed": 1},
+        "E_capture_float32": {"checked": 4, "passed": 3},
+        "F_pointbridge_float32": {"checked": 4, "passed": 3}
+      },
+      "environment_entrypoint_is_direct_trigger": false,
+      "numeric_path_diagnosis": "direct_float32_already_breaks_demo_18; minmax_float32_inverse_additionally_breaks_demo_10_and_demo_2",
+      "selected_label_contract": null,
+      "next_stage": "reconstruct_numeric_action_contract_on_same_20_sequential_demos_without_training"
     }
   },
   "b0_b1_training_authorized": false,

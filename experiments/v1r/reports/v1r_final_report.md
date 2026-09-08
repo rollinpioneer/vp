@@ -2,7 +2,7 @@
 
 - decision: `blocked_sequential_label_contract`
 - status: `completed_delta_pose_contract_failed`
-- latest completed stage: `V1-R.2J`
+- latest completed stage: `V1-R.2J-F`
 - clean baseline success rate: `0.05`
 - scientific claim status: 未授权；未通过或不可执行的门槛保持 blocked/failed。
 - legacy V1 结果未被覆盖，confirm 未用于覆盖 dev 失败。
@@ -14,6 +14,14 @@
 - 新增 7 维 `delta_pose` 接口并通过官方 Point Bridge `delta_pose`/delta OSC 运行时验证。初态匹配、归一化往返、夹爪符号保持和官方 delta runtime 均为 `20/20`，但任务执行回放为 `17/20`。
 - delta 失败轨迹为布局 1 `demo_18`、布局 3 `demo_10`、布局 4 `demo_2`。因此 delta 仅登记为未验证的明确备用接口，不能冻结为训练标签合同。
 - V1-R.2J 结论：实验完成，绝对动作合同与 delta 备用合同均未通过严格 `20/20`；`selected_label_contract: null`，B0/B1、seed 0、confirm、V2、V3 均未授权。
+
+## V1-R.2J-F numeric path diagnostic
+
+- 在四条冻结演示上执行 24 次短回放，交叉比较采集环境/Point Bridge `delta_pose` 入口与 raw `float64`、raw `float32`、shared min-max -> `float32` -> inverse `float64` 三种动作值路径。
+- 结果为 A/C `4/4`、E/F `3/4`、B/D `1/4`。对应环境入口的底层 `step()` 动作数组、调用数量和任务结果一致，Point Bridge 入口不是直接触发因素。
+- `demo_18` 在直接 `float32` 下已经失败；min-max -> `float32` -> inverse 又额外使 `demo_10` 和 `demo_2` 失败。失败阶段均为 `contact_without_grasp`。
+- 结论：问题已收窄为数值动作表示/精度敏感性，但还没有通过 `20/20` 的训练数值合同；`selected_label_contract: null`，所有训练和下游方法实验继续未授权。
+- 证据：`experiments/v1r/reports/delta_pose_path_diagnostic_2j_f.json`、`delta_pose_path_diagnostic_2j_f.md`、`v1r_2j_f_delta_pose_path_diagnostic.yaml`。
 
 ## V1-R.2J evidence hashes
 
