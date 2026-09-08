@@ -1,6 +1,6 @@
 stage: V1-R
-status: blocked_sequential_label_contract
-latest_completed_stage: V1-R.2I
+status: completed_delta_pose_contract_failed
+latest_completed_stage: V1-R.2J
 baseline_commit: a07eb4cb7a2f688657d3c9a86c768c58d0b51cf0
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 control_hz: 20
@@ -49,6 +49,31 @@ sequential_success_demonstrations:
   selected_label_contract: null
   b0_b1_training_authorized: false
   confirm_rollouts_authorized: false
+v1r_2j_contract_reconstruction:
+  status: completed_delta_pose_contract_failed
+  same_20_v1r_2i_demonstrations: true
+  formal_threshold: 20/20
+  absolute_contracts:
+    s0_old: {checked: 20, passed: 3}
+    s0_transition: {checked: 20, passed: 3}
+    s1_pb: {checked: 20, passed: 16}
+    s1_world: {checked: 20, passed: 17}
+  post_success_tail_diagnostic:
+    s0_old: {checked: 20, passed: 11}
+    s0_transition: {checked: 20, passed: 9}
+    s1_pb: {checked: 20, passed: 18}
+    s1_world: {checked: 20, passed: 18}
+  delta_pose:
+    status: failed
+    action_shape: [7]
+    initial_state_matches: {checked: 20, passed: 20}
+    normalization_roundtrip: {checked: 20, passed: 20}
+    gripper_sign_preservation: {checked: 20, passed: 20}
+    official_delta_runtime: {checked: 20, passed: 20}
+    execution_replay: {checked: 20, passed: 17}
+  selected_label_contract: null
+  seed0_training_authorized: false
+  policy_training_or_inference: false
 input_levels: [O, P, V]
 point_sources:
   - gt_current
@@ -64,4 +89,4 @@ point_sources:
   - oracle_hidden_gt
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: diagnose_and_reconstruct_executable_absolute_label_contract_on_same_20_sequential_demos
+next_stage: diagnose_delta_pose_contract_failure_on_same_20_sequential_demos_without_training

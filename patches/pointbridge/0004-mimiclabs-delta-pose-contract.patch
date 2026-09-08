@@ -1,0 +1,172 @@
+--- a/point_bridge/read_data/mimiclabs.py
++++ b/point_bridge/read_data/mimiclabs.py
+@@ -109,23 +109,34 @@
+                         "gripper_states"
+                     ].flatten()
+ 
+-                # compute actions
+-                actions = np.concatenate(
+-                    [
+-                        observations[i]["eef_states"][self._act_subsample :],
+-                        observations[i]["gripper_states"][self._act_subsample :, None],
+-                    ],
+-                    axis=1,
+-                )
+-                actions = np.concatenate(
+-                    [actions, [actions[-1]] * self._act_subsample], axis=0
+-                )
++                if self._action_mode == "delta_pose":
++                    actions = np.asarray(traj_actions[i])
++                    if actions.ndim != 2 or actions.shape[1] != 7:
++                        raise ValueError(
++                            f"delta_pose actions must have shape (T, 7), got {actions.shape}"
++                        )
++                    if len(actions) != len(observations[i]["eef_states"]):
++                        raise ValueError(
++                            "delta_pose actions must align one-to-one with observations"
++                        )
++                else:
++                    # Compute the original absolute next-pose labels.
++                    actions = np.concatenate(
++                        [
++                            observations[i]["eef_states"][self._act_subsample :],
++                            observations[i]["gripper_states"][self._act_subsample :, None],
++                        ],
++                        axis=1,
++                    )
++                    actions = np.concatenate(
++                        [actions, [actions[-1]] * self._act_subsample], axis=0
++                    )
+ 
+-                # convert orientation to 6d rotations
+-                pos, ori, gripper = actions[:, :3], actions[:, 3:7], actions[:, 7:]
+-                ori = R.from_quat(ori).as_matrix()
+-                ori = matrix_to_rotation_6d(ori)
+-                actions = np.concatenate([pos, ori, gripper], axis=1)
++                    # convert orientation to 6d rotations
++                    pos, ori, gripper = actions[:, :3], actions[:, 3:7], actions[:, 7:]
++                    ori = R.from_quat(ori).as_matrix()
++                    ori = matrix_to_rotation_6d(ori)
++                    actions = np.concatenate([pos, ori, gripper], axis=1)
+ 
+                 if len(actions) == 0:
+                     continue
+@@ -216,7 +227,7 @@
+                         else max_ft
+                     )
+ 
+-                elif self._action_mode == "pose":
++                elif self._action_mode in ("pose", "delta_pose"):
+                     # max, min action
+                     if min_act is None:
+                         min_act = np.min(actions, axis=0)
+@@ -283,6 +294,14 @@
+             self.preprocess["actions"] = lambda x: (
+                 x - self.stats["actions"]["min"]
+             ) / (self.stats["actions"]["max"] - self.stats["actions"]["min"] + 1e-5)
++        elif self._action_mode == "delta_pose":
++            action_scale = np.maximum(
++                self.stats["actions"]["max"] - self.stats["actions"]["min"],
++                1e-12,
++            )
++            self.preprocess["actions"] = lambda x: (
++                x - self.stats["actions"]["min"]
++            ) / action_scale
+ 
+         # augmentations for images
+         if "image" in self._obs_type:
+@@ -530,7 +549,7 @@
+                 future_gripper_states
+             )
+ 
+-        elif self._action_mode == "pose":
++        elif self._action_mode in ("pose", "delta_pose"):
+             if self._action_chunking:
+                 # arrange sampled action to be of shape (history_len, num_queries, action_dim)
+                 # sampled_action = np.zeros(
+@@ -559,7 +578,7 @@
+                     sample_idx : sample_idx
+                     + self._history_len * self._act_subsample : self._act_subsample
+                 ]
+-            # absolute actions
++            # pose or native delta actions
+             return_dict["actions"] = self.preprocess["actions"](sampled_action)
+ 
+         return return_dict
+--- a/point_bridge/agent/pb.py
++++ b/point_bridge/agent/pb.py
+@@ -294,7 +294,7 @@
+         # actor parameters
+         self._act_dim = (
+             action_shape[0]
+-            if action_mode == "pose"
++            if action_mode in ("pose", "delta_pose")
+             else 3 * self.num_robot_points  # since 3D points
+         )
+ 
+@@ -541,6 +541,14 @@
+                     * (norm_stats["actions"]["max"] - norm_stats["actions"]["min"])
+                     + norm_stats["actions"]["min"]
+                 )
++            elif self.action_mode == "delta_pose":
++                action_scale = np.maximum(
++                    norm_stats["actions"]["max"] - norm_stats["actions"]["min"],
++                    1e-12,
++                )
++                post_process["actions"] = (
++                    lambda a: a * action_scale + norm_stats["actions"]["min"]
++                )
+             elif self.action_mode == "points":
+                 max_act, min_act = (
+                     norm_stats["future_tracks"]["max"],
+@@ -700,7 +708,7 @@
+         batch = next(expert_replay_iter)
+         data = utils.to_torch(batch, self.device)
+ 
+-        if self.action_mode == "pose":
++        if self.action_mode in ("pose", "delta_pose"):
+             action = data["actions"].float()
+         elif self.action_mode == "points":
+             future_tracks = data["future_tracks"].float()  # (b, t, p, q*d)
+--- a/point_bridge/suite/mimiclabs.py
++++ b/point_bridge/suite/mimiclabs.py
+@@ -338,7 +338,7 @@
+         )
+ 
+         # Action spec
+-        self.action_shape = (10,)  # only absolute actions - (3d pos, 6d ori, gripper)
++        self.action_shape = (7,) if action_mode == "delta_pose" else (10,)
+         self.action_space = specs.BoundedArray(
+             self.action_shape, np.float32, -np.inf, np.inf, "action"
+         )
+@@ -548,7 +548,7 @@
+                     robot_action = self.point2action(action)
+                     robot_action = np.array([robot_action])
+ 
+-            elif self._action_mode == "pose":
++            elif self._action_mode in ("pose", "delta_pose"):
+                 if len(action.shape) == 1:
+                     robot_action = np.array([action])
+                 else:
+@@ -1463,9 +1463,7 @@
+     for idx, task_name in enumerate(task_names):
+         # init env
+         controller_configs = suite.load_controller_config(default_controller="OSC_POSE")
+-        controller_configs[
+-            "control_delta"
+-        ] = False  # only absolute actions are supported
++        controller_configs["control_delta"] = action_mode == "delta_pose"
+         env_kwargs = dict(
+             env_name="MimicLabs_Lab1_Tabletop_Manipulation",
+             has_renderer=False,
+--- a/point_bridge/cfgs/suite/mimiclabs.yaml
++++ b/point_bridge/cfgs/suite/mimiclabs.yaml
+@@ -7,7 +7,7 @@
+ 
+ # obs and action settings
+ obs_type: ["points"] # image, points - can be multiple
+-action_mode: pose # pose, points
++action_mode: pose # pose, delta_pose, points
+ 
+ # obs dims
+ img_size: [128,128] # (width, height)

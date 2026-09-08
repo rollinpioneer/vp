@@ -1,5 +1,6 @@
 decision: blocked_sequential_label_contract
-latest_completed_stage: V1-R.2I
+status: completed_delta_pose_contract_failed
+latest_completed_stage: V1-R.2J
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -10,6 +11,11 @@ sequential_success_demo_capture_gate: passed
 actual_command_replay_gate: passed
 s0_label_replay_gate: failed
 s1_label_replay_gate: failed
+absolute_label_contract_reconstruction_gate: failed
+delta_pose_normalization_gate: passed
+delta_pose_gripper_sign_gate: passed
+delta_pose_official_runtime_gate: passed
+delta_pose_execution_replay_gate: failed
 selected_label_contract: null
 clean_baseline_gate: blocked
 clean_baseline_scientific_gate: blocked
@@ -23,7 +29,7 @@ b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: diagnose_and_reconstruct_executable_absolute_label_contract_on_same_20_sequential_demos
+next_stage: diagnose_delta_pose_contract_failure_on_same_20_sequential_demos_without_training
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -89,3 +95,32 @@ sequential_success_demonstrations:
   s0_label_replay: {checked: 20, passed: 3}
   s1_label_replay: {checked: 20, passed: 16}
   decision: actual_commands_pass_but_no_absolute_label_contract_passes
+v1r_2j_executable_absolute_and_delta_contracts:
+  status: completed_delta_pose_contract_failed
+  formal_threshold: 20/20
+  same_20_v1r_2i_demonstrations: true
+  policy_training_or_inference: false
+  absolute_contracts:
+    s0_old: {checked: 20, passed: 3}
+    s0_transition: {checked: 20, passed: 3}
+    s1_pb: {checked: 20, passed: 16}
+    s1_world: {checked: 20, passed: 17}
+  post_success_tail_diagnostic:
+    s0_old: {checked: 20, passed: 11}
+    s0_transition: {checked: 20, passed: 9}
+    s1_pb: {checked: 20, passed: 18}
+    s1_world: {checked: 20, passed: 18}
+  delta_pose:
+    action_shape: [7]
+    initial_state_matches: {checked: 20, passed: 20}
+    normalization_roundtrip: {checked: 20, passed: 20}
+    gripper_sign_preservation: {checked: 20, passed: 20}
+    official_delta_runtime: {checked: 20, passed: 20}
+    execution_replay: {checked: 20, passed: 17}
+    failures: [layout_1_demo_18, layout_3_demo_10, layout_4_demo_2]
+  selected_label_contract: null
+  b0_b1_training_authorized: false
+  seed0_training_authorized: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false

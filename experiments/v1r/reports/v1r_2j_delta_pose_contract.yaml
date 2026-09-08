@@ -1,0 +1,24 @@
+name: V1-R.2J delta-pose fallback contract validation
+stage: V1-R.2J
+status: completed_delta_pose_contract_failed
+decision_case: D
+formal_threshold: 20/20
+formal_runtime:
+  robosuite: 1.4.1
+  mujoco: 3.3.5
+  control_freq_hz: 20
+  action_mode: delta_pose
+  action_shape: [7]
+  control_delta: true
+gates:
+  normalization_roundtrip: {status: passed, checked: 20, passed: 20}
+  gripper_sign_preservation: {status: passed, checked: 20, passed: 20}
+  official_delta_runtime: {status: passed, checked: 20, passed: 20}
+  execution_replay: {status: failed, checked: 20, passed: 17}
+selected_label_contract: null
+b0_b1_training_authorized: false
+seed0_training_authorized: false
+confirm_rollouts_authorized: false
+v2_formal_experiment_authorized: false
+v3_formal_experiment_authorized: false
+next_action: diagnose_delta_pose_contract_failure_on_same_20_sequential_demos_without_training

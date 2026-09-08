@@ -1,0 +1,27 @@
+name: V1-R.2J executable absolute-action label contract reconstruction
+stage: V1-R.2J
+status: completed
+decision_case: D
+formal_threshold: 20/20
+formal_runtime:
+  robosuite: 1.4.1
+  mujoco: 3.3.5
+  control_freq_hz: 20
+base_gates:
+  s0_old: {status: failed, checked: 20, successes: 3}
+  s0_transition: {status: failed, checked: 20, successes: 3}
+  s1_pb: {status: failed, checked: 20, successes: 16}
+  s1_world: {status: failed, checked: 20, successes: 17}
+post_success_tail_diagnostic:
+  s0_old: {status: failed, checked: 20, successes: 11}
+  s0_transition: {status: failed, checked: 20, successes: 9}
+  s1_pb: {status: failed, checked: 20, successes: 18}
+  s1_world: {status: failed, checked: 20, successes: 18}
+selected_label_contract: null
+uniform_tail_required: false
+b0_b1_training_authorized: false
+seed0_training_authorized: false
+confirm_rollouts_authorized: false
+v2_formal_experiment_authorized: false
+v3_formal_experiment_authorized: false
+next_action: register_delta_pose_contract_and_verify_normalization_execution_roundtrip

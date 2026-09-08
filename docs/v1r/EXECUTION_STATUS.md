@@ -23,17 +23,20 @@
 - 20 条任务成功演示中，连续五步 `_check_grasp=True` 的诊断为 0/20；该条件按协议保持非门槛，不能覆盖任务成功和实际命令回放结论。这 20 条只用于动作合同验证，不代表未来训练数据覆盖充分。
 - 冻结 clean dev：seed-0 40/40 rollout 完成，成功率 0.05；布局 1/2/3 各 0/10，布局 4 为 2/10。模拟器异常和动作解码异常均为 0，40/40 初态严格匹配。
 - 失败阶段：`no_approach=11`、`no_grasp=24`、`post_grasp_drop=3`；38 个失败回合超时。
+- V1-R.2J 在同一 20 条 V1-R.2I 工件上完成绝对动作合同重建和 7 维 `delta_pose` 备用接口验证。绝对合同基础结果为 S0-old `3/20`、S0-transition `3/20`、S1-PB `16/20`、S1-world `17/20`；统一尾段诊断为 `11/20`、`9/20`、`18/20`、`18/20`，均未通过 `20/20`。
+- `delta_pose` 的初态恢复、共享 min-max 归一化往返、夹爪符号保持和官方 delta runtime 均为 `20/20`，但正式任务执行回放为 `17/20`；失败为布局 1 `demo_18`、布局 3 `demo_10`、布局 4 `demo_2`。该接口保留为未验证备用 patch，不得作为训练合同。
 - 基础回归：当前完整测试 `50/50` 通过；上传大小检查通过（178 个待跟踪文件均不超过 10 MiB），`git diff --check`、CSV/JSON/YAML 结构检查和 Python 语法检查通过。
 
 ## 诚实门槛状态
 
-V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_gate` 和 `s1_label_replay_gate` 均为 `failed`。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
+V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_gate` 和 `s1_label_replay_gate` 均为 `failed`。V1-R.2J 又验证了 7 维 `delta_pose` 的归一化、夹爪符号和官方运行时均可执行，但任务回放只有 `17/20`，仍未达到严格门槛。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
 因此当前决策为：
 
 ```yaml
 decision: blocked_sequential_label_contract
-latest_completed_stage: V1-R.2I
+status: completed_delta_pose_contract_failed
+latest_completed_stage: V1-R.2J
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 runner_parity: passed
 initial_state_restoration: passed
@@ -43,19 +46,26 @@ sequential_success_demo_capture_gate: passed
 actual_command_replay_gate: passed
 s0_label_replay_gate: failed
 s1_label_replay_gate: failed
+absolute_label_contract_reconstruction_gate: failed
+delta_pose_normalization_gate: passed
+delta_pose_gripper_sign_gate: passed
+delta_pose_official_runtime_gate: passed
+delta_pose_execution_replay_gate: failed
 selected_label_contract: null
 clean_baseline_gate: blocked
 b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: diagnose_and_reconstruct_executable_absolute_label_contract_on_same_20_sequential_demos
+next_stage: diagnose_delta_pose_contract_failure_on_same_20_sequential_demos_without_training
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
 ```
 
-根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现，但当前 S0/S1 绝对标签转换仍分别只有 3/20 和 16/20。下一步仅限在同一 20 条新演示上定位并重建可执行的绝对标签合同；不能回到旧 PKL，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
+2J 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
+
+根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J 则显示绝对标签候选仍最高 17/20，delta 备用接口也只有 17/20。当前仍没有可冻结的训练动作合同；下一步仅限在同一 20 条演示上继续诊断 delta/执行差异，不能回到旧 PKL，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 

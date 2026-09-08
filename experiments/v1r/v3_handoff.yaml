@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2I sequential demonstrations now replay their actual commands 20/20, but neither S0 nor S1 passes the strict label contract and the downstream context alias gate is not passed
+reason: V1-R.2J completed without a 20/20 absolute or delta action contract; S0/S1 absolute replay reached 3/20, 3/20, 16/20, and 17/20, and delta replay reached 17/20, so downstream experiments remain unauthorized

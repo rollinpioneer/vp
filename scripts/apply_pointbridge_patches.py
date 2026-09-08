@@ -14,6 +14,7 @@ PATCHES = (
     ROOT / "patches" / "pointbridge" / "0001-mimiclabs-saved-state-generator.patch",
     ROOT / "patches" / "pointbridge" / "0002-mujoco23-mesh-scale-compat.patch",
     ROOT / "patches" / "pointbridge" / "0003-mujoco23-mesh-path-compat.patch",
+    ROOT / "patches" / "pointbridge" / "0004-mimiclabs-delta-pose-contract.patch",
 )
 
 

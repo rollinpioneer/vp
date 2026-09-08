@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2I rebuilt 20 formal-runtime sequential successes and actual-command replay passed 20/20, but S0/S1 label replay reached only 3/20 and 16/20; no training label contract is selected and the clean baseline gate remains blocked
+reason: V1-R.2J completed on the same 20 demonstrations; S0/S1 absolute contracts reached 3/20, 3/20, 16/20, and 17/20, while the 7-D delta fallback reached 17/20 execution success; no label contract is selected and training remains blocked

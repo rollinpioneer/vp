@@ -1,10 +1,24 @@
 # V1-R 执行结果
 
 - decision: `blocked_sequential_label_contract`
-- latest completed stage: `V1-R.2I`
+- status: `completed_delta_pose_contract_failed`
+- latest completed stage: `V1-R.2J`
 - clean baseline success rate: `0.05`
 - scientific claim status: 未授权；未通过或不可执行的门槛保持 blocked/failed。
 - legacy V1 结果未被覆盖，confirm 未用于覆盖 dev 失败。
+
+## V1-R.2J executable action-contract reconstruction
+
+- 固定使用 V1-R.2I 的同一 20 条正式连续成功演示；没有重新采集、没有加载中间状态、没有策略训练或推理。
+- 绝对合同基础回放：S0-old `3/20`、S0-transition `3/20`、S1-PB `16/20`、S1-world `17/20`；统一成功后尾段诊断分别为 `11/20`、`9/20`、`18/20`、`18/20`。四个绝对合同均未达到严格 `20/20`。
+- 新增 7 维 `delta_pose` 接口并通过官方 Point Bridge `delta_pose`/delta OSC 运行时验证。初态匹配、归一化往返、夹爪符号保持和官方 delta runtime 均为 `20/20`，但任务执行回放为 `17/20`。
+- delta 失败轨迹为布局 1 `demo_18`、布局 3 `demo_10`、布局 4 `demo_2`。因此 delta 仅登记为未验证的明确备用接口，不能冻结为训练标签合同。
+- V1-R.2J 结论：实验完成，绝对动作合同与 delta 备用合同均未通过严格 `20/20`；`selected_label_contract: null`，B0/B1、seed 0、confirm、V2、V3 均未授权。
+
+## V1-R.2J evidence hashes
+
+- absolute runtime result: see `experiments/v1r/manifests/executable_absolute_label_contract_artifact_index.csv`
+- delta runtime result: see `experiments/v1r/reports/delta_pose_contract.json` and the same artifact index
 
 ## V1-R.2F audits
 
