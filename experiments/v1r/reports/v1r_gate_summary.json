@@ -1,8 +1,96 @@
 {
-  "stage": "V1-R.2G",
-  "latest_completed_stage": "V1-R.2G",
-  "decision": "blocked_pointbridge_absolute_pose_contract",
+  "stage": "V1-R.2H",
+  "latest_completed_stage": "V1-R.2H",
+  "decision": "blocked_pose_gripper_factorial",
   "gates": {
+    "pose_gripper_factorial_gate": {
+      "stage": "V1-R.2H",
+      "status": "failed",
+      "outcome": "result_4_no_group_reaches_20_of_20",
+      "formal_threshold": {
+        "checked_per_group": 20,
+        "required_passed_per_group": 20
+      },
+      "formal_runtime": {
+        "robosuite": "1.4.1",
+        "mujoco": "3.3.5"
+      },
+      "controller": "OSC_POSE",
+      "control_delta": false,
+      "control_freq_hz": 20,
+      "same_v1r_2g_trajectories": true,
+      "baseline_replication": "passed",
+      "invariants": "passed",
+      "restored_initial_state_matches": 80,
+      "simulator_exceptions": 0,
+      "groups": {
+        "A": {
+          "pose": "P0_next_measured_eef_pose",
+          "gripper": "G0_next_raw_gripper_state",
+          "checked": 20,
+          "passed": 13,
+          "per_layout": {
+            "1": {"checked": 5, "passed": 1},
+            "2": {"checked": 5, "passed": 3},
+            "3": {"checked": 5, "passed": 4},
+            "4": {"checked": 5, "passed": 5}
+          }
+        },
+        "B": {
+          "pose": "P0_next_measured_eef_pose",
+          "gripper": "G1_current_transition_gripper_command",
+          "checked": 20,
+          "passed": 9,
+          "baseline_failures_repaired": 0,
+          "baseline_successes_regressed": 4,
+          "per_layout": {
+            "1": {"checked": 5, "passed": 0},
+            "2": {"checked": 5, "passed": 3},
+            "3": {"checked": 5, "passed": 2},
+            "4": {"checked": 5, "passed": 4}
+          }
+        },
+        "C": {
+          "pose": "P1_saved_controller_absolute_target",
+          "gripper": "G0_next_raw_gripper_state",
+          "checked": 20,
+          "passed": 13,
+          "baseline_failures_repaired": 2,
+          "baseline_successes_regressed": 2,
+          "per_layout": {
+            "1": {"checked": 5, "passed": 0},
+            "2": {"checked": 5, "passed": 4},
+            "3": {"checked": 5, "passed": 5},
+            "4": {"checked": 5, "passed": 4}
+          }
+        },
+        "D": {
+          "pose": "P1_saved_controller_absolute_target",
+          "gripper": "G1_current_transition_gripper_command",
+          "checked": 20,
+          "passed": 11,
+          "baseline_failures_repaired": 1,
+          "baseline_successes_regressed": 3,
+          "per_layout": {
+            "1": {"checked": 5, "passed": 0},
+            "2": {"checked": 5, "passed": 2},
+            "3": {"checked": 5, "passed": 5},
+            "4": {"checked": 5, "passed": 4}
+          }
+        }
+      },
+      "b0_b1_training_authorized": false,
+      "confirm_rollouts_authorized": false,
+      "v2_formal_experiment_authorized": false,
+      "v3_formal_experiment_authorized": false,
+      "next_stage": "regenerate_sequential_success_demos_in_formal_runtime_and_stop_using_current_pkl_for_training",
+      "evidence": [
+        "experiments/v1r/reports/pointbridge_pose_gripper_factorial.json",
+        "experiments/v1r/reports/pointbridge_pose_gripper_factorial.csv",
+        "experiments/v1r/reports/pointbridge_pose_gripper_factorial.md",
+        "experiments/v1r/reports/v1r_2h_pose_gripper_factorial.yaml"
+      ]
+    },
     "pointbridge_absolute_pose_contract_gate": {
       "stage": "V1-R.2G",
       "status": "failed",
@@ -28,7 +116,7 @@
         "4": {"checked": 5, "passed": 5}
       },
       "b0_b1_training_authorized": false,
-      "next_stage": "repair_absolute_transform_OSC_frequency_gripper_and_saved_state_compatibility_without_retraining"
+      "next_stage": "v1r_2h_pose_target_and_gripper_alignment_factorial"
     },
     "clean_baseline_gate": {
       "stage": "V1-R.2",
@@ -142,7 +230,7 @@
       "blockers": [
         "seed-0 dev success rate 0.050 is below the predeclared 0.50 threshold",
         "expert replay audit is not passed",
-        "Point Bridge absolute-pose contract gate is not passed"
+        "V1-R.2H pose-target/gripper-alignment factorial gate is not passed"
       ],
       "confirm_gate_status": "not_run"
     },
@@ -188,6 +276,35 @@
     }
   },
   "audits": {
+    "pose_gripper_factorial_audit": {
+      "status": "failed",
+      "outcome": "result_4_no_group_reaches_20_of_20",
+      "trajectory_group_runs": 80,
+      "restored_initial_state_matches": 80,
+      "simulator_exceptions": 0,
+      "baseline_replication": "passed",
+      "all_invariants_passed": true,
+      "group_passed": {
+        "A": 13,
+        "B": 9,
+        "C": 13,
+        "D": 11
+      },
+      "baseline_failure_repairs": {
+        "B": 0,
+        "C": 2,
+        "D": 1
+      },
+      "baseline_success_regressions": {
+        "B": 4,
+        "C": 2,
+        "D": 3
+      },
+      "first_contact_records": 80,
+      "switch_window_records": 80,
+      "stable_grasp_records": 2,
+      "evidence": "experiments/v1r/reports/pointbridge_pose_gripper_factorial.json"
+    },
     "pointbridge_absolute_pose_contract_audit": {
       "status": "failed",
       "decision_case": "B",
@@ -326,6 +443,7 @@
     }
   },
   "b0_b1_training_authorized": false,
+  "confirm_rollouts_authorized": false,
   "v2_formal_experiment_authorized": false,
   "v3_formal_experiment_authorized": false
 }

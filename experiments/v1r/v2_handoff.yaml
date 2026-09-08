@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2G Point Bridge absolute-pose contract failed (case B), and the clean baseline gate remains blocked
+reason: V1-R.2H pose-target/gripper-alignment factorial failed because A/B/C/D reached only 13/9/13/11 of 20; current PKL is not authorized for training and the clean baseline gate remains blocked

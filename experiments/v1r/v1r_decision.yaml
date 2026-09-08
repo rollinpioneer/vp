@@ -1,10 +1,11 @@
-decision: blocked_pointbridge_absolute_pose_contract
-latest_completed_stage: V1-R.2G
+decision: blocked_pose_gripper_factorial
+latest_completed_stage: V1-R.2H
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
 initial_state_restoration: passed
 pointbridge_absolute_pose_contract_gate: failed
+pose_gripper_factorial_gate: failed
 clean_baseline_gate: blocked
 clean_baseline_scientific_gate: blocked
 initial_state_pairing_audit: passed
@@ -14,9 +15,10 @@ deployment_device: cpu
 expert_replay_audit: failed
 per_layout_failure_analysis: complete
 b0_b1_training_authorized: false
+confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: repair_absolute_transform_OSC_frequency_gripper_and_saved_state_compatibility_without_retraining
+next_stage: regenerate_sequential_success_demos_in_formal_runtime_and_stop_using_current_pkl_for_training
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -33,3 +35,42 @@ pointbridge_absolute_pose_contract:
     2: {checked: 5, passed: 3}
     3: {checked: 5, passed: 4}
     4: {checked: 5, passed: 5}
+pose_gripper_factorial:
+  outcome: result_4_no_group_reaches_20_of_20
+  formal_threshold: 20/20
+  baseline_replication: passed
+  invariants: passed
+  restored_initial_state_matches: 80
+  simulator_exceptions: 0
+  groups:
+    A:
+      pose: P0_next_measured_eef_pose
+      gripper: G0_next_raw_gripper_state
+      checked: 20
+      passed: 13
+      per_layout:
+        1: {checked: 5, passed: 1}
+        2: {checked: 5, passed: 3}
+        3: {checked: 5, passed: 4}
+        4: {checked: 5, passed: 5}
+    B:
+      pose: P0_next_measured_eef_pose
+      gripper: G1_current_transition_gripper_command
+      checked: 20
+      passed: 9
+      baseline_failures_repaired: 0
+      baseline_successes_regressed: 4
+    C:
+      pose: P1_saved_controller_absolute_target
+      gripper: G0_next_raw_gripper_state
+      checked: 20
+      passed: 13
+      baseline_failures_repaired: 2
+      baseline_successes_regressed: 2
+    D:
+      pose: P1_saved_controller_absolute_target
+      gripper: G1_current_transition_gripper_command
+      checked: 20
+      passed: 11
+      baseline_failures_repaired: 1
+      baseline_successes_regressed: 3

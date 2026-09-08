@@ -1,0 +1,53 @@
+stage: V1-R.2H
+name: pose-target and gripper-alignment 2x2 factorial
+status: failed
+outcome: result_4_no_group_reaches_20_of_20
+factorial_gate: failed
+formal_threshold: 20/20
+baseline_replication: passed
+b0_b1_training_authorized: false
+confirm_rollouts_authorized: false
+v2_formal_experiment_authorized: false
+v3_formal_experiment_authorized: false
+next_stage: regenerate_sequential_success_demos_in_formal_runtime_and_stop_using_current_pkl_for_training
+groups:
+  A:
+    pose: P0_next_measured_eef_pose
+    gripper: G0_next_raw_gripper_state
+    checked: 20
+    passed: 13
+    per_layout:
+      1: {checked: 5, passed: 1}
+      2: {checked: 5, passed: 3}
+      3: {checked: 5, passed: 4}
+      4: {checked: 5, passed: 5}
+  B:
+    pose: P0_next_measured_eef_pose
+    gripper: G1_current_transition_gripper_command
+    checked: 20
+    passed: 9
+    per_layout:
+      1: {checked: 5, passed: 0}
+      2: {checked: 5, passed: 3}
+      3: {checked: 5, passed: 2}
+      4: {checked: 5, passed: 4}
+  C:
+    pose: P1_saved_controller_absolute_target
+    gripper: G0_next_raw_gripper_state
+    checked: 20
+    passed: 13
+    per_layout:
+      1: {checked: 5, passed: 0}
+      2: {checked: 5, passed: 4}
+      3: {checked: 5, passed: 5}
+      4: {checked: 5, passed: 4}
+  D:
+    pose: P1_saved_controller_absolute_target
+    gripper: G1_current_transition_gripper_command
+    checked: 20
+    passed: 11
+    per_layout:
+      1: {checked: 5, passed: 0}
+      2: {checked: 5, passed: 2}
+      3: {checked: 5, passed: 5}
+      4: {checked: 5, passed: 4}

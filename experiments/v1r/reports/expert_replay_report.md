@@ -26,3 +26,9 @@
 ## V1-R.2G 后续门槛
 
 旧报告检查的是原始 delta 动作，不代表 Point Bridge 部署动作契约。后续 V1-R.2G 已在 robosuite `1.4.1`、MuJoCo `3.3.5` 下用原生 `BCDataset` 绝对位姿标签和官方 `control_delta=False` 环境完成 20 条回放；布局 1/2/3/4 分别为 1/5、3/5、4/5、5/5，整体 13/20。训练归一化标签按 Point Bridge 路径转为 `float32`，部署反归一化动作保持 `float64`。当前权威门槛和逐步证据见 `v1r_2g_pointbridge_absolute_pose_contract.yaml` 与 `pointbridge_absolute_pose_contract.json`，决策为情况 B，仍禁止重新训练。
+
+## V1-R.2H 后续定点实验
+
+V1-R.2H 在完全相同的 20 条轨迹和初态上，只比较 P0/P1 位姿目标与 G0/G1 夹爪时序。A/B/C/D 分别得到 13/20、9/20、13/20、11/20；A 逐轨迹复现 V1-R.2G，80/80 初态精确恢复且无模拟器异常。B/C/D 分别只修复 A 的 0/7、2/7、1/7 条失败，并分别回退 4、2、3 条原成功轨迹，因此没有任何单因素或双因素索引修复达到严格 20/20 门槛。
+
+权威证据见 `pointbridge_pose_gripper_factorial.json`、`.csv`、`.md` 和 `v1r_2h_pose_gripper_factorial.yaml`。结论为预注册结果 4：停止使用当前逐帧保存状态构造的 PKL 进行正式训练，下一步在正式运行时中顺序执行或重新生成真实成功演示。

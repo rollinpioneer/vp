@@ -14,33 +14,39 @@
 - V1-R.2G Point Bridge 绝对位姿契约：直接实例化原生 `BCDataset`，使用 `act_subsample=1`、`eef_states[1:]`、`gripper_states[1:]`、末动作重复、SciPy 四元数转换和 Point Bridge 原生 6D 旋转；标签再经过 `BCDataset.preprocess['actions']` 与 `PB.act` pose 分支反归一化。没有运行策略网络或语言网络。
 - V1-R.2G 正式回放运行于 robosuite `1.4.1`、MuJoCo `3.3.5`，由 `point_bridge.suite.mimiclabs.make()` 创建 `OSC_POSE`、`control_delta=False`、20 Hz、10 维绝对动作环境。四布局各 5 条，20/20 精确恢复 PKL 初态，标签对齐 20/20，无模拟器异常；布局 1/2/3/4 分别通过 1/5、3/5、4/5、5/5，整体 13/20。
 - 绝对位姿回放共记录 3,832 个执行步。每步均包含绝对目标、实际 EEF 位姿、平移/旋转跟踪误差、控制边界状态、抓取和任务成功。归一化标签按训练路径转为 `float32`，部署反归一化动作保持 `float64`。7 条失败均为 `no_grasp`；绝对 OSC 未配置平移或旋转 goal limits，边界命中均为 0。门槛按预注册决策落入情况 B，不能重新训练。
+- V1-R.2H 在同一 20 条轨迹和同一初态上完成 P0/P1 位姿目标与 G0/G1 夹爪时序的 2x2 定点实验。A/B/C/D 分别为 `13/20`、`9/20`、`13/20`、`11/20`；A 逐轨迹精确复现 V1-R.2G，80/80 初态严格恢复，模拟器异常为 0，全部固定项检查通过。
+- B 未修复 A 的 7 条失败且回退 4 条成功；C 修复 2/7 并回退 2 条；D 修复 1/7 并回退 3 条。四组均未达到直接专家标签的严格 `20/20` 门槛，因此结果为 `result_4_no_group_reaches_20_of_20`，不能把问题归结为简单的位姿来源或夹爪单帧索引修复。
+- 抓取邻域证据覆盖全部 80 次运行：记录原始/实际闭合时刻、闭合距离、夹爪关节、首次接触、稳定抓取、最长抓取持续、闭合空抓、闭合前后各 5 步 EEF 位置误差和最终成功。只有布局 3 `demo_6` 在 C/D 下出现至少 5 步稳定抓取；G0 的闭合偏移统一为 `-1` 步，G1 统一为 `0` 步。
 - 冻结 clean dev：seed-0 40/40 rollout 完成，成功率 0.05；布局 1/2/3 各 0/10，布局 4 为 2/10。模拟器异常和动作解码异常均为 0，40/40 初态严格匹配。
 - 失败阶段：`no_approach=11`、`no_grasp=24`、`post_grasp_drop=3`；38 个失败回合超时。
-- 基础回归：当前完整测试 `35/35` 通过；上传大小检查通过（164 个待跟踪文件均不超过 10 MiB），`git diff --check` 和 Python 语法检查通过。
+- 基础回归：当前完整测试 `43/43` 通过；上传大小检查通过（170 个待跟踪文件均不超过 10 MiB），`git diff --check`、CSV/JSON 结构检查和 Python 语法检查通过。
 
 ## 诚实门槛状态
 
-当前 `pointbridge_absolute_pose_contract_gate` 为 `failed`，决策为情况 B。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
+当前 `pose_gripper_factorial_gate` 为 `failed`，结果为预注册的情况 4。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
 因此当前决策为：
 
 ```yaml
-decision: blocked_pointbridge_absolute_pose_contract
+decision: blocked_pose_gripper_factorial
+latest_completed_stage: V1-R.2H
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 runner_parity: passed
 initial_state_restoration: passed
 pointbridge_absolute_pose_contract_gate: failed
+pose_gripper_factorial_gate: failed
 clean_baseline_gate: blocked
 b0_b1_training_authorized: false
+confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: repair_absolute_transform_OSC_frequency_gripper_and_saved_state_compatibility_without_retraining
+next_stage: regenerate_sequential_success_demos_in_formal_runtime_and_stop_using_current_pkl_for_training
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
 ```
 
-根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 进一步证明，即使使用 Point Bridge 原生绝对标签链，布局 1/2 仍不能全部完成，布局 3 也只有 4/5；因此不能把原始 delta 回放失败当成重新训练的唯一前置阻塞，也不能把当前问题转写为纯策略泛化问题。下一步只检查绝对坐标变换、绝对 OSC、控制周期、夹爪命令和保存状态/目标兼容性，不重新训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
+根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。当前本地 PKL 来自逐帧恢复保存状态，不能证明状态序列在正式运行时可连续执行，因此停止把它作为正式训练数据。下一步必须在 robosuite `1.4.1`、MuJoCo `3.3.5` 的正式运行时中顺序执行或重新生成成功演示，只从真实连续成功轨迹构造 Point Bridge 标签。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 
@@ -76,3 +82,18 @@ env PYTHONPATH=/tmp/v1r_mujoco335 MUJOCO_GL=egl \
   --report experiments/v1r/reports/pointbridge_absolute_pose_contract.md \
   --gate-output experiments/v1r/reports/v1r_2g_pointbridge_absolute_pose_contract.yaml
 ```
+
+V1-R.2H 的正式命令为：
+
+```bash
+env PYTHONPATH=/tmp/v1r_mujoco335 MUJOCO_GL=egl \
+  HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+  /home/xushijie/.conda/envs/mimicgen/bin/python \
+  experiments/v1r/scripts/run_pointbridge_pose_gripper_factorial.py \
+  --output experiments/v1r/reports/pointbridge_pose_gripper_factorial.json \
+  --csv-output experiments/v1r/reports/pointbridge_pose_gripper_factorial.csv \
+  --report experiments/v1r/reports/pointbridge_pose_gripper_factorial.md \
+  --gate-output experiments/v1r/reports/v1r_2h_pose_gripper_factorial.yaml
+```
+
+该命令因科学门槛失败返回退出码 `2`；这表示实验已完成但四组均未通过，不是运行异常。

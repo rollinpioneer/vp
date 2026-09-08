@@ -1,5 +1,5 @@
 path,kind,description,upload_status
-docs/v1r/EXECUTION_STATUS.md,documentation,V1-R.2F 已执行审计结果根因与后续授权状态,uploaded
+docs/v1r/EXECUTION_STATUS.md,documentation,V1-R.2H 已执行结果、当前阻塞和后续授权状态,uploaded
 experiments/v1r/configs/v1r_protocol.yaml,config,V1-R 输入等级来源和控制频率,uploaded
 experiments/v1r/configs/b0_44_per_layout.yaml,config,B0 每布局 44 条既有示范且受专家回放门槛约束,uploaded
 experiments/v1r/configs/b1_all_success_balanced_sampling.yaml,config,B1 全成功示范布局均衡采样配置,uploaded
@@ -22,6 +22,7 @@ experiments/v1r/scripts/audit_cpu_cuda_parity.py,script,比较 CPU/CUDA 动作�
 experiments/v1r/scripts/replay_expert_trajectories.py,script,每布局回放五条专家成功轨迹并隔离控制器和夹爪缓存,uploaded
 experiments/v1r/scripts/diagnose_expert_replay.py,script,限定三条专家轨迹并定位首个执行差异、目标递推、时间对齐和分离误差,uploaded
 experiments/v1r/scripts/validate_pointbridge_absolute_pose.py,script,用原生 BCDataset 标签和官方绝对 OSC 环境执行四布局各五条 V1-R.2G 契约验证,uploaded
+experiments/v1r/scripts/run_pointbridge_pose_gripper_factorial.py,script,在相同 20 条轨迹上执行 P0/P1 位姿目标与 G0/G1 夹爪时序的 V1-R.2H 2x2 定点实验,uploaded
 experiments/v1r/scripts/summarize_clean_failures.py,script,按布局汇总 clean 成功率与失败阶段,uploaded
 experiments/v1r/scripts/audit_perception_modes.py,script,真实 RGB-D/GT 感知审计聚合,uploaded
 experiments/v1r/scripts/identify_reference_phases.py,script,离线识别静止接近和运动搬运阶段,uploaded
@@ -48,10 +49,14 @@ experiments/v1r/reports/expert_replay_targeted_diagnosis_mujoco311.md,report,MuJ
 experiments/v1r/reports/pointbridge_absolute_pose_contract.json,report,V1-R.2G 四布局 20 条原生绝对位姿标签回放和 3832 步目标 EEF 误差边界遥测,uploaded
 experiments/v1r/reports/pointbridge_absolute_pose_contract.md,report,V1-R.2G 正式绝对位姿动作契约结果摘要,uploaded
 experiments/v1r/reports/v1r_2g_pointbridge_absolute_pose_contract.yaml,report,V1-R.2G 情况 B 门槛与训练授权状态,uploaded
+experiments/v1r/reports/pointbridge_pose_gripper_factorial.json,report,V1-R.2H 四组 80 次回放的逐轨迹抓取邻域遥测、固定项审计和配对效应,uploaded
+experiments/v1r/reports/pointbridge_pose_gripper_factorial.csv,report,V1-R.2H 80 次回放的闭合时刻、接触、抓取和闭合前后 5 步位置误差表,uploaded
+experiments/v1r/reports/pointbridge_pose_gripper_factorial.md,report,V1-R.2H 2x2 定点实验结果、逐轨迹抓取表和结果 4 决策摘要,uploaded
+experiments/v1r/reports/v1r_2h_pose_gripper_factorial.yaml,report,V1-R.2H 四组门槛、训练授权和下一阶段状态,uploaded
 experiments/v1r/reports/layout_failure_report.json,report,冻结 clean dev 的布局成功率和失败阶段统计,uploaded
 experiments/v1r/reports/layout_failure_report.md,report,冻结 clean dev 布局失败摘要,uploaded
 experiments/v1r/reports/v1r_2f_root_cause.yaml,report,V1-R.2F 根因定位和训练授权结论,uploaded
-experiments/v1r/reports/v1r_gate_summary.json,report,V1-R 全门槛和 V1-R.2F 审计摘要,uploaded
+experiments/v1r/reports/v1r_gate_summary.json,report,V1-R 全门槛、V1-R.2G 契约和 V1-R.2H 定点实验摘要,uploaded
 experiments/v1r/reports/v1r_final_report.md,report,V1-R 最终决策摘要,uploaded
 experiments/v1r/v1r_decision.yaml,decision,V1-R 当前门槛授权状态和下一阶段,uploaded
 experiments/v1r/v2_handoff.yaml,decision,V2 未授权 handoff,uploaded
@@ -69,6 +74,7 @@ src/vico_point/perception/masked_point_encoder.py,source,DROP_MASK 简单基线�
 tests/test_contracts.py,test,XML 兼容与既有系统契约回归测试,uploaded
 tests/test_v1r_audits.py,test,冻结状态严格匹配门槛阈值 runner 汇总和平衡采样测试,uploaded
 tests/test_v1r_pointbridge_absolute_pose.py,test,V1-R.2G 标签对齐归一化控制边界和 A/B/C 决策回归测试,uploaded
+tests/test_v1r_pose_gripper_factorial.py,test,V1-R.2H 位姿往返、因素隔离、闭合窗口、稳定抓取和严格门槛回归测试,uploaded
 third_party/pointbridge/,external_source,锁定的 Point Bridge 上游源码,excluded_gitignored
 third_party/pointbridge/data/**/*.hdf5,dataset,官方演示 RGB-D/HDF5 数据,excluded_large_local_only
 third_party/pointbridge/expert_demos/**/*.pkl,dataset,Point Bridge 训练演示 PKL,excluded_large_local_only
