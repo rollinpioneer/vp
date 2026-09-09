@@ -1,6 +1,9 @@
-stage: V1-R.2K.3
-status: passed_b1_2k_dataset_frozen_seed0_not_authorized
+stage: V1-R.2K.3-F
+status: passed_point_observation_and_chunking_freeze_seed0_authorized
+decision: authorized_seed0_b1_2k_20_pilot
 numeric_contract: delta_pose_float32_identity
+dataset_scope: balanced_20_episode_seed0_pilot
+candidate_universe_exhausted: false
 pointbridge_patches:
   - patches/pointbridge/0005-mimiclabs-delta-pose-float32-identity-training.patch
   - patches/pointbridge/0006-mimiclabs-delta-pose-chunk-contract.patch
@@ -12,19 +15,33 @@ checks:
   action_order_and_length_exact: {checked: 20, passed: 20, required: 20}
   task_replay_success: {checked: 20, passed: 20, required: 20, source: V1-R.2K.1}
   captured_vs_replayed_state_exact: {checked: 20, passed: 20, max_abs_error: 0.0, source: V1-R.2K.1}
-  b1_2k_point_pkls: {checked: 4, passed: 4, required: 4, source: outputs/v1r/b1_2k_point_pkls}
+  b1_2k_point_pkls: {checked: 4, passed: 4, required: 4, source: outputs/v1r/b1_2k_point_pkls_f}
   b1_2k_episode_count: {checked: 20, passed: 20, required: 20}
-  b1_2k_dataset_label_exact: {checked: 20, passed: 20, required: 20}
   b1_2k_previous_gripper_exact: {checked: 20, passed: 20, required: 20}
-  b1_2k_manifest_records: {checked: 20, passed: 20, required: 20}
-  b1_2k_chunking: {action_chunking: true, num_queries: 40, terminal_padding: zero_motion_hold_last_gripper}
-remaining_blocker:
-  code: seed0_training_requires_separate_decision
-  detail: The complete B1-2K point-observation PKLs and manifest are built and frozen; seed 0 still requires an independent authorization decision.
+  robot_point_gripper_state_exact: {checked: 20, passed: 20, required: 20}
+  fixed_object_template_per_episode: {checked: 20, passed: 20, required: 20}
+  object_point_rigid_propagation_exact: {checked: 20, passed: 20, required: 20}
+  point_values_finite: {checked: 20, passed: 20, required: 20}
+  chunked_dataloader_exact: {checked: 80, passed: 80, required: 80, action_chunking: true, num_queries: 40}
+  valid_zero_delta_populated_mask: passed
+artifact_freeze:
+  dataset_path: outputs/v1r/b1_2k_point_pkls_f
+  index: experiments/v1r/manifests/b1_2k_dataset_artifact_index.csv
+  manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+  verification_sha256: e7294ca0b6ee74fbb30ff10b75b459b27118f74247510a182eac0647e9de2884
+  ordered_episode_mapping_sha256: e16374fbf4b5e4dde80bcdf2de213507a2b47bec90474136e0fa22de95e62934
+  training_config_sha256: 77bc9fcd6d8aa80c9c79b3640d5992c520bb6ccdc938b8597179d363c62cdb5c
+  superseded_dataset: outputs/v1r/b1_2k_point_pkls
+  superseded_reason: point_observation_mismatch
 authorization:
-  training_authorized: false
-  seed0_training_authorized: false
+  training_authorized: true
+  seed0_training_authorized: true
+  authorized_variant: B1-2K-20
+  authorized_seeds: [0]
+  training_started: false
+  b0_b1_training_authorized: false
   confirm_rollouts_authorized: false
   v2_formal_experiment_authorized: false
   v3_formal_experiment_authorized: false
-next_stage: independent_seed0_readiness_decision
+frozen_training_config: experiments/v1r/configs/b1_2k_20_seed0.yaml
+next_stage: run_authorized_b1_2k_20_seed0

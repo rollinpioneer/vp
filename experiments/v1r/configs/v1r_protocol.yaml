@@ -1,6 +1,6 @@
 stage: V1-R
-status: completed_2k_training_action_path_dataset_not_frozen
-latest_completed_stage: V1-R.2K.2
+status: authorized_seed0_b1_2k_20_pilot_not_started
+latest_completed_stage: V1-R.2K.3-F
 baseline_commit: a07eb4cb7a2f688657d3c9a86c768c58d0b51cf0
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 control_hz: 20
@@ -120,10 +120,21 @@ v1r_2k_quantized_at_source:
   capture: {attempted: 41, accepted: 20, accepted_per_layout: 5}
   strict_replay: {checked: 20, passed: 20, max_state_abs_error: 0.0}
 v1r_2k_seed0_readiness:
-  status: passed_training_action_path_dataset_not_frozen
+  stage: V1-R.2K.3-F
+  status: passed_point_observation_and_chunking_freeze_seed0_authorized
+  dataset_scope: balanced_20_episode_seed0_pilot
+  dataset_path: outputs/v1r/b1_2k_point_pkls_f
   dataset_label_exact: {checked: 20, passed: 20}
   dataloader_batch_exact: {checked: 20, passed: 20}
   decoded_command_exact: {checked: 20, passed: 20}
-  remaining_blocker: b1_2k_training_dataset_not_built_or_frozen
-  seed0_training_authorized: false
-next_stage: build_and_freeze_b1_2k_training_dataset
+  robot_point_gripper_state_exact: {checked: 20, passed: 20}
+  fixed_object_template_per_episode: {checked: 20, passed: 20}
+  object_point_rigid_propagation_exact: {checked: 20, passed: 20}
+  point_values_finite: {checked: 20, passed: 20}
+  chunked_dataloader_exact: {checked: 80, passed: 80}
+  valid_zero_delta_populated_mask: passed
+  seed0_training_authorized: true
+  authorized_variant: B1-2K-20
+  authorized_seeds: [0]
+  training_started: false
+next_stage: run_authorized_b1_2k_20_seed0

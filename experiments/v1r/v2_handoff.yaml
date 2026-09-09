@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2K.3 froze the complete B1-2K point-input dataset and manifest after passing 4/4 PKL, 20/20 episode, label, gripper-proprio, and chunking checks. Seed 0, B0/B1, confirm, and V2 remain unauthorized pending a separate seed-0 decision.
+reason: V1-R.2K.3-F passed point-observation parity and real 40-step chunking gates and authorized only the B1-2K-20 seed-0 pilot. V2 remains unauthorized until the seed-0 clean-dev decision and later method-specific gates.

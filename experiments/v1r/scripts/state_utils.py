@@ -132,13 +132,20 @@ def pointbridge_core_env(env: Any) -> Any:
 
     core = env
     while hasattr(core, "_env"):
-        if hasattr(core, "_pixel_keys") and hasattr(core, "get_gt_points"):
+        if "_pixel_keys" in vars(core) and callable(
+            getattr(type(core), "get_gt_points", None)
+        ):
             return core
         core = core._env
     raise RuntimeError("could not locate Point Bridge RGB observation wrapper")
 
 
-def refresh_pointbridge_observation(env: Any, time_step: Any, object_points: dict[str, np.ndarray] | None) -> Any:
+def refresh_pointbridge_observation(
+    env: Any,
+    time_step: Any,
+    object_points: dict[str, np.ndarray] | None,
+    gripper_state: float = -1.0,
+) -> Any:
     """Refresh a wrapper observation after setting a frozen state without stepping.
 
     Point Bridge's wrapper performs ten controller warm-up steps inside reset.
@@ -153,18 +160,22 @@ def refresh_pointbridge_observation(env: Any, time_step: Any, object_points: dic
     core = env
     frame_stack = None
     while hasattr(core, "_env"):
-        if hasattr(core, "_pixel_keys") and hasattr(core, "get_gt_points"):
+        if "_pixel_keys" in vars(core) and callable(
+            getattr(type(core), "get_gt_points", None)
+        ):
             break
-        if hasattr(core, "_frames") and hasattr(core, "pixel_keys"):
+        if "_frames" in vars(core) and "pixel_keys" in vars(core):
             frame_stack = core
         core = core._env
     if not hasattr(core, "get_gt_points"):
         raise RuntimeError("could not locate Point Bridge RGB observation wrapper")
 
     core._step = 0
-    core.prev_gripper_state = -1
+    core.prev_gripper_state = float(gripper_state)
     if object_points:
-        core.object_points = {key: np.array(value, copy=True) for key, value in object_points.items()}
+        core.object_points = {
+            key: np.array(value, copy=True) for key, value in object_points.items()
+        }
         core.fixed_points = True
     else:
         core.object_points = {}
@@ -184,7 +195,9 @@ def refresh_pointbridge_observation(env: Any, time_step: Any, object_points: dic
     position, orientation = transform[:3, 3], transform[:3, :3]
     core.robot_base_orientation = orientation
     orientation_6d = matrix_to_rotation_6d(orientation)
-    core._current_pose = np.concatenate([position, orientation_6d, [-1]])
+    core._current_pose = np.concatenate(
+        [position, orientation_6d, [float(gripper_state)]]
+    )
     observation["proprioceptive"] = core._current_pose
     observation["features"] = core._current_pose
 

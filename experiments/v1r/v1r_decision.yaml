@@ -1,6 +1,6 @@
-decision: blocked_seed0_training_authorization
-status: completed_b1_2k_dataset_frozen_seed0_not_authorized
-latest_completed_stage: V1-R.2K.3
+decision: authorized_seed0_b1_2k_20_pilot
+status: completed_point_observation_freeze_seed0_authorized_not_started
+latest_completed_stage: V1-R.2K.3-F
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -27,11 +27,14 @@ deployment_device: cpu
 expert_replay_audit: failed
 per_layout_failure_analysis: complete
 b0_b1_training_authorized: false
-seed0_training_authorized: false
+seed0_training_authorized: true
+authorized_variant: B1-2K-20
+authorized_seeds: [0]
+seed0_training_started: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: independent_seed0_readiness_decision
+next_stage: run_authorized_b1_2k_20_seed0
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -196,13 +199,31 @@ v1r_2k_quantized_at_source:
     verification: outputs/v1r/sequential_success_demos_2k_quantized_at_source/verification.json
     report: experiments/v1r/reports/v1r_2k_quantized_at_source.md
 v1r_2k_seed0_readiness:
-  stage: V1-R.2K.2
-  status: passed_training_action_path_dataset_not_frozen
-  pointbridge_patch: patches/pointbridge/0005-mimiclabs-delta-pose-float32-identity-training.patch
+  stage: V1-R.2K.3-F
+  status: passed_point_observation_and_chunking_freeze_seed0_authorized
+  pointbridge_patches:
+    - patches/pointbridge/0005-mimiclabs-delta-pose-float32-identity-training.patch
+    - patches/pointbridge/0006-mimiclabs-delta-pose-chunk-contract.patch
+  dataset_scope: balanced_20_episode_seed0_pilot
+  candidate_universe_exhausted: false
+  dataset_path: outputs/v1r/b1_2k_point_pkls_f
+  training_config: experiments/v1r/configs/b1_2k_20_seed0.yaml
+  training_config_sha256: 77bc9fcd6d8aa80c9c79b3640d5992c520bb6ccdc938b8597179d363c62cdb5c
   dataset_label_exact: {checked: 20, passed: 20}
   dataloader_batch_exact: {checked: 20, passed: 20}
   decoded_command_exact: {checked: 20, passed: 20}
   agent_postprocess_exact: true
-  remaining_blocker: b1_2k_training_dataset_not_built_or_frozen
-  seed0_training_authorized: false
-  next_stage: build_and_freeze_b1_2k_training_dataset
+  robot_point_gripper_state_exact: {checked: 20, passed: 20}
+  fixed_object_template_per_episode: {checked: 20, passed: 20}
+  object_point_rigid_propagation_exact: {checked: 20, passed: 20}
+  point_values_finite: {checked: 20, passed: 20}
+  chunked_dataloader_exact: {checked: 80, passed: 80}
+  valid_zero_delta_populated_mask: passed
+  seed0_training_authorized: true
+  authorized_variant: B1-2K-20
+  authorized_seeds: [0]
+  training_started: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+  next_stage: run_authorized_b1_2k_20_seed0

@@ -1,0 +1,78 @@
+stage: V1-R.2K.3-F
+status: authorized_not_started
+variant: B1-2K-20
+authorized_seeds: [0]
+training:
+  upstream: /home/xushijie/vico-point/third_party/pointbridge
+  dataset_path: /home/xushijie/vico-point-v1r-2k/outputs/v1r/b1_2k_point_pkls_f
+  dataset_scope: balanced_20_episode_seed0_pilot
+  layouts: [1, 2, 3, 4]
+  num_demos_per_layout: 5
+  action_mode: delta_pose
+  selected_label_contract: delta_pose_float32_identity
+  dataset_minmax_normalization: false
+  action_chunking: true
+  num_queries: 40
+  history_len: 1
+  terminal_padding: zero_motion_hold_last_gripper
+  temporal_agg_strategy: exponential_average
+  obs_type: [points]
+  use_proprio: true
+  use_language: false
+  noise_object_points: true
+  batch_size: 16
+  train_steps: 300010
+  save_every_steps: 100000
+  log_every_steps: 1000
+  device: cuda
+  seed: 0
+  experiment: v1r_b1_2k_20_seed0
+  launcher: point_bridge/train.py
+  hydra_overrides:
+    - agent=pb
+    - suite=mimiclabs
+    - dataloader=mimiclabs
+    - eval=false
+    - device=cuda
+    - save_video=false
+    - use_tb=true
+    - batch_size=16
+    - num_demos_per_task=5
+    - suite.num_train_steps=300010
+    - suite.save_every_steps=100000
+    - suite.log_every_steps=1000
+    - use_language=false
+    - use_proprio=true
+    - action_chunking=true
+    - num_queries=40
+    - suite.history_len=1
+    - suite.obs_type=[points]
+    - suite.action_mode=delta_pose
+    - dataloader.bc_dataset.path=/home/xushijie/vico-point-v1r-2k/outputs/v1r/b1_2k_point_pkls_f
+    - dataloader.bc_dataset.suffix=null
+    - dataloader.bc_dataset.task_indices=[0,1,2,3]
+    - dataloader.bc_dataset.noise_object_points=true
+    - suite.num_points_per_obj=128
+    - experiment=v1r_b1_2k_20_seed0
+    - seed=0
+evaluation:
+  manifest: experiments/v1r/manifests/clean_baseline_dev.csv
+  rollout_count: 40
+  success_threshold: 20
+  success_rate_threshold: 0.50
+  decision_if_passed: allow_separate_decision_for_remaining_training_seeds
+  decision_if_failed: baseline_not_established_diagnose_pilot_coverage_or_learnability
+  confirm_rollouts_authorized: false
+artifact_freeze:
+  index: experiments/v1r/manifests/b1_2k_dataset_artifact_index.csv
+  manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+  verification_sha256: e7294ca0b6ee74fbb30ff10b75b459b27118f74247510a182eac0647e9de2884
+  ordered_episode_mapping_sha256: e16374fbf4b5e4dde80bcdf2de213507a2b47bec90474136e0fa22de95e62934
+  patch_0005_sha256: 3505305352152606f2545be6524e2a67aad04099c1c7549ffecd4372c4bccdfa
+  patch_0006_sha256: 626ba034dd64e0690450b0e94e8a189552c3248c6ffc0fea2cd77a2bdf3c5b2e
+authorization:
+  seed0_training_authorized: true
+  b0_b1_training_authorized: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false

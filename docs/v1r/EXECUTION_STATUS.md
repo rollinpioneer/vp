@@ -1,7 +1,7 @@
 # V1-R 执行状态（2026-09-09）
 
-当前研究锚点已前移到 `V1-R.2K.3`：量化源采集、严格 20/20 回放、Point Bridge 训练动作路径回环及完整 B1-2K 点输入数据集均已完成。冻结合同为
-`delta_pose_float32_identity`；seed 0、B0/B1、confirm、V2 和 V3 仍未授权，下一步是独立的 seed-0 启动决策。
+当前研究锚点已前移到 `V1-R.2K.3-F`：量化源采集、严格 20/20 回放、Point Bridge 训练动作路径回环、点观测部署一致性和真实 40 步 chunking 均已通过。冻结合同为
+`delta_pose_float32_identity`；仅 `B1-2K-20` 的 seed 0 已授权但尚未启动，legacy B0/B1、confirm、V2 和 V3 仍未授权。
 
 ## 已完成
 
@@ -35,6 +35,7 @@
 - V1-R.2K 量化源采集已完成：沿冻结的布局内数字 demo 顺序共尝试 41 次，接收 20 条，布局 1/2/3/4 分别为 5/5、5/5、5/5、5/5；所有尝试均保留，旧 V1-R.2J-N 结果未覆盖。
 - V1-R.2K 严格回放已通过 `20/20`：保存的 float32 标签经共享解码器得到的 float64 控制命令在值、顺序和长度上完全一致，采集与回放状态序列逐步一致，最大绝对误差为 `0.0`。该结果只证明量化后的数据合同可执行，不证明策略可学习或真实机器人迁移。
 - V1-R.2K.2 新增 Point Bridge `0005` 补丁，采集、回放、`BCDataset` 与 `BCAgent` 共同调用 `vico_point.action_contracts`，delta 标签不再做 min-max。20/20 数据集标签和 DataLoader batch、20/20 解码命令均逐元素一致，agent 后处理检查通过；由于完整点输入训练 PKL 和 B1-2K 清单尚未冻结，seed 0 仍未授权。
+- V1-R.2K.3-F 修正 Point Bridge 包装器定位、上一条夹爪命令对应的机器人点和每 episode 固定对象模板；正式验证通过点观测四项 `20/20`、真实 40 步 chunk `80/80`。二进制身份和训练配置已冻结，仅授权 `B1-2K-20` seed 0，尚未启动。
 - 基础回归：完整测试 `68/68` 通过；206 个已跟踪或待跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
 
 ## 历史门槛状态（截至 V1-R.2J-N）
@@ -76,28 +77,33 @@ formal_runtime:
 
 2J/2J-F/2J-N 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-## 当前门槛状态（V1-R.2K.3）
+## 当前门槛状态（V1-R.2K.3-F）
 
 ```yaml
-decision: blocked_seed0_training_authorization
-status: completed_b1_2k_dataset_frozen_seed0_not_authorized
-latest_completed_stage: V1-R.2K.3
+decision: authorized_seed0_b1_2k_20_pilot
+status: completed_point_observation_freeze_seed0_authorized_not_started
+latest_completed_stage: V1-R.2K.3-F
 selected_label_contract: delta_pose_float32_identity
 quantized_at_source_capture_gate: passed
 strict_replay_gate: 20/20
-training_authorized: false
-seed0_training_authorized: false
+point_observation_parity_gate: passed_20_of_20
+chunked_dataloader_gate: passed_80_of_80
+training_authorized: true_for_b1_2k_20_seed0_only
+seed0_training_authorized: true
+authorized_variant: B1-2K-20
+authorized_seeds: [0]
+seed0_training_started: false
 b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
 training_action_path_gate: passed
-training_dataset_manifest_gate: passed_4_pkls_20_episodes
-next_stage: independent_seed0_readiness_decision
+training_dataset_manifest_gate: passed_4_corrected_pkls_20_episodes
+next_stage: run_authorized_b1_2k_20_seed0
 ```
 
-V1-R.2K 冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`，2K.2 又确认该合同已进入 Point Bridge 数据读取和 agent 后处理路径。
-它不证明策略可学习或真实机器人迁移，也不授权 seed 0、B0/B1、confirm、V2 或 V3；下一步是从已验证因果状态生成并冻结完整 B1-2K 点输入训练数据。
+V1-R.2K 冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`，2K.2 确认该合同已进入 Point Bridge 数据读取和 agent 后处理路径，2K.3-F 又修正并验证了夹爪相关机器人点、固定对象模板和真实 chunking。
+这些结果仍不证明策略可学习或真实机器人迁移。下一步仅运行已冻结配置中的一个 seed 0，并在冻结 clean dev 40 条上以 `20/40` 为门槛；confirm、V2 和 V3 不随 seed-0 授权自动开放。
 
 上述历史结果说明，根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J/2J-F/2J-N 将阻塞收窄到数值动作路径，并排除了执行入口、控制器输入 dtype 和当前样本中的旋转零值分支。V1-R.2K 随后用量化源采集建立了新的可执行数据合同，但仍未授权策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 

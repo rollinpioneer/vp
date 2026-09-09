@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2K.3 froze the B1-2K point-input dataset under delta_pose_float32_identity, but no seed-0 training is authorized. V3 remains unauthorized.
+reason: V1-R.2K.3-F authorized only the B1-2K-20 seed-0 pilot under delta_pose_float32_identity. V3 remains unauthorized pending the seed-0 clean-dev decision and later context-specific gates.

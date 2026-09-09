@@ -1,10 +1,12 @@
-stage: V1-R.2K.3
-status: planned_not_started
-name: build_and_freeze_b1_2k_training_dataset
+stage: V1-R.2K.3-F
+status: completed_point_observation_freeze_seed0_authorized
+name: build_verify_and_freeze_b1_2k_20_training_dataset
 source_contract: delta_pose_float32_identity
 candidate_universe: frozen_v0_success_audit_manifests
+dataset_scope: balanced_20_episode_seed0_pilot
+candidate_universe_exhausted: false
 reuse_existing_2k_attempts: true
-process_remaining_candidates: true
+process_remaining_candidates: false
 record_all_attempts: true
 intermediate_state_restore_during_execution: false
 dataset_minmax_normalization: false
@@ -20,11 +22,28 @@ target:
   accepted_per_layout: 5
   strict_replay: 20/20
 outputs:
-  pkl_directory: outputs/v1r/b1_2k_point_pkls
-  manifest: outputs/v1r/b1_2k_point_pkls/manifest.json
+  pkl_directory: outputs/v1r/b1_2k_point_pkls_f
+  manifest: outputs/v1r/b1_2k_point_pkls_f/manifest.json
+  verification: outputs/v1r/b1_2k_point_pkls_f/verification.json
+  artifact_index: experiments/v1r/manifests/b1_2k_dataset_artifact_index.csv
+  training_config: experiments/v1r/configs/b1_2k_20_seed0.yaml
+  training_config_sha256: 77bc9fcd6d8aa80c9c79b3640d5992c520bb6ccdc938b8597179d363c62cdb5c
+verification:
+  robot_point_gripper_state_exact: 20/20
+  fixed_object_template_per_episode: 20/20
+  object_point_rigid_propagation_exact: 20/20
+  point_values_finite: 20/20
+  chunked_dataloader_exact: 80/80
+  valid_zero_delta_populated_mask: passed
+superseded_output:
+  path: outputs/v1r/b1_2k_point_pkls
+  status: superseded_point_observation_mismatch
 authorization:
-  seed0_training_authorized: false
+  seed0_training_authorized: true
+  authorized_variant: B1-2K-20
+  authorized_seeds: [0]
   b0_b1_training_authorized: false
   confirm_rollouts_authorized: false
   v2_formal_experiment_authorized: false
   v3_formal_experiment_authorized: false
+next_stage: run_authorized_b1_2k_20_seed0

@@ -9,6 +9,7 @@ actions during collection and never calls the historical PKL generator.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import pickle
@@ -24,7 +25,11 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from capture_sequential_success_demos import add_upstream_paths, file_sha256, synchronize_runtime_state  # noqa: E402
-from state_utils import refresh_pointbridge_observation  # noqa: E402
+from state_utils import (  # noqa: E402
+    array_sha256,
+    pointbridge_core_env,
+    refresh_pointbridge_observation,
+)
 
 
 def _accepted_records(manifest: Path) -> list[dict[str, Any]]:
@@ -34,6 +39,10 @@ def _accepted_records(manifest: Path) -> list[dict[str, Any]]:
     if len(records) != 20 or any(sum(int(r["layout"]) == i for r in records) != 5 for i in range(1, 5)):
         raise ValueError("expected exactly five accepted quantized demos per layout")
     return records
+
+
+def _text_sha256(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 class _ZeroLanguageEncoder:
@@ -70,13 +79,18 @@ def _episode(env: Any, record: dict[str, Any], root: Path) -> dict[str, Any]:
         eef = np.asarray(bundle["eef_states_before"], dtype=np.float64).copy()
     if len(states) != len(labels) or len(eef) != len(labels):
         raise ValueError(f"length mismatch in {artifact}")
+    point_sampling_seed = (
+        int(record["layout"]) * 100_000
+        + int(str(record["demo_key"]).rsplit("_", 1)[1])
+    )
+    np.random.seed(point_sampling_seed)
 
     timestep = env.reset()
-    core = env
-    while hasattr(core, "_env"):
-        if hasattr(core, "get_gt_points"):
-            break
-        core = core._env
+    core = pointbridge_core_env(env)
+    if not hasattr(core._env, "reset_to"):
+        raise RuntimeError("Point Bridge base environment does not support reset_to")
+    core._env.reset_to({"states": states[0], "model": model_xml})
+    synchronize_runtime_state(core._env)
     observations: dict[str, list[Any]] = {
         "robot_tracks_3d": [], "object_tracks_128_3d": [],
         "eef_states": [], "gripper_states": [], "states": [],
@@ -85,13 +99,34 @@ def _episode(env: Any, record: dict[str, Any], root: Path) -> dict[str, Any]:
     gripper[0] = -1.0
     if len(labels) > 1:
         gripper[1:] = labels[:-1, -1]
+    fixed_object_points: dict[str, np.ndarray] | None = None
     for index, state in enumerate(states):
         core._env.sim.set_state_from_flattened(state)
         core._env.sim.forward()
-        timestep = refresh_pointbridge_observation(env, timestep, None)
+        timestep = refresh_pointbridge_observation(
+            env,
+            timestep,
+            fixed_object_points,
+            gripper_state=float(gripper[index]),
+        )
+        if fixed_object_points is None:
+            fixed_object_points = {
+                key: np.asarray(value, dtype=np.float32).copy()
+                for key, value in core.object_points.items()
+            }
+            timestep = refresh_pointbridge_observation(
+                env,
+                timestep,
+                fixed_object_points,
+                gripper_state=float(gripper[index]),
+            )
         obs = timestep.observation
-        observations["robot_tracks_3d"].append(np.asarray(obs["robot_tracks_3d"], dtype=np.float32))
-        observations["object_tracks_128_3d"].append(np.asarray(obs["object_tracks_128_3d"], dtype=np.float32))
+        observations["robot_tracks_3d"].append(
+            np.asarray(obs["robot_tracks_3d"], dtype=np.float32)
+        )
+        observations["object_tracks_128_3d"].append(
+            np.asarray(obs["object_tracks_128_3d"], dtype=np.float32)
+        )
         observations["eef_states"].append(eef[index].astype(np.float32))
         observations["gripper_states"].append(gripper[index])
         observations["states"].append(state.astype(np.float32))
@@ -103,6 +138,20 @@ def _episode(env: Any, record: dict[str, Any], root: Path) -> dict[str, Any]:
         "source_artifact": str(artifact.relative_to(root)),
         "source_artifact_sha256": file_sha256(artifact),
         "model_xml": model_xml,
+        "object_point_template": fixed_object_points or {},
+        "object_point_template_sha256": (
+            array_sha256(
+                np.concatenate(
+                    [
+                        value.reshape(-1)
+                        for _, value in sorted((fixed_object_points or {}).items())
+                    ]
+                )
+            )
+            if fixed_object_points
+            else None
+        ),
+        "point_sampling_seed": point_sampling_seed,
     }
 
 
@@ -110,7 +159,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, default=ROOT / "outputs/v1r/sequential_success_demos_2k_quantized_at_source/manifest.json")
     parser.add_argument("--upstream", type=Path, default=DEFAULT_UPSTREAM)
-    parser.add_argument("--output", type=Path, default=ROOT / "outputs/v1r/b1_2k_point_pkls")
+    parser.add_argument("--output", type=Path, default=ROOT / "outputs/v1r/b1_2k_point_pkls_f")
     args = parser.parse_args()
     manifest = args.manifest.resolve()
     upstream = args.upstream.resolve()
@@ -125,19 +174,22 @@ def main() -> int:
     for record in records:
         by_layout[int(record["layout"])].append(record)
     manifest_records = []
+    pkl_files = []
     for layout in range(1, 5):
         env = _make_env(pb_suite, upstream, f"bowl_on_plate_{layout}")
         try:
             episodes = []
             for record in by_layout[layout]:
                 episode = _episode(env, record, ROOT)
-                episodes.append({k: v for k, v in episode.items() if k in {"observation", "actions", "task_emb"}})
-                manifest_records.append({"layout": layout, "demo_key": record["demo_key"], "artifact": episode["source_artifact"], "artifact_sha256": episode["source_artifact_sha256"], "steps": len(episode["actions"])})
+                episodes.append({k: v for k, v in episode.items() if k in {"observation", "actions", "task_emb", "object_point_template"}})
+                manifest_records.append({"layout": layout, "demo_key": record["demo_key"], "artifact": episode["source_artifact"], "artifact_sha256": episode["source_artifact_sha256"], "steps": len(episode["actions"]), "point_sampling_seed": episode["point_sampling_seed"], "object_point_template_sha256": episode["object_point_template_sha256"]})
         finally:
             env.close()
         pkl_path = output / f"bowl_on_plate_{layout}.pkl"
-        pkl_path.write_bytes(pickle.dumps({"observations": [e["observation"] for e in episodes], "actions": [e["actions"] for e in episodes], "task_emb": np.zeros(384, dtype=np.float32)}))
-    result = {"stage": "V1-R.2K.3", "status": "built", "source_manifest": str(manifest.relative_to(ROOT)), "records": manifest_records, "dataset_contract": {"action_mode": "delta_pose", "history_len": 1, "action_chunking": True, "num_queries": 40, "gripper_proprio": "previous_issued_command", "terminal_padding": "zero_motion_hold_last_gripper"}, "seed0_training_authorized": False}
+        pkl_path.write_bytes(pickle.dumps({"observations": [e["observation"] for e in episodes], "actions": [e["actions"] for e in episodes], "task_emb": np.zeros(384, dtype=np.float32), "object_point_templates": [e["object_point_template"] for e in episodes]}))
+        ordered_keys = [f"layout_{layout}/{r['demo_key']}" for r in by_layout[layout]]
+        pkl_files.append({"path": str(pkl_path.relative_to(ROOT)), "size_bytes": pkl_path.stat().st_size, "sha256": file_sha256(pkl_path), "episodes": len(episodes), "ordered_episode_keys_sha256": _text_sha256("\n".join(ordered_keys))})
+    result = {"stage": "V1-R.2K.3-F", "status": "built", "source_manifest": str(manifest.relative_to(ROOT)), "records": manifest_records, "pkl_files": pkl_files, "ordered_episode_mapping_sha256": _text_sha256("\n".join(f"{r['layout']}/{r['demo_key']}/{r['artifact_sha256']}" for r in manifest_records)), "dataset_contract": {"action_mode": "delta_pose", "history_len": 1, "action_chunking": True, "num_queries": 40, "gripper_proprio": "previous_issued_command", "terminal_padding": "zero_motion_hold_last_gripper", "robot_points_gripper_state": "previous_issued_command", "object_points": "one_fixed_object_frame_template_per_episode", "dataset_scope": "balanced_20_episode_seed0_pilot", "candidate_universe_exhausted": False}, "supersedes_output": "outputs/v1r/b1_2k_point_pkls", "seed0_training_authorized": False}
     (output / "manifest.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
     return 0

@@ -1,19 +1,27 @@
 # V1-R 执行结果
 
-- decision: `blocked_seed0_training_authorization`
-- status: `completed_b1_2k_dataset_frozen_seed0_not_authorized`
-- latest completed stage: `V1-R.2K.3`
+- decision: `authorized_seed0_b1_2k_20_pilot`
+- status: `completed_point_observation_freeze_seed0_authorized_not_started`
+- latest completed stage: `V1-R.2K.3-F`
 - selected label contract: `delta_pose_float32_identity`
-- clean baseline success rate: `0.05`
+- legacy frozen clean baseline success rate: `0.05`; authorized B1-2K-20 seed 0 has not run.
 - scientific claim status: 仅证明量化后标签在冻结仿真器族中可执行；不宣称策略学习增益或真实机器人迁移。
-- training, seed 0, confirm, V2 and V3: 未授权；下一步为独立评估 seed 0 是否启动。
+- training authorization: 仅授权 `B1-2K-20` 的 seed 0，尚未启动；legacy B0/B1、confirm、V2 和 V3 仍未授权。
+
+## V1-R.2K.3-F point-observation freeze
+
+- 修复 Point Bridge 包装器定位：不再因外层 `__getattr__` 转发而把状态和固定点模板写到错误层。
+- 20/20 episode 的机器人点使用上一条夹爪命令；每个 episode 只采样一次 float32 对象坐标系模板，后续逐帧仅做刚体传播。
+- 动态验证通过：机器人夹爪点 `20/20`、固定对象模板 `20/20`、对象点刚体传播 `20/20`、点值有限 `20/20`、真实 40 步 chunk `80/80`，显式 populated mask 已启用。
+- 修正后的四个 PKL、manifest、verification、episode 有序映射和 `0005`/`0006` 补丁身份记录在 `experiments/v1r/manifests/b1_2k_dataset_artifact_index.csv`；旧 PKL 标记为 `superseded_point_observation_mismatch`。
+- 数据范围严格限定为四布局各 5 条的 `balanced_20_episode_seed0_pilot`，未穷尽候选全集。门槛通过后仅授权一个 `B1-2K-20` seed 0；不直接授权 confirm、V2 或 V3。
 
 ## V1-R.2K.3 B1-2K dataset freeze
 
 - 新增 `0006-mimiclabs-delta-pose-chunk-contract.patch`：delta 模式末端只补零位移并保持最后夹爪命令，时间聚合使用显式 populated mask，合法全零 delta 不再被误判为未填充。
 - 使用 `/home/xushijie/vico-point/third_party/pointbridge` 的正式运行环境生成四个布局 PKL；20 个 episode 全部来自已接受量化源 artifact 的 `states_before` 和 `float32_labels`，未调用旧 PKL 生成入口。
 - 原生 `BCDataset(action_chunking=true, num_queries=40)` 读取检查：4/4 文件、20/20 episode、20/20 标签精确一致、20/20 上一条夹爪命令一致；末端 padding 为 `zero_motion_hold_last_gripper`。
-- 数据集和 manifest 已冻结为本地 gitignored 运行时工件；这些结果只证明训练数据合同完整，不授权 seed 0、B0/B1、confirm、V2 或 V3。
+- 该阶段生成的旧点 PKL 后续发现机器人夹爪点和对象模板不满足部署一致性，现由 V1-R.2K.3-F 修正版取代；动作块修复和历史结果仍保留。
 
 ## V1-R.2K.2 seed-0 readiness
 
