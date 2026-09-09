@@ -13,8 +13,14 @@ from typing import Any
 
 import numpy as np
 
+from vico_point.action_contracts import (
+    DELTA_POSE_FLOAT32_IDENTITY,
+    decode_delta_command,
+    encode_delta_label,
+)
 
-CONTRACT_ID = "delta_pose_float32_identity"
+
+CONTRACT_ID = DELTA_POSE_FLOAT32_IDENTITY
 SOURCE_DTYPE = "float64"
 LABEL_DTYPE = "float32"
 CONTROLLER_DTYPE = "float64"
@@ -30,13 +36,13 @@ def _array(value: Any, *, dtype: np.dtype[Any]) -> np.ndarray:
 def encode_expert_delta(raw_action: Any) -> np.ndarray:
     """Convert a source float64 action to the stored training label."""
 
-    return _array(raw_action, dtype=np.dtype(np.float32)).copy()
+    return encode_delta_label(raw_action).copy()
 
 
 def decode_delta_for_controller(label: Any) -> np.ndarray:
     """Convert a stored float32 label to the command sent to robosuite."""
 
-    return _array(label, dtype=np.dtype(np.float32)).astype(np.float64, copy=True)
+    return decode_delta_command(label)
 
 
 def encode_sequence(raw_actions: Any) -> np.ndarray:

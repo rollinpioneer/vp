@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2K completed with the separately versioned quantized-at-source contract and strict replay passed 20/20, but this only authorizes a separate seed-0 training decision. B0/B1, confirm, and V2 remain unauthorized.
+reason: V1-R.2K.2 passed the Point Bridge dataset, DataLoader, shared decoder, and agent postprocess action-path checks, but the complete B1-2K point-input training dataset and manifest are not built or frozen. Seed 0, B0/B1, confirm, and V2 remain unauthorized.

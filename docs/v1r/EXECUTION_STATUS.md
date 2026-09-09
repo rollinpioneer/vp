@@ -1,7 +1,7 @@
 # V1-R 执行状态（2026-09-09）
 
-当前研究锚点已前移到 `V1-R.2K.1`：量化源采集和严格 20/20 回放均已完成。冻结合同为
-`delta_pose_float32_identity`；这只授权独立的 seed-0 训练决策，不授权 B0/B1、confirm、V2 或 V3。
+当前研究锚点已前移到 `V1-R.2K.2`：量化源采集、严格 20/20 回放及 Point Bridge 训练动作路径回环均已完成。冻结合同为
+`delta_pose_float32_identity`；完整 B1-2K 点输入训练数据尚未构建和冻结，因此 seed 0、B0/B1、confirm、V2 和 V3 均未授权。
 
 ## 已完成
 
@@ -34,6 +34,7 @@
 - 本机 robosuite `1.4.1` 确实包含 `math.isclose` 朝向更新分支，但四条轨迹中 raw/direct-float32/min-max 三种路径均无全零旋转步骤，分支决策变化为 0；“零变非零触发朝向更新”在本轮样本上被否定。下一阶段为独立版本 V1-R.2K，从采集第一步即执行固定 float32 标签到 float64 控制器解码路径，旧 20 条失败结果保持不变。
 - V1-R.2K 量化源采集已完成：沿冻结的布局内数字 demo 顺序共尝试 41 次，接收 20 条，布局 1/2/3/4 分别为 5/5、5/5、5/5、5/5；所有尝试均保留，旧 V1-R.2J-N 结果未覆盖。
 - V1-R.2K 严格回放已通过 `20/20`：保存的 float32 标签经共享解码器得到的 float64 控制命令在值、顺序和长度上完全一致，采集与回放状态序列逐步一致，最大绝对误差为 `0.0`。该结果只证明量化后的数据合同可执行，不证明策略可学习或真实机器人迁移。
+- V1-R.2K.2 新增 Point Bridge `0005` 补丁，采集、回放、`BCDataset` 与 `BCAgent` 共同调用 `vico_point.action_contracts`，delta 标签不再做 min-max。20/20 数据集标签和 DataLoader batch、20/20 解码命令均逐元素一致，agent 后处理检查通过；由于完整点输入训练 PKL 和 B1-2K 清单尚未冻结，seed 0 仍未授权。
 - 基础回归：完整测试 `68/68` 通过；206 个已跟踪或待跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
 
 ## 历史门槛状态（截至 V1-R.2J-N）
@@ -75,12 +76,12 @@ formal_runtime:
 
 2J/2J-F/2J-N 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-## 当前门槛状态（V1-R.2K.1）
+## 当前门槛状态（V1-R.2K.2）
 
 ```yaml
-decision: completed_quantized_at_source_numeric_contract
-status: completed_quantized_at_source_replay_passed
-latest_completed_stage: V1-R.2K.1
+decision: blocked_seed0_training_dataset
+status: completed_2k_training_action_path_dataset_not_frozen
+latest_completed_stage: V1-R.2K.2
 selected_label_contract: delta_pose_float32_identity
 quantized_at_source_capture_gate: passed
 strict_replay_gate: 20/20
@@ -90,11 +91,13 @@ b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: separate_seed0_training_decision
+training_action_path_gate: passed
+training_dataset_manifest_gate: blocked_not_built
+next_stage: build_and_freeze_b1_2k_training_dataset
 ```
 
-V1-R.2K 只冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`。
-它不证明策略可学习或真实机器人迁移，也不授权 B0/B1、confirm、V2 或 V3；下一步只能单独决定是否重建训练数据并启动 seed 0。
+V1-R.2K 冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`，2K.2 又确认该合同已进入 Point Bridge 数据读取和 agent 后处理路径。
+它不证明策略可学习或真实机器人迁移，也不授权 seed 0、B0/B1、confirm、V2 或 V3；下一步是从已验证因果状态生成并冻结完整 B1-2K 点输入训练数据。
 
 上述历史结果说明，根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J/2J-F/2J-N 将阻塞收窄到数值动作路径，并排除了执行入口、控制器输入 dtype 和当前样本中的旋转零值分支。V1-R.2K 随后用量化源采集建立了新的可执行数据合同，但仍未授权策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 

@@ -15,16 +15,36 @@ PATCHES = (
     ROOT / "patches" / "pointbridge" / "0002-mujoco23-mesh-scale-compat.patch",
     ROOT / "patches" / "pointbridge" / "0003-mujoco23-mesh-path-compat.patch",
     ROOT / "patches" / "pointbridge" / "0004-mimiclabs-delta-pose-contract.patch",
+    ROOT / "patches" / "pointbridge" / "0005-mimiclabs-delta-pose-float32-identity-training.patch",
 )
 
 
 def _run_patch(upstream: Path, patch: Path, *options: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["patch", *options, "-p1", "-i", str(patch)],
+        [
+            "patch",
+            *options,
+            "--reject-file=-",
+            "--no-backup-if-mismatch",
+            "-p1",
+            "-i",
+            str(patch),
+        ],
         cwd=upstream,
         text=True,
         capture_output=True,
         check=False,
+    )
+
+
+def _v1r_2k_contract_applied(upstream: Path) -> bool:
+    dataset = upstream / "point_bridge" / "read_data" / "mimiclabs.py"
+    agent = upstream / "point_bridge" / "agent" / "pb.py"
+    if not all(path.exists() for path in (dataset, agent)):
+        return False
+    return (
+        "from vico_point.action_contracts import encode_delta_label" in dataset.read_text(encoding="utf-8")
+        and "from vico_point.action_contracts import decode_delta_command" in agent.read_text(encoding="utf-8")
     )
 
 
@@ -42,6 +62,15 @@ def main() -> int:
         parser.error(f"expected Point Bridge {EXPECTED_COMMIT}, found {actual_commit}")
 
     for patch in PATCHES:
+        contract_applied = _v1r_2k_contract_applied(upstream)
+        if patch.name.startswith("0005-") and contract_applied:
+            print(f"already applied {patch.relative_to(ROOT)}")
+            continue
+        # 0005 replaces the normalization hunk introduced by 0004, so a
+        # reverse dry-run of 0004 is no longer a valid applied-state check.
+        if patch.name.startswith("0004-") and contract_applied:
+            print(f"already applied {patch.relative_to(ROOT)} (superseded by 0005)")
+            continue
         result = _run_patch(upstream, patch, "--forward", "--batch")
         if result.returncode == 0:
             print(f"applied {patch.relative_to(ROOT)}")

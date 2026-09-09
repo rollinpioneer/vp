@@ -1,0 +1,33 @@
+--- a/point_bridge/read_data/mimiclabs.py
++++ b/point_bridge/read_data/mimiclabs.py
+@@ -13,1 +13,2 @@
+ from point_bridge.robot_utils.common.utils import matrix_to_rotation_6d
++from vico_point.action_contracts import encode_delta_label
+@@ -297,8 +297,3 @@
+         elif self._action_mode == "delta_pose":
+-            action_scale = np.maximum(
+-                self.stats["actions"]["max"] - self.stats["actions"]["min"],
+-                1e-12,
+-            )
+-            self.preprocess["actions"] = lambda x: (
+-                x - self.stats["actions"]["min"]
+-            ) / action_scale
++            # V1-R.2K labels use the shared source-quantized contract.
++            self.preprocess["actions"] = encode_delta_label
+
+--- a/point_bridge/agent/pb.py
++++ b/point_bridge/agent/pb.py
+@@ -12,1 +12,2 @@
+ from point_bridge import utils
++from vico_point.action_contracts import decode_delta_command
+@@ -544,8 +544,3 @@
+             elif self.action_mode == "delta_pose":
+-                action_scale = np.maximum(
+-                    norm_stats["actions"]["max"] - norm_stats["actions"]["min"],
+-                    1e-12,
+-                )
+-                post_process["actions"] = (
+-                    lambda a: a * action_scale + norm_stats["actions"]["min"]
+-                )
++                # V1-R.2K uses the same decoder as capture and data loading.
++                post_process["actions"] = decode_delta_command

@@ -1,12 +1,18 @@
 # V1-R 执行结果
 
-- decision: `completed_quantized_at_source_numeric_contract`
-- status: `completed_quantized_at_source_replay_passed`
-- latest completed stage: `V1-R.2K.1`
+- decision: `blocked_seed0_training_dataset`
+- status: `completed_2k_training_action_path_dataset_not_frozen`
+- latest completed stage: `V1-R.2K.2`
 - selected label contract: `delta_pose_float32_identity`
 - clean baseline success rate: `0.05`
 - scientific claim status: 仅证明量化后标签在冻结仿真器族中可执行；不宣称策略学习增益或真实机器人迁移。
-- training, seed 0, confirm, V2 and V3: 未授权；下一步为独立的 seed-0 训练决策。
+- training, seed 0, confirm, V2 and V3: 未授权；下一步为构建并冻结完整 B1-2K 点输入训练数据。
+
+## V1-R.2K.2 seed-0 readiness
+
+- 新增 `0005-mimiclabs-delta-pose-float32-identity-training.patch`，采集、回放、`BCDataset` 与 `BCAgent` 共同调用 `vico_point.action_contracts`；delta 标签保持 float32 identity，部署输出 float64 控制命令，不再使用动作 min-max。
+- 现有 20 条工件经过真实 `BCDataset` 和 PyTorch `DataLoader` 后标签与 batch 均为 `20/20` 精确一致，共享 decoder 命令 `20/20` 精确一致，agent 部署后处理检查通过。
+- 本轮不训练网络。现有工件还没有完整 Point Bridge 点输入训练 PKL，也没有冻结 B1-2K 全成功数据清单，因此 seed 0 继续未授权。
 
 ## V1-R.2K quantized-at-source data
 

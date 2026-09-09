@@ -1,6 +1,6 @@
-decision: completed_quantized_at_source_numeric_contract
-status: completed_quantized_at_source_replay_passed
-latest_completed_stage: V1-R.2K.1
+decision: blocked_seed0_training_dataset
+status: completed_2k_training_action_path_dataset_not_frozen
+latest_completed_stage: V1-R.2K.2
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -31,7 +31,7 @@ seed0_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: separate_seed0_training_decision
+next_stage: build_and_freeze_b1_2k_training_dataset
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -195,3 +195,14 @@ v1r_2k_quantized_at_source:
     capture_manifest: outputs/v1r/sequential_success_demos_2k_quantized_at_source/manifest.json
     verification: outputs/v1r/sequential_success_demos_2k_quantized_at_source/verification.json
     report: experiments/v1r/reports/v1r_2k_quantized_at_source.md
+v1r_2k_seed0_readiness:
+  stage: V1-R.2K.2
+  status: passed_training_action_path_dataset_not_frozen
+  pointbridge_patch: patches/pointbridge/0005-mimiclabs-delta-pose-float32-identity-training.patch
+  dataset_label_exact: {checked: 20, passed: 20}
+  dataloader_batch_exact: {checked: 20, passed: 20}
+  decoded_command_exact: {checked: 20, passed: 20}
+  agent_postprocess_exact: true
+  remaining_blocker: b1_2k_training_dataset_not_built_or_frozen
+  seed0_training_authorized: false
+  next_stage: build_and_freeze_b1_2k_training_dataset

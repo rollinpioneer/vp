@@ -1,6 +1,6 @@
 stage: V1-R
-status: completed_numeric_candidate_failed
-latest_completed_stage: V1-R.2J-N
+status: completed_2k_training_action_path_dataset_not_frozen
+latest_completed_stage: V1-R.2K.2
 baseline_commit: a07eb4cb7a2f688657d3c9a86c768c58d0b51cf0
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 control_hz: 20
@@ -114,4 +114,16 @@ point_sources:
   - oracle_hidden_gt
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: V1-R.2K_quantized_at_source_sequential_data
+v1r_2k_quantized_at_source:
+  status: completed_quantized_at_source_replay_passed
+  selected_label_contract: delta_pose_float32_identity
+  capture: {attempted: 41, accepted: 20, accepted_per_layout: 5}
+  strict_replay: {checked: 20, passed: 20, max_state_abs_error: 0.0}
+v1r_2k_seed0_readiness:
+  status: passed_training_action_path_dataset_not_frozen
+  dataset_label_exact: {checked: 20, passed: 20}
+  dataloader_batch_exact: {checked: 20, passed: 20}
+  decoded_command_exact: {checked: 20, passed: 20}
+  remaining_blocker: b1_2k_training_dataset_not_built_or_frozen
+  seed0_training_authorized: false
+next_stage: build_and_freeze_b1_2k_training_dataset
