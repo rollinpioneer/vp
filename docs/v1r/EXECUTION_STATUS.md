@@ -1,5 +1,8 @@
 # V1-R 执行状态（2026-09-09）
 
+当前研究锚点已前移到 `V1-R.2K.1`：量化源采集和严格 20/20 回放均已完成。冻结合同为
+`delta_pose_float32_identity`；这只授权独立的 seed-0 训练决策，不授权 B0/B1、confirm、V2 或 V3。
+
 ## 已完成
 
 - V1-R.0：冻结 legacy 快照、锁定分支和 Point Bridge commit。
@@ -29,13 +32,15 @@
 - 该诊断进一步收窄了原因：`demo_18` 对直接 `float32` 已敏感；min-max -> `float32` -> inverse 在此样本集上又使 `demo_10` 和 `demo_2` 失败。所有失败均为 `contact_without_grasp`。这证明数值动作路径存在精度敏感性，但尚未形成可用于训练的数值合同。
 - V1-R.2J-N 仅在 Point Bridge 入口测试 `raw -> float32 label -> float64 controller` 候选：布局 1 `demo_18` 失败，其余三条成功，结果 `3/4`，未达到扩展到 20 条的固定前置条件。该路径与 2J-F 的直接 float32 路径在底层动作、控制目标、EEF、碗轨迹及成败上逐值一致，单独统一控制器输入 dtype 不能修复问题。
 - 本机 robosuite `1.4.1` 确实包含 `math.isclose` 朝向更新分支，但四条轨迹中 raw/direct-float32/min-max 三种路径均无全零旋转步骤，分支决策变化为 0；“零变非零触发朝向更新”在本轮样本上被否定。下一阶段为独立版本 V1-R.2K，从采集第一步即执行固定 float32 标签到 float64 控制器解码路径，旧 20 条失败结果保持不变。
+- V1-R.2K 量化源采集已完成：沿冻结的布局内数字 demo 顺序共尝试 41 次，接收 20 条，布局 1/2/3/4 分别为 5/5、5/5、5/5、5/5；所有尝试均保留，旧 V1-R.2J-N 结果未覆盖。
+- V1-R.2K 严格回放已通过 `20/20`：保存的 float32 标签经共享解码器得到的 float64 控制命令在值、顺序和长度上完全一致，采集与回放状态序列逐步一致，最大绝对误差为 `0.0`。该结果只证明量化后的数据合同可执行，不证明策略可学习或真实机器人迁移。
 - 基础回归：完整测试 `68/68` 通过；206 个已跟踪或待跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
 
-## 诚实门槛状态
+## 历史门槛状态（截至 V1-R.2J-N）
 
 V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_gate` 和 `s1_label_replay_gate` 均为 `failed`。V1-R.2J 又验证了 7 维 `delta_pose` 的归一化、夹爪符号和官方运行时均可执行，但任务回放只有 `17/20`，仍未达到严格门槛。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
-因此当前决策为：
+当时的决策为：
 
 ```yaml
 decision: blocked_numeric_action_contract
@@ -70,7 +75,28 @@ formal_runtime:
 
 2J/2J-F/2J-N 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J/2J-F/2J-N 将阻塞收窄到数值动作路径，并排除了执行入口、控制器输入 dtype 和当前样本中的旋转零值分支。当前仍没有可冻结的训练动作合同；下一步是独立的 V1-R.2K quantized-at-source 数据版本，不能把旧失败轨迹改写为通过，也不能开始策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
+## 当前门槛状态（V1-R.2K.1）
+
+```yaml
+decision: completed_quantized_at_source_numeric_contract
+status: completed_quantized_at_source_replay_passed
+latest_completed_stage: V1-R.2K.1
+selected_label_contract: delta_pose_float32_identity
+quantized_at_source_capture_gate: passed
+strict_replay_gate: 20/20
+training_authorized: false
+seed0_training_authorized: false
+b0_b1_training_authorized: false
+confirm_rollouts_authorized: false
+v2_formal_experiment_authorized: false
+v3_formal_experiment_authorized: false
+next_stage: separate_seed0_training_decision
+```
+
+V1-R.2K 只冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`。
+它不证明策略可学习或真实机器人迁移，也不授权 B0/B1、confirm、V2 或 V3；下一步只能单独决定是否重建训练数据并启动 seed 0。
+
+上述历史结果说明，根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J/2J-F/2J-N 将阻塞收窄到数值动作路径，并排除了执行入口、控制器输入 dtype 和当前样本中的旋转零值分支。V1-R.2K 随后用量化源采集建立了新的可执行数据合同，但仍未授权策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 
 ## 输入与输出约定
 

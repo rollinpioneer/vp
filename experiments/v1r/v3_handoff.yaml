@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2J-N failed the 4/4 prerequisite for the float32-label to float64-controller candidate, and V1-R.2K quantized-at-source data has not started. No training-safe action contract is frozen; downstream experiments remain unauthorized.
+reason: V1-R.2K froze delta_pose_float32_identity after 20/20 strict replay, but no policy training or independent seed-0 decision has been authorized. V3 remains unauthorized.

@@ -1,10 +1,20 @@
 # V1-R 执行结果
 
-- decision: `blocked_numeric_action_contract`
-- status: `completed_numeric_candidate_failed`
-- latest completed stage: `V1-R.2J-N`
+- decision: `completed_quantized_at_source_numeric_contract`
+- status: `completed_quantized_at_source_replay_passed`
+- latest completed stage: `V1-R.2K.1`
+- selected label contract: `delta_pose_float32_identity`
 - clean baseline success rate: `0.05`
-- scientific claim status: 未授权；未通过或不可执行的门槛保持 blocked/failed。
+- scientific claim status: 仅证明量化后标签在冻结仿真器族中可执行；不宣称策略学习增益或真实机器人迁移。
+- training, seed 0, confirm, V2 and V3: 未授权；下一步为独立的 seed-0 训练决策。
+
+## V1-R.2K quantized-at-source data
+
+- 采集严格使用 `raw_action_float64 -> float32 label -> float64 controller command`，不使用数据集 min-max、额外缩放、裁剪、平滑或第二次量化。
+- 按布局内 demo 编号升序执行候选；每次尝试只在回合开始恢复初态，后续连续执行，不在中途恢复状态；41 次尝试全部保留。
+- 四布局分别为 `22/5`、`9/5`、`5/5`、`5/5`（attempted/accepted），共 20 条接收演示。旧 V1-R.2J-N 的四条诊断结果未被覆盖；新采集中的 `layout_1/demo_18` 是独立的量化源采集结果。
+- 保存的 float32 标签经共享解码器回放，20/20 通过；控制命令的值、顺序和长度完全一致，采集与回放状态序列逐步完全一致，最大绝对误差为 `0.0`。
+- 该门槛冻结数值合同，但只授权另行决定是否重建训练数据并启动 seed 0；不授权 B0/B1、confirm、V2 或 V3。
 - legacy V1 结果未被覆盖，confirm 未用于覆盖 dev 失败。
 
 ## V1-R.2J executable action-contract reconstruction

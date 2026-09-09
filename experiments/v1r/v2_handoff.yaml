@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2J-N tested the only promoted-float64 numeric candidate on four frozen records and reached 3/4; the required 4/4 prerequisite failed, so the 20-record expansion was not run. V1-R.2K is planned as separately versioned quantized-at-source data; no label contract is selected and training remains blocked.
+reason: V1-R.2K completed with the separately versioned quantized-at-source contract and strict replay passed 20/20, but this only authorizes a separate seed-0 training decision. B0/B1, confirm, and V2 remain unauthorized.
