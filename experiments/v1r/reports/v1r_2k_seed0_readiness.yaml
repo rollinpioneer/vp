@@ -1,7 +1,9 @@
-stage: V1-R.2K.2
-status: passed_training_action_path_dataset_not_frozen
+stage: V1-R.2K.3
+status: passed_b1_2k_dataset_frozen_seed0_not_authorized
 numeric_contract: delta_pose_float32_identity
-pointbridge_patch: patches/pointbridge/0005-mimiclabs-delta-pose-float32-identity-training.patch
+pointbridge_patches:
+  - patches/pointbridge/0005-mimiclabs-delta-pose-float32-identity-training.patch
+  - patches/pointbridge/0006-mimiclabs-delta-pose-chunk-contract.patch
 checks:
   dataset_label_exact: {checked: 20, passed: 20, required: 20}
   dataloader_batch_exact: {checked: 20, passed: 20, required: 20}
@@ -10,13 +12,19 @@ checks:
   action_order_and_length_exact: {checked: 20, passed: 20, required: 20}
   task_replay_success: {checked: 20, passed: 20, required: 20, source: V1-R.2K.1}
   captured_vs_replayed_state_exact: {checked: 20, passed: 20, max_abs_error: 0.0, source: V1-R.2K.1}
+  b1_2k_point_pkls: {checked: 4, passed: 4, required: 4, source: outputs/v1r/b1_2k_point_pkls}
+  b1_2k_episode_count: {checked: 20, passed: 20, required: 20}
+  b1_2k_dataset_label_exact: {checked: 20, passed: 20, required: 20}
+  b1_2k_previous_gripper_exact: {checked: 20, passed: 20, required: 20}
+  b1_2k_manifest_records: {checked: 20, passed: 20, required: 20}
+  b1_2k_chunking: {action_chunking: true, num_queries: 40, terminal_padding: zero_motion_hold_last_gripper}
 remaining_blocker:
-  code: b1_2k_training_dataset_not_built_or_frozen
-  detail: The 20 contract demonstrations do not yet contain the complete Point Bridge point-observation training PKLs or a frozen all-success B1-2K manifest.
+  code: seed0_training_requires_separate_decision
+  detail: The complete B1-2K point-observation PKLs and manifest are built and frozen; seed 0 still requires an independent authorization decision.
 authorization:
   training_authorized: false
   seed0_training_authorized: false
   confirm_rollouts_authorized: false
   v2_formal_experiment_authorized: false
   v3_formal_experiment_authorized: false
-next_stage: build_and_freeze_b1_2k_training_dataset
+next_stage: independent_seed0_readiness_decision

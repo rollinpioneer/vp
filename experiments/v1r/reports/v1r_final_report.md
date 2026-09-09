@@ -1,12 +1,19 @@
 # V1-R 执行结果
 
-- decision: `blocked_seed0_training_dataset`
-- status: `completed_2k_training_action_path_dataset_not_frozen`
-- latest completed stage: `V1-R.2K.2`
+- decision: `blocked_seed0_training_authorization`
+- status: `completed_b1_2k_dataset_frozen_seed0_not_authorized`
+- latest completed stage: `V1-R.2K.3`
 - selected label contract: `delta_pose_float32_identity`
 - clean baseline success rate: `0.05`
 - scientific claim status: 仅证明量化后标签在冻结仿真器族中可执行；不宣称策略学习增益或真实机器人迁移。
-- training, seed 0, confirm, V2 and V3: 未授权；下一步为构建并冻结完整 B1-2K 点输入训练数据。
+- training, seed 0, confirm, V2 and V3: 未授权；下一步为独立评估 seed 0 是否启动。
+
+## V1-R.2K.3 B1-2K dataset freeze
+
+- 新增 `0006-mimiclabs-delta-pose-chunk-contract.patch`：delta 模式末端只补零位移并保持最后夹爪命令，时间聚合使用显式 populated mask，合法全零 delta 不再被误判为未填充。
+- 使用 `/home/xushijie/vico-point/third_party/pointbridge` 的正式运行环境生成四个布局 PKL；20 个 episode 全部来自已接受量化源 artifact 的 `states_before` 和 `float32_labels`，未调用旧 PKL 生成入口。
+- 原生 `BCDataset(action_chunking=true, num_queries=40)` 读取检查：4/4 文件、20/20 episode、20/20 标签精确一致、20/20 上一条夹爪命令一致；末端 padding 为 `zero_motion_hold_last_gripper`。
+- 数据集和 manifest 已冻结为本地 gitignored 运行时工件；这些结果只证明训练数据合同完整，不授权 seed 0、B0/B1、confirm、V2 或 V3。
 
 ## V1-R.2K.2 seed-0 readiness
 

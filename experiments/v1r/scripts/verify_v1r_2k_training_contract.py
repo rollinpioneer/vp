@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 
 ROOT = Path(__file__).resolve().parents[3]
 UPSTREAM = Path("/home/xushijie/vico-point/third_party/pointbridge")
+sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(UPSTREAM))
 sys.path.insert(0, str(ROOT / "experiments" / "v1r" / "scripts"))
 
@@ -62,9 +63,13 @@ def _fixture_from_artifacts(records: list[dict], path: Path) -> None:
         eef_quat = np.zeros((t, 7), dtype=np.float64)
         eef_quat[:, :3] = eef[:, :3]
         eef_quat[:, 3] = 1.0
+        gripper_observation = np.empty(t, dtype=np.float64)
+        gripper_observation[0] = -1.0
+        if t > 1:
+            gripper_observation[1:] = labels[:-1, -1]
         obs = {
             "eef_states": eef_quat,
-            "gripper_states": labels[:, -1].astype(np.float64),
+            "gripper_states": gripper_observation,
             "robot_3d": np.repeat(eef[:, None, :3], 9, axis=1),
             "object_1_3d": np.zeros((t, 1, 1, 3), dtype=np.float64),
         }

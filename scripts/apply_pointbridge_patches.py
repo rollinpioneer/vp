@@ -16,6 +16,7 @@ PATCHES = (
     ROOT / "patches" / "pointbridge" / "0003-mujoco23-mesh-path-compat.patch",
     ROOT / "patches" / "pointbridge" / "0004-mimiclabs-delta-pose-contract.patch",
     ROOT / "patches" / "pointbridge" / "0005-mimiclabs-delta-pose-float32-identity-training.patch",
+    ROOT / "patches" / "pointbridge" / "0006-mimiclabs-delta-pose-chunk-contract.patch",
 )
 
 
@@ -48,6 +49,20 @@ def _v1r_2k_contract_applied(upstream: Path) -> bool:
     )
 
 
+def _v1r_2k_chunk_contract_applied(upstream: Path) -> bool:
+    dataset = upstream / "point_bridge" / "read_data" / "mimiclabs.py"
+    agent = upstream / "point_bridge" / "agent" / "pb.py"
+    if not all(path.exists() for path in (dataset, agent)):
+        return False
+    dataset_text = dataset.read_text(encoding="utf-8")
+    agent_text = agent.read_text(encoding="utf-8")
+    return (
+        'if self._action_mode == "delta_pose":' in dataset_text
+        and "self.all_time_actions_populated" in agent_text
+        and "actions_populated = self.all_time_actions_populated[:, step]" in agent_text
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--upstream", type=Path, default=DEFAULT_UPSTREAM)
@@ -70,6 +85,9 @@ def main() -> int:
         # reverse dry-run of 0004 is no longer a valid applied-state check.
         if patch.name.startswith("0004-") and contract_applied:
             print(f"already applied {patch.relative_to(ROOT)} (superseded by 0005)")
+            continue
+        if patch.name.startswith("0006-") and _v1r_2k_chunk_contract_applied(upstream):
+            print(f"already applied {patch.relative_to(ROOT)}")
             continue
         result = _run_patch(upstream, patch, "--forward", "--batch")
         if result.returncode == 0:

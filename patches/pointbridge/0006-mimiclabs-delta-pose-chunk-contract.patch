@@ -1,0 +1,50 @@
+--- a/point_bridge/read_data/mimiclabs.py
++++ b/point_bridge/read_data/mimiclabs.py
+@@ -540,8 +540,16 @@
+                 end_idx = min(
+                     start_idx + num_actions * self._act_subsample, len(actions)
+                 )
+                 act = actions[start_idx : end_idx : self._act_subsample]
+                 if len(act) < num_actions:
+-                    post = np.array(
+-                        [actions[-1]] * (num_actions - len(act)), dtype=np.float32
+-                    )
++                    if self._action_mode == "delta_pose":
++                        # A repeated delta would keep moving the robot after the
++                        # recorded trajectory ends. Hold only the final gripper.
++                        post = np.zeros(
++                            (num_actions - len(act), actions.shape[-1]), dtype=np.float32
++                        )
++                        post[:, -1] = actions[-1, -1]
++                    else:
++                        post = np.array(
++                            [actions[-1]] * (num_actions - len(act)), dtype=np.float32
++                        )
+                     act = np.concatenate([act, post], axis=0)
+--- a/point_bridge/agent/pb.py
++++ b/point_bridge/agent/pb.py
+@@ -356,6 +356,11 @@
+                 self.all_time_actions = torch.zeros(
+                     [
+                         self.max_episode_len,
+                         self.max_episode_len + self.num_queries,
+                         self._act_dim,
+                     ]
+                 ).to(self.device)
++                self.all_time_actions_populated = torch.zeros(
++                    [self.max_episode_len, self.max_episode_len + self.num_queries],
++                    dtype=torch.bool,
++                    device=self.device,
++                )
+@@ -368,6 +373,7 @@
+             if self.temporal_agg_strategy == "exponential_average":
+                 del self.all_time_actions
++                del self.all_time_actions_populated
+@@ -658,8 +663,9 @@
+             action = action.view(-1, self.num_queries, self._act_dim)
+             self.all_time_actions[[step], step : step + self.num_queries] = action[-1:]
++            self.all_time_actions_populated[step, step : step + self.num_queries] = True
+             actions_for_curr_step = self.all_time_actions[:, step]
+-            actions_populated = torch.all(actions_for_curr_step != 0, axis=1)
++            actions_populated = self.all_time_actions_populated[:, step]
+             actions_for_curr_step = actions_for_curr_step[actions_populated]

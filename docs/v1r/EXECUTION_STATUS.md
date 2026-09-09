@@ -1,7 +1,7 @@
 # V1-R 执行状态（2026-09-09）
 
-当前研究锚点已前移到 `V1-R.2K.2`：量化源采集、严格 20/20 回放及 Point Bridge 训练动作路径回环均已完成。冻结合同为
-`delta_pose_float32_identity`；完整 B1-2K 点输入训练数据尚未构建和冻结，因此 seed 0、B0/B1、confirm、V2 和 V3 均未授权。
+当前研究锚点已前移到 `V1-R.2K.3`：量化源采集、严格 20/20 回放、Point Bridge 训练动作路径回环及完整 B1-2K 点输入数据集均已完成。冻结合同为
+`delta_pose_float32_identity`；seed 0、B0/B1、confirm、V2 和 V3 仍未授权，下一步是独立的 seed-0 启动决策。
 
 ## 已完成
 
@@ -76,12 +76,12 @@ formal_runtime:
 
 2J/2J-F/2J-N 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-## 当前门槛状态（V1-R.2K.2）
+## 当前门槛状态（V1-R.2K.3）
 
 ```yaml
-decision: blocked_seed0_training_dataset
-status: completed_2k_training_action_path_dataset_not_frozen
-latest_completed_stage: V1-R.2K.2
+decision: blocked_seed0_training_authorization
+status: completed_b1_2k_dataset_frozen_seed0_not_authorized
+latest_completed_stage: V1-R.2K.3
 selected_label_contract: delta_pose_float32_identity
 quantized_at_source_capture_gate: passed
 strict_replay_gate: 20/20
@@ -92,8 +92,8 @@ confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
 training_action_path_gate: passed
-training_dataset_manifest_gate: blocked_not_built
-next_stage: build_and_freeze_b1_2k_training_dataset
+training_dataset_manifest_gate: passed_4_pkls_20_episodes
+next_stage: independent_seed0_readiness_decision
 ```
 
 V1-R.2K 冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`，2K.2 又确认该合同已进入 Point Bridge 数据读取和 agent 后处理路径。

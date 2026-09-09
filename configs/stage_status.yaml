@@ -11,9 +11,9 @@ v2_implementation_scaffold_authorized: true
 v2_formal_experiment_authorized: false
 v3_implementation_scaffold_authorized: true
 v3_formal_experiment_authorized: false
-decision: blocked_seed0_training_dataset
-latest_completed_stage: V1-R.2K.2
+decision: blocked_seed0_training_authorization
+latest_completed_stage: V1-R.2K.3
 selected_label_contract: delta_pose_float32_identity
 seed0_training_authorized: false
 confirm_rollouts_authorized: false
-next_action: build_and_freeze_b1_2k_training_dataset
+next_action: independent_seed0_readiness_decision

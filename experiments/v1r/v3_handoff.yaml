@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2K.2 integrated delta_pose_float32_identity into the Point Bridge training action path, but the training dataset is not frozen and no seed-0 training is authorized. V3 remains unauthorized.
+reason: V1-R.2K.3 froze the B1-2K point-input dataset under delta_pose_float32_identity, but no seed-0 training is authorized. V3 remains unauthorized.

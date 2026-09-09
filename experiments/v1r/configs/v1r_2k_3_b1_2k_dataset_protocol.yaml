@@ -1,0 +1,30 @@
+stage: V1-R.2K.3
+status: planned_not_started
+name: build_and_freeze_b1_2k_training_dataset
+source_contract: delta_pose_float32_identity
+candidate_universe: frozen_v0_success_audit_manifests
+reuse_existing_2k_attempts: true
+process_remaining_candidates: true
+record_all_attempts: true
+intermediate_state_restore_during_execution: false
+dataset_minmax_normalization: false
+point_observation_source: saved_causal_states_before
+action_source: saved_float32_labels
+gripper_proprio: previous_issued_command
+action_chunking: true
+num_queries: 40
+history_len: 1
+delta_terminal_padding: zero_motion_hold_last_gripper
+target:
+  layouts: [1, 2, 3, 4]
+  accepted_per_layout: 5
+  strict_replay: 20/20
+outputs:
+  pkl_directory: outputs/v1r/b1_2k_point_pkls
+  manifest: outputs/v1r/b1_2k_point_pkls/manifest.json
+authorization:
+  seed0_training_authorized: false
+  b0_b1_training_authorized: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
