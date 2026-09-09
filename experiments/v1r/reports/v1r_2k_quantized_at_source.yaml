@@ -1,0 +1,67 @@
+name: V1-R.2K quantized-at-source sequential data
+stage: V1-R.2K
+status: completed_quantized_at_source_replay_passed
+executed_at: 2026-09-09
+source_repo:
+  branch: exp/v1r-2k-quantized-at-source-20260909
+  commit: 491db4c4652ebfbcfce241c1c5e83c6d0c9eea75
+pointbridge:
+  path: /home/xushijie/vico-point/third_party/pointbridge
+  commit: 5d567a62d62b5a97c5960d45024e065349680cda
+runtime:
+  python: /home/__compress_data/xushijie/.venvs/point-bridge/bin/python
+  robosuite: 1.4.1
+  mujoco: 3.3.5
+  torch: 2.13.0+cu130
+  cuda_available: false
+  gpu: unavailable_nvidia_driver
+  control_freq_hz: 20
+  controller: OSC_POSE
+  control_delta: true
+protocol:
+  sha256: ee1d4500cd7e83a552e6d651dc4c0486dc44f07125eaca43c7008300abfb8f94
+  candidate_order: numeric_demo_index_ascending_within_layout
+  no_dataset_minmax: true
+  no_intermediate_state_restore: true
+numeric_contract:
+  id: delta_pose_float32_identity
+  raw_action: float64
+  saved_label: raw_action_float64.astype(float32)
+  controller_command: saved_label.astype(float64)
+  shared_implementation: experiments/v1r/scripts/numeric_contract.py
+capture:
+  attempted: 41
+  accepted: 20
+  accepted_per_layout: 5
+  failure_breakdown:
+    contact_without_grasp: 19
+    no_contact: 0
+    other: 2
+  per_layout:
+    layout_1: {attempted: 22, accepted: 5, failed_contact_without_grasp: 15, failed_no_contact: 0, failed_other: 2}
+    layout_2: {attempted: 9, accepted: 5, failed_contact_without_grasp: 4, failed_no_contact: 0, failed_other: 0}
+    layout_3: {attempted: 5, accepted: 5, failed_contact_without_grasp: 0, failed_no_contact: 0, failed_other: 0}
+    layout_4: {attempted: 5, accepted: 5, failed_contact_without_grasp: 0, failed_no_contact: 0, failed_other: 0}
+  demo_18: layout_1/demo_18_recorded_and_accepted
+  every_attempt_saved_locally: true
+verification:
+  checked: 20
+  passed: 20
+  required: 20
+  command_values_order_and_length_exact: true
+  captured_vs_replayed_states_exact: true
+  max_state_abs_error: 0.0
+authorization:
+  training_authorized: false
+  seed0_training_authorized: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+scientific_boundary:
+  claim: source-quantized labels produced executable demonstrations under the frozen simulator family
+  does_not_claim: policy_learning_gain_or_robot_transfer
+  next_decision: separate_seed0_training_decision
+artifacts:
+  capture_manifest: outputs/v1r/sequential_success_demos_2k_quantized_at_source/manifest.json
+  verification: outputs/v1r/sequential_success_demos_2k_quantized_at_source/verification.json
+  raw_artifacts: local_only_gitignored_npz_and_xml_indexed_by_manifest

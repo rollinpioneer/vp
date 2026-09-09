@@ -1,6 +1,6 @@
-decision: blocked_numeric_action_contract
-status: completed_numeric_candidate_failed
-latest_completed_stage: V1-R.2J-N
+decision: completed_quantized_at_source_numeric_contract
+status: completed_quantized_at_source_replay_passed
+latest_completed_stage: V1-R.2K.1
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -17,7 +17,7 @@ delta_pose_gripper_sign_gate: passed
 delta_pose_official_runtime_gate: passed
 delta_pose_execution_replay_gate: failed
 delta_numeric_candidate_gate: failed
-selected_label_contract: null
+selected_label_contract: delta_pose_float32_identity
 clean_baseline_gate: blocked
 clean_baseline_scientific_gate: blocked
 initial_state_pairing_audit: passed
@@ -31,7 +31,7 @@ seed0_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: V1-R.2K_quantized_at_source_sequential_data
+next_stage: separate_seed0_training_decision
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -150,9 +150,48 @@ v1r_2j_executable_absolute_and_delta_contracts:
     orientation_zero_branch_decision_changes: 0
     selected_label_contract: null
     next_stage: V1-R.2K_quantized_at_source_sequential_data
-  selected_label_contract: null
+  selected_label_contract: delta_pose_float32_identity
   b0_b1_training_authorized: false
   seed0_training_authorized: false
   confirm_rollouts_authorized: false
   v2_formal_experiment_authorized: false
-  v3_formal_experiment_authorized: false
+v3_formal_experiment_authorized: false
+
+v1r_2k_quantized_at_source:
+  stage: V1-R.2K
+  status: completed_quantized_at_source_replay_passed
+  source_repo_commit: 491db4c4652ebfbcfce241c1c5e83c6d0c9eea75
+  pointbridge_commit: 5d567a62d62b5a97c5960d45024e065349680cda
+  candidate_order: numeric_demo_index_ascending_within_layout
+  numeric_contract:
+    selected_label_contract: delta_pose_float32_identity
+    saved_label: raw_action_float64.astype(float32)
+    controller_command: saved_label.astype(float64)
+    dataset_minmax_normalization: false
+  capture:
+    attempted: 41
+    accepted: 20
+    accepted_per_layout: 5
+    intermediate_state_restore_count: 0
+    source_action_exhaustion_or_success_stop: true
+    failed_contact_without_grasp: 19
+    failed_no_contact: 0
+    failed_other: 2
+    layout_1_demo_18_recorded: true
+  strict_replay_gate:
+    checked: 20
+    passed: 20
+    required: 20
+    command_sequence_exact: true
+    captured_vs_replayed_state_sequence_exact: true
+    max_state_abs_error: 0.0
+  authorization:
+    b0_b1_training_authorized: false
+    seed0_training_authorized: false
+    confirm_rollouts_authorized: false
+    v2_formal_experiment_authorized: false
+    v3_formal_experiment_authorized: false
+  artifacts:
+    capture_manifest: outputs/v1r/sequential_success_demos_2k_quantized_at_source/manifest.json
+    verification: outputs/v1r/sequential_success_demos_2k_quantized_at_source/verification.json
+    report: experiments/v1r/reports/v1r_2k_quantized_at_source.md

@@ -1,0 +1,37 @@
+stage: V1-R.2K
+package_kind: lightweight_reproducibility_bundle
+package_path: downloads/v1r/V1R_2K_quantized_at_source.zip
+included:
+  - experiments/v1r/configs/v1r_2k_quantized_at_source_protocol.yaml
+  - experiments/v1r/scripts/numeric_contract.py
+  - experiments/v1r/scripts/capture_quantized_at_source_demos.py
+  - experiments/v1r/scripts/verify_quantized_at_source_demos.py
+  - experiments/v1r/tests/test_numeric_contract.py
+  - experiments/v1r/manifests/quantized_at_source_attempts.csv
+  - experiments/v1r/manifests/quantized_at_source_run_manifest.json
+  - experiments/v1r/manifests/quantized_at_source_artifact_index.csv
+  - experiments/v1r/reports/v1r_2k_quantized_at_source.yaml
+  - experiments/v1r/reports/v1r_2k_quantized_at_source.md
+  - experiments/v1r/reports/v1r_2k_delivery_manifest.yaml
+  - experiments/v1r/v1r_decision.yaml
+excluded_external_artifacts:
+  - path: /home/xushijie/vico-point/third_party/pointbridge/data/mimicgen_data/bowl_on_plate/bowl_on_plate_1/demo/demo.hdf5
+    purpose: layout 1 source actions and initial states
+    recovery: restore Point Bridge checkout at commit 5d567a62d62b5a97c5960d45024e065349680cda
+  - path: /home/xushijie/vico-point/third_party/pointbridge/data/mimicgen_data/bowl_on_plate/bowl_on_plate_2/demo/demo.hdf5
+    purpose: layout 2 source actions and initial states
+    recovery: restore Point Bridge checkout at commit 5d567a62d62b5a97c5960d45024e065349680cda
+  - path: /home/xushijie/vico-point/third_party/pointbridge/data/mimicgen_data/bowl_on_plate/bowl_on_plate_3/demo/demo.hdf5
+    purpose: layout 3 source actions and initial states
+    recovery: restore Point Bridge checkout at commit 5d567a62d62b5a97c5960d45024e065349680cda
+  - path: /home/xushijie/vico-point/third_party/pointbridge/data/mimicgen_data/bowl_on_plate/bowl_on_plate_4/demo/demo.hdf5
+    purpose: layout 4 source actions and initial states
+    recovery: restore Point Bridge checkout at commit 5d567a62d62b5a97c5960d45024e065349680cda
+  - path: outputs/v1r/sequential_success_demos_2k_quantized_at_source/
+    purpose: 41 local attempt NPZ/XML bundles and raw runtime JSON
+    recovery: rerun capture and verifier with the locked environment
+security:
+  api_calls: 0
+  api_keys_read: false
+  secrets_in_package: false
+  training_runs: 0
