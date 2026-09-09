@@ -1,11 +1,10 @@
 # V1-R.2F CPU/CUDA Parity
 
-状态：`blocked_unavailable_cuda`。请求冻结场景：10。
+状态：`blocked_missing_results`。请求冻结场景：10。
 
-`torch.cuda.is_available()`：`False`；CUDA device count：`0`；`nvidia-smi` return code：`9`。
+`torch.cuda.is_available()`：`True`；CUDA device count：`8`；`nvidia-smi` return code：`0`。
 
-正式评测设备协议：`cpu`；冻结：`True`。
+正式评测设备协议：`cuda`；冻结：`True`。
 
 阻塞原因：
-- torch.cuda.is_available() is false
-- nvidia-smi cannot access an NVIDIA driver
+- both --cpu-results and --cuda-results are required

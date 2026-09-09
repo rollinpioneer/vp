@@ -1,0 +1,29 @@
+stage: V1-R.2K.seed0_checkpoint_freeze
+status: frozen_before_clean_dev
+training_root: /home/__compress_data/xushijie/vico-point-v1r-2k/outputs/v1r/training/v1r_b1_2k_20_seed0
+primary_checkpoint_step: 300000
+intermediate_checkpoint_steps:
+- 100000
+- 200000
+checkpoint_selection_by_clean_dev: false
+selection_rule: primary checkpoint is the final frozen 300000-step snapshot; intermediate
+  snapshots are diagnostic only
+training_config: /home/__compress_data/xushijie/vico-point-v1r-2k/outputs/v1r/training/v1r_b1_2k_20_seed0/.hydra/config.yaml
+training_config_sha256: fdd53b580f625c0325da6126684fe31dadea6177f3b431ce404340549559c3cb
+dataset_manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+checkpoints:
+  '100000':
+    path: /home/__compress_data/xushijie/vico-point-v1r-2k/outputs/v1r/training/v1r_b1_2k_20_seed0/snapshot/100000.pt
+    sha256: afeb91d34deee6edd353d4cda6de7198f7ba08ed97f512d26bf2e42765095716
+    bytes: 122282027
+    role: diagnostic_only
+  '200000':
+    path: /home/__compress_data/xushijie/vico-point-v1r-2k/outputs/v1r/training/v1r_b1_2k_20_seed0/snapshot/200000.pt
+    sha256: 297b9e614bcd7196b5c2e04743d42c57c6296dd41721f0f5470a8f198b03892a
+    bytes: 122282027
+    role: diagnostic_only
+  '300000':
+    path: /home/__compress_data/xushijie/vico-point-v1r-2k/outputs/v1r/training/v1r_b1_2k_20_seed0/snapshot/300000.pt
+    sha256: e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+    bytes: 122282027
+    role: primary_clean_dev

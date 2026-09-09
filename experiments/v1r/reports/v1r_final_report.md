@@ -1,12 +1,26 @@
 # V1-R 执行结果
 
-- decision: `authorized_seed0_b1_2k_20_pilot`
-- status: `completed_point_observation_freeze_seed0_authorized_not_started`
-- latest completed stage: `V1-R.2K.3-F`
+- decision: `blocked_seed0_clean_dev`
+- status: `completed_seed0_clean_dev_failed`
+- latest completed stage: `V1-R.2K.seed0`
 - selected label contract: `delta_pose_float32_identity`
-- legacy frozen clean baseline success rate: `0.05`; authorized B1-2K-20 seed 0 has not run.
-- scientific claim status: 仅证明量化后标签在冻结仿真器族中可执行；不宣称策略学习增益或真实机器人迁移。
-- training authorization: 仅授权 `B1-2K-20` 的 seed 0，尚未启动；legacy B0/B1、confirm、V2 和 V3 仍未授权。
+- frozen B1-2K-20 seed-0 clean-dev success rate: `3/40 = 0.075`.
+- scientific claim status: 量化后标签、点观测和 chunking 合同已通过；策略基线未建立，不宣称策略学习增益或真实机器人迁移。
+- training authorization: `B1-2K-20` seed 0 已完成；confirm、其他 seed、V2 和 V3 仍未授权。
+
+## V1-R.2K seed-0 clean-dev
+
+- CUDA training completed with return code `0`, 300000 effective steps, primary checkpoint `300000.pt`.
+- Primary checkpoint SHA-256: `e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589`.
+- Layout successes: `0/10`, `2/10`, `0/10`, `1/10`; total `3/40`.
+- Current initial-state matches: `40/40`; historical compatibility hash matches: `35/40`.
+- Simulator exceptions: `0`; action decode errors: `0`.
+- Failure stages: `no_approach=9`, `no_grasp=22`, `post_grasp_drop=6`.
+- Gate: failed; required at least `20/40`.
+- Full upload-safe report: `experiments/v1r/reports/v1r_2k_seed0_clean_dev.md`.
+
+The next stage is `diagnose_pilot_coverage_or_learnability`. Do not start
+confirm rollouts, remaining seeds, V2, or V3 from this result.
 
 ## V1-R.2K.3-F point-observation freeze
 
@@ -70,7 +84,7 @@
 
 - initial_state_pairing_audit: `passed`
 - runner_parity_audit: `passed`
-- cpu_cuda_parity_audit: `blocked_unavailable_cuda`
+- cpu_cuda_parity_audit: `blocked_missing_results` (CUDA visible; no paired CPU/CUDA result)
 - expert_replay_audit: `failed`
 - per_layout_failure_analysis: `complete`
 

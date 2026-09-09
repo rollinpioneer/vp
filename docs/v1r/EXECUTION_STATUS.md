@@ -1,7 +1,7 @@
 # V1-R 执行状态（2026-09-09）
 
-当前研究锚点已前移到 `V1-R.2K.3-F`：量化源采集、严格 20/20 回放、Point Bridge 训练动作路径回环、点观测部署一致性和真实 40 步 chunking 均已通过。冻结合同为
-`delta_pose_float32_identity`；仅 `B1-2K-20` 的 seed 0 已授权但尚未启动，legacy B0/B1、confirm、V2 和 V3 仍未授权。
+当前研究锚点已前移到 `V1-R.2K.seed0`：量化源采集、严格 20/20 回放、Point Bridge 训练动作路径回环、点观测部署一致性和真实 40 步 chunking 均已通过。冻结合同为
+`delta_pose_float32_identity`；唯一授权的 `B1-2K-20` seed 0 已在 CUDA 上完成训练，但 frozen clean-dev 仅 `3/40`，未建立策略基线。legacy B0/B1、confirm、其他 seed、V2 和 V3 仍未授权。
 
 ## 已完成
 
@@ -11,7 +11,7 @@
 - 自动化入口：clean baseline、感知审计、阶段识别、目标 mask schedule、频率/相机汇总、上下文输入审计、V1-R 统一决策。
 - 完整初态：保存 140 个 clean dev/confirm 状态和 10 个 runner parity 状态；150/150 在 CPU 上重复恢复两次并严格匹配，三 training seed 引用相同状态文件和 SHA-256。
 - runner parity：旧 runner 5 个历史成功、5 个历史失败场景均用完整冻结状态复跑；legacy、新 runner、官方 Point Bridge 入口 10/10 对齐，前 20 步动作最大绝对差为 0.0，三者成功率均为 0.10。
-- CPU/CUDA：当前环境没有可用 CUDA 设备，审计状态为 `blocked_unavailable_cuda`；不宣称 CPU/CUDA parity 通过，正式部署设备协议冻结为 CPU。
+- CPU/CUDA：当前提权环境可见 8 张 NVIDIA A100，PyTorch CUDA `2.8.0+cu126` 可用；尚未提供成对 CPU/CUDA 结果，因此 parity 状态为 `blocked_missing_results`，不宣称 parity 通过。正式 seed-0 训练和 clean-dev 使用 CUDA。
 - 专家回放：修复 `reset_to()` 后 Panda 夹爪增量缓存及 OSC 参考关节的审计隔离；重新检查现有 20 条轨迹后，初态仍 20/20 精确恢复，布局 1/2 各 0/5，布局 3/4 各 5/5，整体仍 10/20。10 条失败记录从第 1 步开始偏离，说明缓存污染不是布局 1/2 的充分根因。
 - 目标诊断严格限定为布局 1 `demo_0`、布局 2 `demo_0`、布局 3 `demo_3` 的前 20 步；delta OSC、时间对齐和目标重建均得到支持。首个可解释差异定位在 `state[0] + action[0] -> state[1]`：动作 0 的实际控制目标与保存目标一致，但执行后 EEF 已出现偏差；从动作 1 开始，delta OSC 将该偏差递推进下一控制目标。MuJoCo 3.1.1 中三条轨迹的动作 1 目标递推残差均不超过 `0.000017 mm`。绝对目标仅保留为跨运行时诊断对照，不改变数据动作契约，也未调整坐标或动作倍率。
 - V1-R.2G Point Bridge 绝对位姿契约：直接实例化原生 `BCDataset`，使用 `act_subsample=1`、`eef_states[1:]`、`gripper_states[1:]`、末动作重复、SciPy 四元数转换和 Point Bridge 原生 6D 旋转；标签再经过 `BCDataset.preprocess['actions']` 与 `PB.act` pose 分支反归一化。没有运行策略网络或语言网络。
@@ -24,8 +24,9 @@
 - 四布局各获得 5 条连续任务成功演示。布局 1/2/3/4 分别执行 22/9/5/5 个候选后达到 5/5；20 条工件分别保存实际 7 维控制命令、执行后模拟器状态、实测 EEF 位姿、同一步夹爪命令和控制器绝对目标。
 - 新演示的实际命令回放为 `20/20`，说明这批数据自身可以从完整初态连续复现。训练标签回放分开执行：S0 原始 Point Bridge 下一位姿/下一夹爪标签为 `3/20`，S1 同一步控制器绝对目标/夹爪标签为 `16/20`；两者均未达到严格 `20/20`，因此未选择动作标签合同，也未重建训练 PKL 或启动 seed 0。
 - 20 条任务成功演示中，连续五步 `_check_grasp=True` 的诊断为 0/20；该条件按协议保持非门槛，不能覆盖任务成功和实际命令回放结论。这 20 条只用于动作合同验证，不代表未来训练数据覆盖充分。
-- 冻结 clean dev：seed-0 40/40 rollout 完成，成功率 0.05；布局 1/2/3 各 0/10，布局 4 为 2/10。模拟器异常和动作解码异常均为 0，40/40 初态严格匹配。
-- 失败阶段：`no_approach=11`、`no_grasp=24`、`post_grasp_drop=3`；38 个失败回合超时。
+- 冻结 clean dev：唯一授权的 B1-2K-20 seed-0 训练已完成 300000 步，主 checkpoint 为 `300000.pt`；40/40 rollout 完成，成功率 `3/40=0.075`，布局 1/2/3/4 分别为 `0/10`、`2/10`、`0/10`、`1/10`。当前状态包初态匹配 `40/40`，模拟器异常和动作解码异常均为 0；历史兼容 hash 为 `35/40`，仅作诊断，不覆盖当前初态匹配结论。
+- 失败阶段：`no_approach=9`、`no_grasp=22`、`post_grasp_drop=6`。clean-dev 门槛要求至少 `20/40`，本轮未通过。
+- seed-0 结果报告：`experiments/v1r/reports/v1r_2k_seed0_clean_dev.md` 和 `.yaml`。训练 checkpoint、rollout CSV、PKL、状态包、XML、TensorBoard 文件均保持本地，不上传 Git。
 - V1-R.2J 在同一 20 条 V1-R.2I 工件上完成绝对动作合同重建和 7 维 `delta_pose` 备用接口验证。绝对合同基础结果为 S0-old `3/20`、S0-transition `3/20`、S1-PB `16/20`、S1-world `17/20`；统一尾段诊断为 `11/20`、`9/20`、`18/20`、`18/20`，均未通过 `20/20`。
 - `delta_pose` 的初态恢复、共享 min-max 归一化往返、夹爪符号保持和官方 delta runtime 均为 `20/20`，但正式任务执行回放为 `17/20`；失败为布局 1 `demo_18`、布局 3 `demo_10`、布局 4 `demo_2`。该接口保留为未验证备用 patch，不得作为训练合同。
 - V1-R.2J-F 在四条冻结演示上完成 24 次数值路径诊断：A/C 原始 `float64` 均为 `4/4`，E/F 原始 `float32` 均为 `3/4`，B/D 共享 min-max -> `float32` -> inverse 均为 `1/4`。采集环境与 Point Bridge `delta_pose` 入口在对应数值条件下底层动作数组和结果一致，执行入口不是直接触发因素。
@@ -35,19 +36,19 @@
 - V1-R.2K 量化源采集已完成：沿冻结的布局内数字 demo 顺序共尝试 41 次，接收 20 条，布局 1/2/3/4 分别为 5/5、5/5、5/5、5/5；所有尝试均保留，旧 V1-R.2J-N 结果未覆盖。
 - V1-R.2K 严格回放已通过 `20/20`：保存的 float32 标签经共享解码器得到的 float64 控制命令在值、顺序和长度上完全一致，采集与回放状态序列逐步一致，最大绝对误差为 `0.0`。该结果只证明量化后的数据合同可执行，不证明策略可学习或真实机器人迁移。
 - V1-R.2K.2 新增 Point Bridge `0005` 补丁，采集、回放、`BCDataset` 与 `BCAgent` 共同调用 `vico_point.action_contracts`，delta 标签不再做 min-max。20/20 数据集标签和 DataLoader batch、20/20 解码命令均逐元素一致，agent 后处理检查通过；由于完整点输入训练 PKL 和 B1-2K 清单尚未冻结，seed 0 仍未授权。
-- V1-R.2K.3-F 修正 Point Bridge 包装器定位、上一条夹爪命令对应的机器人点和每 episode 固定对象模板；正式验证通过点观测四项 `20/20`、真实 40 步 chunk `80/80`。二进制身份和训练配置已冻结，仅授权 `B1-2K-20` seed 0，尚未启动。
+- V1-R.2K.3-F 修正 Point Bridge 包装器定位、上一条夹爪命令对应的机器人点和每 episode 固定对象模板；正式验证通过点观测四项 `20/20`、真实 40 步 chunk `80/80`。二进制身份和训练配置已冻结，随后按授权完成 `B1-2K-20` seed 0 训练。
 - 基础回归：完整测试 `68/68` 通过；206 个已跟踪或待跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
 
-## 历史门槛状态（截至 V1-R.2J-N）
+## 当前门槛状态（截至 V1-R.2K.seed0）
 
 V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_gate` 和 `s1_label_replay_gate` 均为 `failed`。V1-R.2J 又验证了 7 维 `delta_pose` 的归一化、夹爪符号和官方运行时均可执行，但任务回放只有 `17/20`，仍未达到严格门槛。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
-当时的决策为：
+当前决策为：
 
 ```yaml
-decision: blocked_numeric_action_contract
-status: completed_numeric_candidate_failed
-latest_completed_stage: V1-R.2J-N
+decision: blocked_seed0_clean_dev
+status: completed_seed0_clean_dev_failed
+latest_completed_stage: V1-R.2K.seed0
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 runner_parity: passed
 initial_state_restoration: passed
@@ -63,13 +64,16 @@ delta_pose_gripper_sign_gate: passed
 delta_pose_official_runtime_gate: passed
 delta_pose_execution_replay_gate: failed
 delta_numeric_candidate_gate: failed
-selected_label_contract: null
-clean_baseline_gate: blocked
+selected_label_contract: delta_pose_float32_identity
+clean_baseline_gate: failed
 b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: V1-R.2K_quantized_at_source_sequential_data
+seed0_training_started: true
+seed0_training_completed: true
+seed0_clean_dev_gate: failed
+next_stage: diagnose_pilot_coverage_or_learnability
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -77,12 +81,12 @@ formal_runtime:
 
 2J/2J-F/2J-N 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-## 当前门槛状态（V1-R.2K.3-F）
+## 当前门槛状态（V1-R.2K.seed0）
 
 ```yaml
-decision: authorized_seed0_b1_2k_20_pilot
-status: completed_point_observation_freeze_seed0_authorized_not_started
-latest_completed_stage: V1-R.2K.3-F
+decision: blocked_seed0_clean_dev
+status: completed_seed0_clean_dev_failed
+latest_completed_stage: V1-R.2K.seed0
 selected_label_contract: delta_pose_float32_identity
 quantized_at_source_capture_gate: passed
 strict_replay_gate: 20/20
@@ -92,18 +96,22 @@ training_authorized: true_for_b1_2k_20_seed0_only
 seed0_training_authorized: true
 authorized_variant: B1-2K-20
 authorized_seeds: [0]
-seed0_training_started: false
+seed0_training_started: true
+seed0_training_completed: true
+seed0_clean_dev_gate: failed
+seed0_clean_dev_successes: 3
+seed0_clean_dev_rollouts: 40
 b0_b1_training_authorized: false
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
 training_action_path_gate: passed
 training_dataset_manifest_gate: passed_4_corrected_pkls_20_episodes
-next_stage: run_authorized_b1_2k_20_seed0
+next_stage: diagnose_pilot_coverage_or_learnability
 ```
 
 V1-R.2K 冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`，2K.2 确认该合同已进入 Point Bridge 数据读取和 agent 后处理路径，2K.3-F 又修正并验证了夹爪相关机器人点、固定对象模板和真实 chunking。
-这些结果仍不证明策略可学习或真实机器人迁移。下一步仅运行已冻结配置中的一个 seed 0，并在冻结 clean dev 40 条上以 `20/40` 为门槛；confirm、V2 和 V3 不随 seed-0 授权自动开放。
+这些结果仍不证明策略可学习或真实机器人迁移。唯一授权的 seed 0 已完成训练，但 frozen clean-dev 仅 `3/40`，低于 `20/40` 门槛。下一步是 pilot coverage / learnability 诊断；confirm、其他 seed、V2 和 V3 不随 seed-0 授权自动开放。
 
 上述历史结果说明，根因不是新 runner，也不是回放审计的终态缓存污染：三条执行路径在同一完整状态上完全一致，且缓存隔离复核后布局 1/2 仍失败。V1-R.2G 证明原生绝对标签链只有 13/20；V1-R.2H 又排除了仅替换保存控制目标或修正夹爪一帧时序即可达到 20/20 的解释。V1-R.2I 进一步证明，正式运行时连续成功轨迹及其实际 delta 命令可以 20/20 复现；V1-R.2J/2J-F/2J-N 将阻塞收窄到数值动作路径，并排除了执行入口、控制器输入 dtype 和当前样本中的旋转零值分支。V1-R.2K 随后用量化源采集建立了新的可执行数据合同，但仍未授权策略训练。旧 V1 的约 30% E00/E10 结果仅保留在 `experiments/v1r/legacy_snapshot/`，没有写入新门槛结果。
 

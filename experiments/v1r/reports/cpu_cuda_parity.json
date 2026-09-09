@@ -1,26 +1,25 @@
 {
   "stage": "V1-R.2F",
   "audit": "cpu_cuda_parity",
-  "status": "blocked_unavailable_cuda",
+  "status": "blocked_missing_results",
   "scenarios_requested": 10,
   "action_tolerance": 1e-05,
   "hardware": {
     "torch_version": "2.8.0+cu126",
     "torch_cuda_version": "12.6",
-    "torch_cuda_available": false,
-    "torch_cuda_device_count": 0,
+    "torch_cuda_available": true,
+    "torch_cuda_device_count": 8,
     "nvidia_smi": {
-      "returncode": 9,
-      "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+      "returncode": 0,
+      "stdout": "NVIDIA A100-SXM4-40GB, 610.57.04\nNVIDIA A100-SXM4-40GB, 610.57.04\nNVIDIA A100-SXM4-40GB, 610.57.04\nNVIDIA A100-SXM4-40GB, 610.57.04\nNVIDIA A100-SXM4-40GB, 610.57.04\nNVIDIA A100-SXM4-40GB, 610.57.04\nNVIDIA A100-SXM4-40GB, 610.57.04\nNVIDIA A100-SXM4-40GB, 610.57.04",
       "stderr": ""
     }
   },
   "blockers": [
-    "torch.cuda.is_available() is false",
-    "nvidia-smi cannot access an NVIDIA driver"
+    "both --cpu-results and --cuda-results are required"
   ],
-  "deployment_device": "cpu",
+  "deployment_device": "cuda",
   "deployment_device_protocol_frozen": true,
-  "formal_evaluation_device_constraint": "all formal rollouts must use cpu",
+  "formal_evaluation_device_constraint": "all formal rollouts must use cuda",
   "records": []
 }

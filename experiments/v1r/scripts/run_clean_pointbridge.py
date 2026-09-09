@@ -189,9 +189,12 @@ def _prepare_episode(
     time_step = env.reset()
     metadata: dict[str, object] = {
         "state_path": "",
+        "saved_initial_state_sha256": "",
         "expected_initial_state_sha256": "",
+        "historical_restored_state_sha256": "",
         "actual_initial_state_sha256": "",
         "initial_state_match": "unresolved",
+        "historical_initial_state_match": "unresolved",
         "state_file_sha256": "",
     }
     state_row = state_index.get(row["scenario_id"]) if state_index is not None else None
@@ -203,7 +206,13 @@ def _prepare_episode(
         metadata.update(
             {
                 "state_path": str(bundle["path"].relative_to(ROOT)),
-                "expected_initial_state_sha256": state_row[
+                # The state bundle is the authoritative input for this
+                # runtime. The historical restored hash is retained as a
+                # compatibility diagnostic because it was produced under a
+                # different Point Bridge / MuJoCo source identity.
+                "saved_initial_state_sha256": state_row["state_sha256"],
+                "expected_initial_state_sha256": state_row["state_sha256"],
+                "historical_restored_state_sha256": state_row[
                     "restored_state_sha256"
                 ],
                 "state_file_sha256": bundle["file_sha256"],
@@ -216,6 +225,10 @@ def _prepare_episode(
         if not metadata["expected_initial_state_sha256"]
         or metadata["expected_initial_state_sha256"] == actual
         else "failed"
+    )
+    historical = metadata["historical_restored_state_sha256"]
+    metadata["historical_initial_state_match"] = (
+        "passed" if not historical or historical == actual else "failed"
     )
     return time_step, metadata
 
@@ -244,9 +257,12 @@ def run_episode(
         "initial_state_sha256": "",
         "state_path": "",
         "state_file_sha256": "",
+        "saved_initial_state_sha256": "",
         "expected_initial_state_sha256": "",
+        "historical_restored_state_sha256": "",
         "actual_initial_state_sha256": "",
         "initial_state_match": "unresolved",
+        "historical_initial_state_match": "unresolved",
         "robot_pose_sha256": "",
         "robot_points_sha256": "",
         "body_state_sha256": "",

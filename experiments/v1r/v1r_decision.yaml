@@ -1,6 +1,6 @@
-decision: authorized_seed0_b1_2k_20_pilot
-status: completed_point_observation_freeze_seed0_authorized_not_started
-latest_completed_stage: V1-R.2K.3-F
+decision: blocked_seed0_clean_dev
+status: completed_seed0_clean_dev_failed
+latest_completed_stage: V1-R.2K.seed0
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -18,23 +18,27 @@ delta_pose_official_runtime_gate: passed
 delta_pose_execution_replay_gate: failed
 delta_numeric_candidate_gate: failed
 selected_label_contract: delta_pose_float32_identity
-clean_baseline_gate: blocked
-clean_baseline_scientific_gate: blocked
+clean_baseline_gate: failed
+clean_baseline_scientific_gate: failed
 initial_state_pairing_audit: passed
 runner_parity_audit: passed
-cpu_cuda_parity_audit: blocked_unavailable_cuda
-deployment_device: cpu
+cpu_cuda_parity_audit: blocked_missing_results
+deployment_device: cuda
 expert_replay_audit: failed
 per_layout_failure_analysis: complete
 b0_b1_training_authorized: false
 seed0_training_authorized: true
 authorized_variant: B1-2K-20
 authorized_seeds: [0]
-seed0_training_started: false
+seed0_training_started: true
+seed0_training_completed: true
+seed0_clean_dev_gate: failed
+seed0_clean_dev_successes: 3
+seed0_clean_dev_rollouts: 40
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: run_authorized_b1_2k_20_seed0
+next_stage: diagnose_pilot_coverage_or_learnability
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -222,8 +226,31 @@ v1r_2k_seed0_readiness:
   seed0_training_authorized: true
   authorized_variant: B1-2K-20
   authorized_seeds: [0]
-  training_started: false
+  training_started: true
+  training_completed: true
+  clean_dev_gate: failed
+  clean_dev_successes: 3
+  clean_dev_rollouts: 40
   confirm_rollouts_authorized: false
   v2_formal_experiment_authorized: false
   v3_formal_experiment_authorized: false
-  next_stage: run_authorized_b1_2k_20_seed0
+  next_stage: diagnose_pilot_coverage_or_learnability
+v1r_2k_seed0_clean_dev:
+  status: completed_seed0_clean_dev_failed
+  decision: blocked_seed0_clean_dev
+  primary_checkpoint_step: 300000
+  primary_checkpoint_sha256: e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+  resolved_config_sha256: fdd53b580f625c0325da6126684fe31dadea6177f3b431ce404340549559c3cb
+  dataset_manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+  device: cuda
+  rollouts: 40
+  successes: 3
+  successes_per_layout: {1: 0, 2: 2, 3: 0, 4: 1}
+  required_successes: 20
+  initial_state_matches: 40
+  historical_initial_state_matches: 35
+  simulator_exceptions: 0
+  action_decode_errors: 0
+  failure_stage_counts: {no_approach: 9, no_grasp: 22, post_grasp_drop: 6}
+  report: experiments/v1r/reports/v1r_2k_seed0_clean_dev.md
+  next_stage: diagnose_pilot_coverage_or_learnability

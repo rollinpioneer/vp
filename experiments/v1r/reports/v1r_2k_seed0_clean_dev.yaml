@@ -1,0 +1,62 @@
+stage: V1-R.2K.seed0
+status: completed_seed0_clean_dev_failed
+decision: blocked_seed0_clean_dev
+variant: B1-2K-20
+seed: 0
+training:
+  device: cuda
+  cuda_visible: true
+  torch: 2.8.0+cu126
+  cuda_runtime: '12.6'
+  gpu: NVIDIA A100-SXM4-40GB
+  train_steps: 300000
+  configured_train_steps: 300010
+  primary_checkpoint_step: 300000
+  primary_checkpoint_sha256: e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+  resolved_config_sha256: fdd53b580f625c0325da6126684fe31dadea6177f3b431ce404340549559c3cb
+  dataset_manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+  checkpoint_selection: frozen_before_clean_dev
+  intermediate_checkpoints_diagnostic_only: true
+dataset:
+  selected_label_contract: delta_pose_float32_identity
+  dataset_minmax_normalization: false
+  dataset_scope: balanced_20_episode_seed0_pilot
+  episodes: 20
+  layouts: [1, 2, 3, 4]
+clean_dev:
+  manifest: experiments/v1r/manifests/clean_baseline_dev.csv
+  rollouts: 40
+  successes: 3
+  success_rate: 0.075
+  threshold_successes: 20
+  threshold_rate: 0.5
+  successes_per_layout: {1: 0, 2: 2, 3: 0, 4: 1}
+  initial_state_matches: 40
+  historical_initial_state_matches: 35
+  simulator_exceptions: 0
+  action_decode_errors: 0
+  failure_stage_counts:
+    no_approach: 9
+    no_grasp: 22
+    post_grasp_drop: 6
+  final_csv_sha256: 3bff63cdde28a8a4df102ee605fe999271e47974000d63e9f6634ac81e0f078c
+  final_json_sha256: fd25d1660ae0cc8260b9128be4426993b1d83077c3310f25ec000943d1a5785c
+  gate: failed
+authorization:
+  selected_label_contract: delta_pose_float32_identity
+  seed0_training_authorized: true
+  seed0_training_started: true
+  seed0_training_completed: true
+  seed0_clean_dev_gate: failed
+  confirm_rollouts_authorized: false
+  remaining_training_seeds_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+next_stage: diagnose_pilot_coverage_or_learnability
+interpretation: >-
+  The quantized-source action contract, Point Bridge data path, point
+  observation freeze, and 40-step chunking passed. The first B1-2K-20 seed
+  trained successfully on CUDA, but the frozen clean-dev baseline reached
+  only 3/40 and did not establish a learnable policy baseline. This result
+  does not invalidate the action contract and does not authorize confirm,
+  other seeds, V2, or V3.

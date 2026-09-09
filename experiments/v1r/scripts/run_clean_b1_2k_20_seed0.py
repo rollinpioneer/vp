@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""Evaluate a B1-2K-20 checkpoint using its saved resolved config.
+
+Only evaluation-specific fields are overridden. In particular, the action
+mode, point inputs, history, chunking, and dataset path are taken from the
+training config rather than the legacy clean runner's hard-coded pose setup.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+
+from run_clean_pointbridge import load_snapshot, run_episode, sha256  # noqa: E402
+from seed0_contract import load_yaml, validate_frozen_contract  # noqa: E402
+from state_utils import load_state_index  # noqa: E402
+
+
+def _configure_runtime(upstream: Path) -> None:
+    """Make the clean runner self-contained under the frozen runtime."""
+
+    paths = [
+        Path("/tmp/v1r_mujoco335"),
+        ROOT / "src",
+        upstream,
+        upstream / "third_party/mimiclabs",
+        upstream / "third_party/LIBERO",
+        upstream / "third_party/mimicgen",
+        upstream / "third_party/robocasa",
+    ]
+    existing = [item for item in os.environ.get("PYTHONPATH", "").split(os.pathsep) if item]
+    merged = [str(path) for path in paths if path.is_dir()]
+    merged.extend(existing)
+    os.environ["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(merged))
+    for path in reversed(merged):
+        if path not in sys.path:
+            sys.path.insert(0, path)
+    os.environ.setdefault("MUJOCO_GL", "egl")
+    os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
+    os.environ.setdefault("USE_TF", "0")
+    os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
+    os.environ.setdefault("TENSORBOARD_NO_TF", "1")
+
+
+def _resolved_config(checkpoint: Path, explicit: Path | None) -> Path:
+    if explicit is not None:
+        return explicit.resolve()
+    candidate = checkpoint.parent.parent / ".hydra" / "config.yaml"
+    if candidate.is_file():
+        return candidate
+    candidate = checkpoint.parent.parent / "resolved_config.yaml"
+    if candidate.is_file():
+        return candidate
+    raise FileNotFoundError("could not locate training .hydra/config.yaml beside checkpoint")
+
+
+def _check_config(cfg: dict[str, object]) -> None:
+    suite = cfg.get("suite", {})
+    if not isinstance(suite, dict):
+        raise ValueError("resolved config has no suite mapping")
+    checks = {
+        "suite.action_mode": (suite.get("action_mode"), "delta_pose"),
+        "action_chunking": (cfg.get("action_chunking"), True),
+        "num_queries": (cfg.get("num_queries"), 40),
+        "suite.history_len": (suite.get("history_len"), 1),
+        "suite.obs_type": (suite.get("obs_type"), ["points"]),
+        "use_proprio": (cfg.get("use_proprio"), True),
+        "use_language": (cfg.get("use_language"), False),
+        "dataset_minmax_normalization": (
+            cfg.get("dataset_minmax_normalization", False),
+            False,
+        ),
+    }
+    errors = {key: value for key, value in checks.items() if value[0] != value[1]}
+    if errors:
+        raise ValueError(f"resolved config violates clean-dev contract: {errors}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--checkpoint", type=Path, required=True)
+    parser.add_argument("--resolved-config", type=Path)
+    parser.add_argument("--upstream", type=Path, default=Path("/home/xushijie/vico-point/third_party/pointbridge"))
+    parser.add_argument("--state-index", type=Path, default=ROOT / "experiments/v1r/manifests/clean_state_index.csv")
+    parser.add_argument("--split", choices=("dev", "confirm"), default="dev")
+    parser.add_argument("--limit", type=int)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+
+    checkpoint = args.checkpoint.resolve()
+    upstream = args.upstream.resolve()
+    if not checkpoint.is_file():
+        parser.error(f"checkpoint does not exist: {checkpoint}")
+    frozen = validate_frozen_contract(ROOT / "experiments/v1r/configs/b1_2k_20_seed0.yaml", upstream)
+    resolved_path = _resolved_config(checkpoint, args.resolved_config)
+    resolved = load_yaml(resolved_path)
+    _check_config(resolved)
+    _configure_runtime(upstream)
+
+    # Reuse the legacy runner's audited rollout loop, but load the actual
+    # training config through a small temporary Hydra composition shim.
+    import importlib.util
+
+    legacy_path = ROOT / "scripts" / "evaluate_pointbridge_paired.py"
+    spec = importlib.util.spec_from_file_location("v1r_clean_legacy", legacy_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {legacy_path}")
+    legacy = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(legacy)
+    legacy._add_paths(upstream)
+    eval_module = legacy._load_eval_module(upstream)
+    from omegaconf import OmegaConf
+
+    cfg = OmegaConf.load(resolved_path)
+    cfg.eval = True
+    cfg.device = args.device
+    cfg.save_video = False
+    cfg.use_tb = False
+    cfg.bc_weight = str(checkpoint)
+    cfg.suite.num_eval_episodes = 1
+    cfg.expert_dataset = cfg.dataloader.bc_dataset
+    old_cwd = Path.cwd()
+    os.chdir(upstream)
+    rows = []
+    try:
+        workspace = eval_module.Workspace(cfg)
+        load_snapshot(workspace, checkpoint, args.device)
+        workspace.agent.train(False)
+        state_index = load_state_index(args.state_index.resolve())
+        state_rows = [row for row in state_index.values() if row.get("split") == args.split]
+        state_rows.sort(key=lambda row: row["scenario_id"])
+        if args.limit is not None:
+            state_rows = state_rows[: args.limit]
+        if args.split == "dev" and len(state_rows) != 40 and args.limit is None:
+            raise ValueError(f"frozen clean dev must contain 40 rows, got {len(state_rows)}")
+        for index, state_row in enumerate(state_rows):
+            env = workspace.env[int(state_row["layout"]) - 1]
+            row = {
+                "training_seed": "0",
+                "scenario_id": state_row["scenario_id"],
+                "layout": state_row["layout"],
+                "simulator_seed": state_row["simulator_seed"],
+            }
+            result = run_episode(workspace, env, row, 0, state_index, max_steps=None)
+            result["checkpoint_sha256"] = sha256(checkpoint)
+            result["evaluation_device"] = args.device
+            if not np_action_shape_ok(result):
+                raise ValueError(f"non-7D action was observed for {row['scenario_id']}")
+            rows.append(result)
+            print(f"{index + 1}/{len(state_rows)} {row['scenario_id']} success={result['success']}", flush=True)
+    finally:
+        if "workspace" in locals():
+            for env in workspace.env:
+                try:
+                    env.close()
+                except Exception:
+                    pass
+        os.chdir(old_cwd)
+    if not rows:
+        raise ValueError("clean evaluation selected no rows")
+    args.output.resolve().parent.mkdir(parents=True, exist_ok=True)
+    import csv
+
+    with args.output.resolve().open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+    summary = {
+        "stage": "V1-R.2K.seed0.clean_dev",
+        "status": "complete",
+        "rollouts": len(rows),
+        "successes_total": sum(int(row["success"]) for row in rows),
+        "successes_per_layout": {
+            str(layout): sum(int(row["success"]) for row in rows if int(row["layout"]) == layout)
+            for layout in range(1, 5)
+        },
+        "initial_state_matches": sum(row["initial_state_match"] == "passed" for row in rows),
+        "historical_initial_state_matches": sum(
+            row.get("historical_initial_state_match") == "passed" for row in rows
+        ),
+        "simulator_exceptions": sum(int(row["simulator_exception"]) for row in rows),
+        "action_decode_errors": sum(int(row["action_decode_error"]) for row in rows),
+        "failure_stage_counts": {
+            stage: sum(row["failure_stage"] == stage for row in rows)
+            for stage in sorted({str(row["failure_stage"]) for row in rows})
+        },
+        "checkpoint_sha256": sha256(checkpoint),
+        "resolved_config_sha256": sha256(resolved_path),
+        "dataset_manifest_sha256": frozen["sha256"]["dataset_manifest"],
+        "evaluation_device": args.device,
+        "pass": len(rows) == 40 and sum(int(row["success"]) for row in rows) >= 20,
+    }
+    args.output.with_suffix(".json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(summary, indent=2))
+    return 0 if summary["pass"] else 2
+
+
+def np_action_shape_ok(result: dict[str, object]) -> bool:
+    """The rollout loop records first actions; enforce the deployment shape."""
+
+    first = result.get("first_20_actions_json", "[]")
+    try:
+        values = json.loads(str(first))
+    except json.JSONDecodeError:
+        return False
+    return all(len(action) == 7 for action in values)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,4 +1,6 @@
 import csv
+import pickle
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,7 +18,6 @@ from experiments.v1r.scripts.state_utils import (
     load_state_index,
     raw_array_sha256,
 )
-from vico_point.data.layout_balanced_sampler import layout_balanced_weights
 
 
 class V1RAuditTests(unittest.TestCase):
@@ -96,15 +97,41 @@ class V1RAuditTests(unittest.TestCase):
         self.assertEqual(set(summary), {"legacy", "new", "official"})
         self.assertTrue(all(value["success_rate"] == 0.5 for value in summary.values()))
 
-    def test_layout_balanced_weights_give_each_layout_equal_mass(self):
-        layouts = [1, 1, 1, 2, 3, 3]
-        weights = layout_balanced_weights(layouts)
-        totals = {}
-        for layout, weight in zip(layouts, weights):
-            totals[layout] = totals.get(layout, 0.0) + weight
-        self.assertEqual(set(totals), {1, 2, 3})
-        for value in totals.values():
-            self.assertAlmostEqual(value, 1 / 3)
+    def test_pointbridge_dataset_keeps_task_layouts_as_sampling_groups(self):
+        upstream = Path("/home/xushijie/vico-point/third_party/pointbridge")
+        if not upstream.is_dir():
+            self.skipTest("Point Bridge checkout is not available")
+        sys.path.insert(0, str(upstream))
+        try:
+            from point_bridge.read_data.mimiclabs import BCDataset
+        except ImportError as exc:
+            self.skipTest(f"Point Bridge runtime is not installed: {exc}")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for task in ("bowl_on_plate_2", "bowl_on_plate_1"):
+                observation = {
+                    "eef_states": np.tile(np.array([[0, 0, 0, 1, 0, 0, 0]], dtype=np.float64), (2, 1)),
+                    "gripper_states": np.array([-1.0, 1.0]),
+                    "robot_tracks_3d": np.zeros((2, 1, 3), dtype=np.float32),
+                    "object_tracks_1_3d": np.zeros((2, 1, 1, 3), dtype=np.float32),
+                }
+                payload = {
+                    "observations": [observation],
+                    "actions": [np.zeros((2, 7), dtype=np.float32)],
+                    "task_emb": np.zeros(384, dtype=np.float32),
+                }
+                (root / f"{task}.pkl").write_bytes(pickle.dumps(payload))
+            dataset = BCDataset(
+                path=str(root), suffix=None, num_demos_per_task=1,
+                history_len=1, action_chunking=False, num_queries=1,
+                img_size=[8, 8], num_robot_points=1, num_points_per_obj=1,
+                robot_points_key="robot_tracks", object_points_key="object_tracks",
+                pixel_keys=["unused"], act_subsample=1, obs_subsample=1,
+                obs_type=["points"], action_mode="delta_pose",
+            )
+            self.assertEqual(dataset.tasks, ["bowl_on_plate_1", "bowl_on_plate_2"])
+            self.assertEqual(sorted(dataset._episodes), [0, 1])
+            self.assertEqual(len(dataset._sample_episode(env_idx=0)["action"]), 2)
 
     def test_state_bundle_rejects_index_hash_mismatch(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -1,6 +1,6 @@
 stage: V1-R
-status: authorized_seed0_b1_2k_20_pilot_not_started
-latest_completed_stage: V1-R.2K.3-F
+status: completed_seed0_clean_dev_failed
+latest_completed_stage: V1-R.2K.seed0
 baseline_commit: a07eb4cb7a2f688657d3c9a86c768c58d0b51cf0
 upstream_commit: 5d567a62d62b5a97c5960d45024e065349680cda
 control_hz: 20
@@ -136,5 +136,24 @@ v1r_2k_seed0_readiness:
   seed0_training_authorized: true
   authorized_variant: B1-2K-20
   authorized_seeds: [0]
-  training_started: false
-next_stage: run_authorized_b1_2k_20_seed0
+  training_started: true
+  training_completed: true
+  clean_dev_gate: failed
+  clean_dev_successes: 3
+  clean_dev_rollouts: 40
+next_stage: diagnose_pilot_coverage_or_learnability
+v1r_2k_seed0_clean_dev:
+  status: completed_seed0_clean_dev_failed
+  decision: blocked_seed0_clean_dev
+  primary_checkpoint_step: 300000
+  primary_checkpoint_sha256: e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+  device: cuda
+  rollouts: 40
+  successes: 3
+  required_successes: 20
+  successes_per_layout: {1: 0, 2: 2, 3: 0, 4: 1}
+  initial_state_matches: 40
+  historical_initial_state_matches: 35
+  simulator_exceptions: 0
+  action_decode_errors: 0
+  next_stage: diagnose_pilot_coverage_or_learnability
