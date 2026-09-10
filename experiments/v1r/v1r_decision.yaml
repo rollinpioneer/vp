@@ -1,6 +1,6 @@
 decision: blocked_seed0_clean_dev
 status: completed_seed0_clean_dev_failed
-latest_completed_stage: V1-R.2K.seed0.checkpoint_diagnostic
+latest_completed_stage: V1-R.2K.seed0-D1
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -38,7 +38,7 @@ seed0_clean_dev_rollouts: 40
 confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
-next_stage: diagnose_pilot_coverage_or_learnability
+next_stage: V1-R.PB-R0_separate_protocol_pending
 checkpoint_learning_curve_diagnostic:
   stage: V1-R.2K.seed0.checkpoint_diagnostic
   status: completed_diagnostic_only
@@ -199,7 +199,8 @@ v1r_2j_executable_absolute_and_delta_contracts:
   seed0_training_authorized: false
   confirm_rollouts_authorized: false
   v2_formal_experiment_authorized: false
-v3_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+  pb_r0_authorized: false
 
 v1r_2k_quantized_at_source:
   stage: V1-R.2K
@@ -295,3 +296,44 @@ v1r_2k_seed0_clean_dev:
   readiness_report: experiments/v1r/reports/v1r_2k_seed0_readiness_final.yaml
   report: experiments/v1r/reports/v1r_2k_seed0_clean_dev.md
   next_stage: diagnose_pilot_coverage_or_learnability
+
+v1r_2k_seed0_d1:
+  stage: V1-R.2K.seed0-D1
+  status: completed_diagnostic_only
+  diagnostic_only: true
+  fit_classification: fit_inconclusive
+  best_checkpoint_step: 200000
+  best_checkpoint_successes: 14
+  checkpoint_fit_successes: {100000: 4, 200000: 14, 300000: 11}
+  checkpoint_fit_successes_per_layout:
+    100000: {1: 0, 2: 1, 3: 2, 4: 1}
+    200000: {1: 2, 2: 3, 3: 5, 4: 4}
+    300000: {1: 1, 2: 2, 3: 3, 4: 5}
+  E1: {rollouts: 60, initial_state_matches: 60, simulator_exceptions: 0, action_decode_errors: 0}
+  E2:
+    simulation_rollouts: 0
+    valid_mse: {100000: 0.003273419803008437, 200000: 0.001068584038875997, 300000: 0.0008450942696072161}
+    h0_mse: {100000: 0.0029894059989601374, 200000: 0.0018394029466435313, 300000: 0.001215120661072433}
+    terminal_padding_excluded: true
+  E3:
+    simulation_rollouts: 0
+    scenario_count: 40
+    pattern_counts: {'000': 33, '001': 1, '010': 2, '011': 2, '110': 2}
+    success_200_300_jaccard: 0.2857142857142857
+  E4:
+    condition_triggered: true
+    new_rollouts: 40
+    strong_sensitivity: false
+    results: {200000: {frozen: 14, latest_chunk_first: 12, added: 2, regressions: 4}, 300000: {frozen: 11, latest_chunk_first: 5, added: 0, regressions: 6}}
+  formal_clean_dev_unchanged: true
+  formal_clean_dev_successes: 3
+  formal_clean_dev_rollouts: 40
+  seed0_retraining_authorized: false
+  remaining_training_seeds_authorized: false
+  confirm_rollouts_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+  pb_r0_authorized: false
+  next_stage: V1-R.PB-R0_separate_protocol_pending
+  report: experiments/v1r/reports/v1r_2k_seed0_d1_result.md
+  machine_readable_report: experiments/v1r/reports/v1r_2k_seed0_d1_result.yaml

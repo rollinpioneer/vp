@@ -1,7 +1,7 @@
 # V1-R 执行状态（2026-09-10）
 
-当前研究锚点已前移到 `V1-R.2K.seed0.checkpoint_diagnostic`：量化源采集、严格 20/20 回放、Point Bridge 训练动作路径回环、点观测部署一致性和真实 40 步 chunking 均已通过。冻结合同为
-`delta_pose_float32_identity`；唯一授权的 `B1-2K-20` seed 0 已在 CUDA 上完成训练，但 frozen clean-dev 仅 `3/40`，未建立策略基线。legacy B0/B1、confirm、其他 seed、V2 和 V3 仍未授权。
+当前研究锚点已前移到 `V1-R.2K.seed0-D1`。量化源数据合同保持为
+`delta_pose_float32_identity`，正式 300k clean-dev 仍为 `3/40`。D1 在冻结的训练初态上得到 100k/200k/300k 分别 `4/20`、`14/20`、`11/20`，因此分类为 `fit_inconclusive`；条件触发的 `latest_chunk_first` 未达到强聚合敏感门槛。下一步是单独预注册 PB-R0，当前未授权执行。seed-0 重训、confirm、其他 seed、V2 和 V3 仍未授权。
 
 ## 已完成
 
@@ -27,6 +27,9 @@
 - 冻结 clean dev：唯一授权的 B1-2K-20 seed-0 训练已完成 300000 步，主 checkpoint 为 `300000.pt`；40/40 rollout 完成，成功率 `3/40=0.075`，布局 1/2/3/4 分别为 `0/10`、`2/10`、`0/10`、`1/10`。当前状态包初态匹配 `40/40`，模拟器异常和动作解码异常均为 0；历史兼容 hash 为 `35/40`，仅作诊断，不覆盖当前初态匹配结论。
 - 失败阶段：`no_approach=9`、`no_grasp=22`、`post_grasp_drop=6`。clean-dev 门槛要求至少 `20/40`，本轮未通过。
 - checkpoint 学习曲线诊断：使用训练前已冻结的中间 checkpoint，在相同 40 条 CUDA dev 初态上只读评估。`100000.pt=2/40`（布局 `0/10,1/10,0/10,1/10`），`200000.pt=6/40`（布局 `1/10,2/10,0/10,3/10`）；正式冻结的 `300000.pt=3/40`。结果显示同一 seed 的中期局部改善未在最终 checkpoint 保持，不改变正式 checkpoint 选择，也不授权 confirm、其他 seed、V2 或 V3。
+- V1-R.2K.seed0-D1 训练初态闭环诊断完成 60 条 rollout：100k/200k/300k 分别为 `4/20`、`14/20`、`11/20`；60/60 初态严格匹配，仿真和动作解码异常均为 0。最佳 checkpoint 未达到预注册的 `16/20`，因此为 `fit_inconclusive`，而不是已建立训练拟合。
+- D1 离线 chunk 拟合覆盖每个 checkpoint 118360 个有效动作位置，terminal padding 单独统计。有效 MSE 从 100k 的 `0.0032734` 降至 200k 的 `0.0010686` 和 300k 的 `0.0008451`，但 h=0 并未稳定优于远期 horizon。
+- D1 条件触发的聚合对照只新增 40 条训练初态 rollout：200k `latest_chunk_first=12/20`（相对 frozen 新增 2、回退 4），300k `5/20`（新增 0、回退 6），未通过“新增至少 5、回退不超过 1”的强敏感门槛。正式 clean-dev 与 checkpoint 角色未改变。
 - seed-0 结果报告：`experiments/v1r/reports/v1r_2k_seed0_clean_dev.md` 和 `.yaml`。训练 checkpoint、rollout CSV、PKL、状态包、XML、TensorBoard 文件均保持本地，不上传 Git。
 - V1-R.2J 在同一 20 条 V1-R.2I 工件上完成绝对动作合同重建和 7 维 `delta_pose` 备用接口验证。绝对合同基础结果为 S0-old `3/20`、S0-transition `3/20`、S1-PB `16/20`、S1-world `17/20`；统一尾段诊断为 `11/20`、`9/20`、`18/20`、`18/20`，均未通过 `20/20`。
 - `delta_pose` 的初态恢复、共享 min-max 归一化往返、夹爪符号保持和官方 delta runtime 均为 `20/20`，但正式任务执行回放为 `17/20`；失败为布局 1 `demo_18`、布局 3 `demo_10`、布局 4 `demo_2`。该接口保留为未验证备用 patch，不得作为训练合同。
@@ -40,7 +43,7 @@
 - V1-R.2K.3-F 修正 Point Bridge 包装器定位、上一条夹爪命令对应的机器人点和每 episode 固定对象模板；正式验证通过点观测四项 `20/20`、真实 40 步 chunk `80/80`。二进制身份和训练配置已冻结，随后按授权完成 `B1-2K-20` seed 0 训练。
 - 基础回归：完整测试 `70/70` 通过；236 个已跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
 
-## 当前门槛状态（截至 V1-R.2K.seed0.checkpoint_diagnostic）
+## 当前门槛状态（截至 V1-R.2K.seed0-D1）
 
 V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_gate` 和 `s1_label_replay_gate` 均为 `failed`。V1-R.2J 又验证了 7 维 `delta_pose` 的归一化、夹爪符号和官方运行时均可执行，但任务回放只有 `17/20`，仍未达到严格门槛。真实冻结 clean dev 的 seed-0 仍仅为 `0.05`，低于预注册的 `0.50` clean 门槛；因此没有运行三 seed confirm，也没有重新训练 B0/B1。V1-R.3/R.4/R.5/R.6 没有被旧 V1 输出替代；缺少真实输入时继续保持 `blocked` 或 `unresolved`。
 
@@ -49,7 +52,7 @@ V1-R.2I 的顺序采集与实际命令回放已经通过，但 `s0_label_replay_
 ```yaml
 decision: blocked_seed0_clean_dev
 status: completed_seed0_clean_dev_failed
-latest_completed_stage: V1-R.2K.seed0.checkpoint_diagnostic
+latest_completed_stage: V1-R.2K.seed0-D1
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 runner_parity: passed
 initial_state_restoration: passed
@@ -74,7 +77,9 @@ v3_formal_experiment_authorized: false
 seed0_training_started: true
 seed0_training_completed: true
 seed0_clean_dev_gate: failed
-next_stage: diagnose_pilot_coverage_or_learnability
+fit_classification: fit_inconclusive
+pb_r0_authorized: false
+next_stage: V1-R.PB-R0_separate_protocol_pending
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5
@@ -82,12 +87,12 @@ formal_runtime:
 
 2J/2J-F/2J-N 的完整逐步运行结果保留在本地 gitignored `outputs/v1r/`；仓库只提交精简 JSON/Markdown/YAML 和文件索引，不上传状态、HDF5、PKL、XML 或运行时遥测大文件。
 
-## 当前门槛状态（V1-R.2K.seed0.checkpoint_diagnostic）
+## 当前门槛状态（V1-R.2K.seed0-D1）
 
 ```yaml
 decision: blocked_seed0_clean_dev
 status: completed_seed0_clean_dev_failed
-latest_completed_stage: V1-R.2K.seed0.checkpoint_diagnostic
+latest_completed_stage: V1-R.2K.seed0-D1
 selected_label_contract: delta_pose_float32_identity
 quantized_at_source_capture_gate: passed
 strict_replay_gate: 20/20
@@ -108,7 +113,9 @@ v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
 training_action_path_gate: passed
 training_dataset_manifest_gate: passed_4_corrected_pkls_20_episodes
-next_stage: diagnose_pilot_coverage_or_learnability
+fit_classification: fit_inconclusive
+pb_r0_authorized: false
+next_stage: V1-R.PB-R0_separate_protocol_pending
 ```
 
 V1-R.2K 冻结了可执行的量化源动作合同：`raw float64 -> float32 label -> float64 controller command`，2K.2 确认该合同已进入 Point Bridge 数据读取和 agent 后处理路径，2K.3-F 又修正并验证了夹爪相关机器人点、固定对象模板和真实 chunking。

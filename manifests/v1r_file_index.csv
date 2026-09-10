@@ -67,6 +67,15 @@ experiments/v1r/reports/v1r_gate_summary.json,report,V1-R 全门槛及 V1-R.2G/2
 experiments/v1r/reports/v1r_final_report.md,report,V1-R 最终决策摘要,uploaded
 experiments/v1r/reports/v1r_2k_seed0_checkpoint_learning_curve.md,report,V1-R.2K seed-0 100k/200k/300k checkpoint 学习曲线诊断摘要,uploaded
 experiments/v1r/reports/v1r_2k_seed0_checkpoint_learning_curve.yaml,report,V1-R.2K seed-0 checkpoint 诊断机器可读结果,uploaded
+experiments/v1r/configs/v1r_2k_seed0_d1_protocol.yaml,config,V1-R.2K seed-0 D1 预注册诊断协议,uploaded
+experiments/v1r/manifests/b1_2k_20_trainfit.csv,manifest,V1-R.2K seed-0 D1 冻结的四布局各五条训练拟合场景清单,uploaded
+experiments/v1r/scripts/run_seed0_trainfit.py,script,D1 E1 三个冻结 checkpoint 的训练初态闭环回放,uploaded
+experiments/v1r/scripts/evaluate_seed0_offline_chunks.py,script,D1 E2 不运行仿真的离线 action chunk 拟合指标,uploaded
+experiments/v1r/scripts/analyze_seed0_checkpoint_transitions.py,script,D1 E3 合并现有 40 场景并分析 checkpoint 成败转移,uploaded
+experiments/v1r/scripts/run_seed0_aggregation_diagnostic.py,script,D1 E4 条件触发的 latest chunk first 聚合诊断,uploaded
+tests/test_v1r_seed0_d1.py,test,V1-R.2K seed-0 D1 协议结果和授权边界回归测试,uploaded
+experiments/v1r/reports/v1r_2k_seed0_d1_result.md,report,V1-R.2K seed-0 D1 诊断结果摘要,uploaded
+experiments/v1r/reports/v1r_2k_seed0_d1_result.yaml,report,V1-R.2K seed-0 D1 机器可读诊断结果,uploaded
 experiments/v1r/v1r_decision.yaml,decision,V1-R 当前门槛授权状态和下一阶段,uploaded
 experiments/v1r/v2_handoff.yaml,decision,V2 未授权 handoff,uploaded
 experiments/v1r/v3_handoff.yaml,decision,V3 未授权 handoff,uploaded

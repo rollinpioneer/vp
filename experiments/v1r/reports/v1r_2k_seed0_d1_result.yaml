@@ -1,17 +1,124 @@
 stage: V1-R.2K.seed0-D1
-status: preregistered_not_run
+status: completed_diagnostic_only
 diagnostic_only: true
-E1: {status: not_run}
-E2: {status: not_run}
-E3: {status: not_run}
-E4: {status: pending_trigger_decision}
-fit_classification: null
-route_decision: null
-authorization:
+protocol: experiments/v1r/configs/v1r_2k_seed0_d1_protocol.yaml
+source_anchor:
+  vp_commit: 011af056e3e0b7632113c7ae31ac4aa3269b0145
+  pointbridge_checkout: /home/xushijie/vico-point/third_party/pointbridge
+  pointbridge_commit: 491db4c4652ebfbcfce241c1c5e83c6d0c9eea75
+  control_hz: 20
+  runtime: {robosuite: 1.4.1, mujoco: 3.3.5}
+  device: cuda
+frozen_inputs:
+  trainfit_manifest: experiments/v1r/manifests/b1_2k_20_trainfit.csv
+  trainfit_manifest_sha256: fd7366506c9ceda9cfb57cf21dcfa09522a48b49ca1389e7e0654368274335f6
+  ordered_episode_mapping_sha256: e16374fbf4b5e4dde80bcdf2de213507a2b47bec90474136e0fa22de95e62934
+  dataset_manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+  resolved_config_sha256: fdd53b580f625c0325da6126684fe31dadea6177f3b431ce404340549559c3cb
+  checkpoint_sha256:
+    '100000': afeb91d34deee6edd353d4cda6de7198f7ba08ed97f512d26bf2e42765095716
+    '200000': 297b9e614bcd7196b5c2e04743d42c57c6296dd41721f0f5470a8f198b03892a
+    '300000': e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+E1_trainfit_closed_loop:
+  status: completed
+  rollouts: 60
+  initial_state_matches: 60
+  simulator_exceptions: 0
+  action_decode_errors: 0
+  action_shape: [7]
+  control_hz: 20
+  evaluation_device: cuda
+  checkpoints:
+    '100000':
+      successes: 4
+      rollouts: 20
+      successes_per_layout: {1: 0, 2: 1, 3: 2, 4: 1}
+      failure_stage_counts: {no_grasp: 15, post_grasp_drop: 1}
+    '200000':
+      successes: 14
+      rollouts: 20
+      successes_per_layout: {1: 2, 2: 3, 3: 5, 4: 4}
+      failure_stage_counts: {no_grasp: 6}
+    '300000':
+      successes: 11
+      rollouts: 20
+      successes_per_layout: {1: 1, 2: 2, 3: 3, 4: 5}
+      failure_stage_counts: {no_grasp: 9}
+  source: outputs/v1r/d1/seed0_trainfit_{100000,200000,300000}.csv
+  source_metadata: source NPZ/PKL/XML/object-template hashes and normalized input hash recorded per row
+E2_offline_action_chunk_fit:
+  status: completed
+  simulation_rollouts: 0
+  valid_action_count_per_checkpoint: 118360
+  terminal_padding_excluded_from_valid_metrics: true
+  object_point_noise: {enabled: true, std: 0.1}
+  checkpoints:
+    '100000':
+      valid_mse: 0.003273419803008437
+      valid_mae: 0.023059044033288956
+      h0_mse: 0.0029894059989601374
+      h1_9_mse: 0.002209288068115711
+      h10_19_mse: 0.0031330713536590338
+      h20_39_mse: 0.003932368941605091
+      h0_gripper_sign_accuracy: 0.9973126306360107
+    '200000':
+      valid_mse: 0.001068584038875997
+      valid_mae: 0.017881622537970543
+      h0_mse: 0.0018394029466435313
+      h1_9_mse: 0.0008945234585553405
+      h10_19_mse: 0.0008008445147424936
+      h20_39_mse: 0.0012624658411368728
+      h0_gripper_sign_accuracy: 0.9979098238280084
+    '300000':
+      valid_mse: 0.0008450942696072161
+      valid_mae: 0.016435807570815086
+      h0_mse: 0.001215120661072433
+      h1_9_mse: 0.0008949070470407605
+      h10_19_mse: 0.0006473108078353107
+      h20_39_mse: 0.0009058844880200922
+      h0_gripper_sign_accuracy: 0.998507017020006
+  source: outputs/v1r/d1/seed0_offline_chunks.json
+E3_checkpoint_transition_analysis:
+  status: completed
+  simulation_rollouts: 0
+  scenario_count: 40
+  pattern_counts: {'000': 33, '001': 1, '010': 2, '011': 2, '110': 2}
+  successes: {100000: 2, 200000: 6, 300000: 3}
+  success_200_intersection_300: 2
+  success_200_union_300: 7
+  success_200_300_jaccard: 0.2857142857142857
+  transitions_200_to_300: 5
+  layout_3_transition_rows: 3
+  same_scenario_ids: true
+  same_initial_state_contract: true
+  source: outputs/v1r/d1/seed0_checkpoint_transitions.json
+E4_temporal_aggregation:
+  status: completed_condition_triggered
+  new_rollouts: 40
+  checkpoints: [200000, 300000]
+  mode_comparison: frozen_exponential_average_vs_latest_chunk_first
+  simulator_exceptions: 0
+  action_decode_errors: 0
+  results:
+    '200000': {frozen_successes: 14, latest_successes: 12, added_successes: 2, regressions: 4, classification: weak_or_inconclusive}
+    '300000': {frozen_successes: 11, latest_successes: 5, added_successes: 0, regressions: 6, classification: weak_or_inconclusive}
+  strong_sensitivity_rule: {added_successes_at_least: 5, regressions_at_most: 1}
+  strong_sensitivity_passed: false
+  source: outputs/v1r/d1/seed0_aggregation_latest_chunk_first.json
+classification:
+  fit_classification: fit_inconclusive
+  rationale: best_checkpoint_14_of_20_and_no_checkpoint_reaches_16_of_20
+  learned_then_degraded: false
+  aggregation_classification: weak_or_inconclusive
+  route_decision: pb_r0_separate_protocol_required
+decision_boundary:
+  formal_clean_dev_unchanged: true
+  formal_clean_dev_successes: 3
+  formal_clean_dev_rollouts: 40
   seed0_retraining_authorized: false
-  confirm_rollouts_authorized: false
   remaining_training_seeds_authorized: false
+  confirm_rollouts_authorized: false
   v2_formal_experiment_authorized: false
   v3_formal_experiment_authorized: false
   pb_r0_authorized: false
-
+  next_stage: V1-R.PB-R0_separate_protocol_pending

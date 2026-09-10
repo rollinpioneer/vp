@@ -1,2 +1,2 @@
 authorized: false
-reason: V1-R.2K.3-F authorized only the B1-2K-20 seed-0 pilot under delta_pose_float32_identity. V3 remains unauthorized pending the seed-0 clean-dev decision and later context-specific gates.
+reason: V1-R.2K.seed0-D1 completed with fit_inconclusive and did not change the failed 3/40 formal clean-dev result. V3 remains unauthorized pending a separately authorized PB-R0 and later context-specific gates.

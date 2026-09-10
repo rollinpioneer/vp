@@ -114,4 +114,3 @@ def validate_preflight(upstream: Path = DEFAULT_UPSTREAM) -> dict[str, Any]:
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
-
