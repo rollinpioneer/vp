@@ -1,0 +1,62 @@
+stage: V1-R.2K.seed0-D1
+version: 1.0
+status: preregistered_not_run
+diagnostic_only: true
+source_anchor:
+  repository: rollinpioneer/vp
+  branch_parent: exp/v1r-2k-quantized-at-source-20260909
+  vp_source_commit: 011af056e3e0b7632113c7ae31ac4aa3269b0145
+pointbridge_identity:
+  independent_git_checkout: false
+  pointbridge_base_commit: 5d567a62d62b5a97c5960d45024e065349680cda
+  patched_parent_checkout_commit: 491db4c4652ebfbcfce241c1c5e83c6d0c9eea75
+  critical_file_sha256:
+    point_bridge/read_data/mimiclabs.py: 8563eecfdbf6bf343ab11cc3bf5737ff93987fbf01e5e14fb0c3f6be852cfa2c
+    point_bridge/agent/pb.py: 230b9c75812b69cd1dfd535d8fba08c1b431305f1fb5ea22da2509e8e46f0a46
+    point_bridge/suite/mimiclabs.py: 07150115ef0a9c33f1b86792244c9688a6441712d8b09b81a92262cc5bd99d39
+  applied_patch_sha256:
+    0004: 77098b71e2d02604b1fdc08e96683a9b54b2232b28438478ee197c5c27156a51
+    0005: 3505305352152606f2545be6524e2a67aad04099c1c7549ffecd4372c4bccdfa
+    0006: 626ba034dd64e0690450b0e94e8a189552c3248c6ffc0fea2cd77a2bdf3c5b2e
+frozen_artifacts:
+  resolved_config_sha256: fdd53b580f625c0325da6126684fe31dadea6177f3b431ce404340549559c3cb
+  dataset_manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+  ordered_episode_mapping_sha256: e16374fbf4b5e4dde80bcdf2de213507a2b47bec90474136e0fa22de95e62934
+  checkpoint_sha256:
+    '100000': afeb91d34deee6edd353d4cda6de7198f7ba08ed97f512d26bf2e42765095716
+    '200000': 297b9e614bcd7196b5c2e04743d42c57c6296dd41721f0f5470a8f198b03892a
+    '300000': e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+  clean_dev_csv_sha256:
+    '100000': 1bcfd159b8e94fda1d8ee3293e255c3f2673709ebbbad954036734770628c122
+    '200000': bc2a2983dcd5de8ff10ad030d7ba9a63c58ca353911f0513c8c367374cff07ed
+    '300000': b46682d68579a6bde8408d66511c410a95443e8a53da4622d60f238c74fa53b2
+experiments:
+  E1: {checkpoints: [100000, 200000, 300000], train_initial_states: 20, rollouts: 60}
+  E2: {checkpoints: [100000, 200000, 300000], simulation_rollouts: 0, num_queries: 40}
+  E3: {reuse_existing_clean_dev_csv: true, simulation_rollouts: 0}
+  E4:
+    conditional: true
+    checkpoints: [200000, 300000]
+    train_initial_states: 20
+    maximum_rollouts: 40
+    strong_sensitivity_rule: at_least_5_added_successes_and_at_most_1_regression
+authorization:
+  seed0_original_training_authorization_consumed: true
+  seed0_retraining_authorized: false
+  confirm_rollouts_authorized: false
+  remaining_training_seeds_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+  pb_r0_authorized: false
+fit_rules:
+  fit_established: best_checkpoint_at_least_16_of_20_and_each_layout_at_least_3_of_5
+  fit_failed: all_checkpoints_at_most_10_of_20
+  fit_inconclusive: best_11_to_15_or_layout_distribution_severely_imbalanced
+  learned_then_degraded: earlier_fit_established_and_300k_at_least_4_successes_lower
+formal_clean_dev:
+  checkpoint_step: 300000
+  successes: 3
+  rollouts: 40
+  gate: failed
+  immutable_by_d1: true
+

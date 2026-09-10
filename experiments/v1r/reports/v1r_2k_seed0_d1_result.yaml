@@ -1,0 +1,17 @@
+stage: V1-R.2K.seed0-D1
+status: preregistered_not_run
+diagnostic_only: true
+E1: {status: not_run}
+E2: {status: not_run}
+E3: {status: not_run}
+E4: {status: pending_trigger_decision}
+fit_classification: null
+route_decision: null
+authorization:
+  seed0_retraining_authorized: false
+  confirm_rollouts_authorized: false
+  remaining_training_seeds_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+  pb_r0_authorized: false
+
