@@ -252,5 +252,9 @@ v1r_2k_seed0_clean_dev:
   simulator_exceptions: 0
   action_decode_errors: 0
   failure_stage_counts: {no_approach: 9, no_grasp: 22, post_grasp_drop: 6}
+  verified_clean_dev_csv_sha256: b46682d68579a6bde8408d66511c410a95443e8a53da4622d60f238c74fa53b2
+  verified_clean_dev_json_sha256: 6341fd112599e9e4b47e737bc6f4b5c110d325e3e7af7292b92128fa70cbcc81
+  checkpoint_selection_sha256: e9ce902fffe00da4744a730e0c937e985b3a66855971c128c640c3e0f6c317c8
+  readiness_report: experiments/v1r/reports/v1r_2k_seed0_readiness_final.yaml
   report: experiments/v1r/reports/v1r_2k_seed0_clean_dev.md
   next_stage: diagnose_pilot_coverage_or_learnability

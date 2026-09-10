@@ -41,7 +41,34 @@ clean_dev:
     post_grasp_drop: 6
   final_csv_sha256: 3bff63cdde28a8a4df102ee605fe999271e47974000d63e9f6634ac81e0f078c
   final_json_sha256: fd25d1660ae0cc8260b9128be4426993b1d83077c3310f25ec000943d1a5785c
+  authoritative_verified_output:
+    csv: outputs/v1r/training/v1r_b1_2k_20_seed0/clean_dev_seed0_verified.csv
+    csv_sha256: b46682d68579a6bde8408d66511c410a95443e8a53da4622d60f238c74fa53b2
+    json: outputs/v1r/training/v1r_b1_2k_20_seed0/clean_dev_seed0_verified.json
+    json_sha256: 6341fd112599e9e4b47e737bc6f4b5c110d325e3e7af7292b92128fa70cbcc81
+    checkpoint_selection_sha256: e9ce902fffe00da4744a730e0c937e985b3a66855971c128c640c3e0f6c317c8
+    evaluation_device: cuda
   gate: failed
+smoke:
+  status: passed
+  steps: 20
+  formal_training: false
+  cuda_visible_devices: '3'
+  gpu: NVIDIA A100-SXM4-40GB
+  metadata: outputs/v1r/training_smoke_verified/v1r_b1_2k_20_seed0_smoke/launcher_metadata.json
+  metadata_sha256: 64a0c2730699b5782ef1aed133ba770ccb7f2a5e5b329cb19ade56e4b3379c20
+  return_code: 0
+  technical_eval:
+    checkpoint: outputs/v1r/training_smoke_verified/v1r_b1_2k_20_seed0_smoke/snapshot/10.pt
+    output_csv: outputs/v1r/training_smoke_verified/v1r_b1_2k_20_seed0_smoke/smoke_eval.csv
+    output_csv_sha256: ff81c53d8963de0b9afa92c298467f3e9890edaa75023733dbab624db218950e
+    output_json: outputs/v1r/training_smoke_verified/v1r_b1_2k_20_seed0_smoke/smoke_eval.json
+    output_json_sha256: a341569825f5e762ea78f129f15aa6d25684ae8c3f2641c7a89769efe09d4302
+    rollouts: 1
+    initial_state_matches: 1
+    simulator_exceptions: 0
+    action_decode_errors: 0
+    pass: true
 authorization:
   selected_label_contract: delta_pose_float32_identity
   seed0_training_authorized: true

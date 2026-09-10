@@ -1,4 +1,4 @@
-# V1-R 执行状态（2026-09-09）
+# V1-R 执行状态（2026-09-10）
 
 当前研究锚点已前移到 `V1-R.2K.seed0`：量化源采集、严格 20/20 回放、Point Bridge 训练动作路径回环、点观测部署一致性和真实 40 步 chunking 均已通过。冻结合同为
 `delta_pose_float32_identity`；唯一授权的 `B1-2K-20` seed 0 已在 CUDA 上完成训练，但 frozen clean-dev 仅 `3/40`，未建立策略基线。legacy B0/B1、confirm、其他 seed、V2 和 V3 仍未授权。
@@ -37,7 +37,7 @@
 - V1-R.2K 严格回放已通过 `20/20`：保存的 float32 标签经共享解码器得到的 float64 控制命令在值、顺序和长度上完全一致，采集与回放状态序列逐步一致，最大绝对误差为 `0.0`。该结果只证明量化后的数据合同可执行，不证明策略可学习或真实机器人迁移。
 - V1-R.2K.2 新增 Point Bridge `0005` 补丁，采集、回放、`BCDataset` 与 `BCAgent` 共同调用 `vico_point.action_contracts`，delta 标签不再做 min-max。20/20 数据集标签和 DataLoader batch、20/20 解码命令均逐元素一致，agent 后处理检查通过；由于完整点输入训练 PKL 和 B1-2K 清单尚未冻结，seed 0 仍未授权。
 - V1-R.2K.3-F 修正 Point Bridge 包装器定位、上一条夹爪命令对应的机器人点和每 episode 固定对象模板；正式验证通过点观测四项 `20/20`、真实 40 步 chunk `80/80`。二进制身份和训练配置已冻结，随后按授权完成 `B1-2K-20` seed 0 训练。
-- 基础回归：完整测试 `68/68` 通过；206 个已跟踪或待跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
+- 基础回归：完整测试 `69/69` 通过；236 个已跟踪文件均不超过 10 MiB；JSON/YAML 解析、Python 语法检查和 `git diff --check` 通过。
 
 ## 当前门槛状态（截至 V1-R.2K.seed0）
 

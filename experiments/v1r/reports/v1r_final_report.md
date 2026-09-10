@@ -19,6 +19,12 @@
 - Gate: failed; required at least `20/40`.
 - Full upload-safe report: `experiments/v1r/reports/v1r_2k_seed0_clean_dev.md`.
 
+The repaired dedicated evaluation entry was independently rerun over all 40
+rows and reproduced the same result (`3/40`), with current initial-state
+matches `40/40`, simulator exceptions `0`, and action decode errors `0`.
+The five-item readiness completion is recorded in
+`experiments/v1r/reports/v1r_2k_seed0_readiness_final.md` and `.yaml`.
+
 The next stage is `diagnose_pilot_coverage_or_learnability`. Do not start
 confirm rollouts, remaining seeds, V2, or V3 from this result.
 

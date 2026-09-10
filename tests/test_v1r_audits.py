@@ -13,6 +13,9 @@ from experiments.v1r.scripts.diagnose_expert_replay import (
     attach_first_explanatory_difference,
     reset_gripper_cache,
 )
+from experiments.v1r.scripts.run_clean_b1_2k_20_seed0 import (
+    _check_checkpoint_selection,
+)
 from experiments.v1r.scripts.state_utils import (
     load_state_bundle,
     load_state_index,
@@ -344,6 +347,36 @@ class V1RAuditTests(unittest.TestCase):
             self.assertEqual(result["per_seed"]["0"]["rows"], 1)
             self.assertEqual(result["per_seed"]["0"]["success_rate"], 1.0)
             self.assertEqual(result["status"], "dev_precheck_passed")
+
+    def test_clean_entry_requires_frozen_primary_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkpoint = root / "300000.pt"
+            checkpoint.write_bytes(b"checkpoint")
+            import hashlib
+
+            checkpoint_sha = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+            selection = root / "selection.yaml"
+            selection.write_text(
+                "\n".join(
+                    [
+                        "status: frozen_before_clean_dev",
+                        "checkpoint_selection_by_clean_dev: false",
+                        "primary_checkpoint_step: 300000",
+                        "checkpoints:",
+                        "  '300000':",
+                        f"    sha256: {checkpoint_sha}",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            result = _check_checkpoint_selection(checkpoint, selection)
+            self.assertEqual(result["primary_checkpoint_step"], 300000)
+            wrong_step = root / "200000.pt"
+            wrong_step.write_bytes(b"checkpoint")
+            with self.assertRaises(ValueError):
+                _check_checkpoint_selection(wrong_step, selection)
 
 
 if __name__ == "__main__":

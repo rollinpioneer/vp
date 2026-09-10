@@ -1,0 +1,75 @@
+stage: V1-R.2K.seed0.readiness
+status: completed
+date: '2026-09-10'
+items:
+  one_training_launcher:
+    status: passed
+    launcher: experiments/v1r/scripts/run_b1_2k_20_seed0.py
+    config: experiments/v1r/configs/b1_2k_20_seed0.yaml
+    config_sha256: 77bc9fcd6d8aa80c9c79b3640d5992c520bb6ccdc938b8597179d363c62cdb5c
+    dataset_manifest_sha256: 761254629727b0035a794f86fc7ceca6f2e5fb429282d5259f37a53ad7c39c5e
+    verification_sha256: e7294ca0b6ee74fbb30ff10b75b459b27118f74247510a182eac0647e9de2884
+    ordered_episode_mapping_sha256: e16374fbf4b5e4dde80bcdf2de213507a2b47bec90474136e0fa22de95e62934
+    patch_0005_sha256: 3505305352152606f2545be6524e2a67aad04099c1c7549ffecd4372c4bccdfa
+    patch_0006_sha256: 626ba034dd64e0690450b0e94e8a189552c3248c6ffc0fea2cd77a2bdf3c5b2e
+    upstream_head: 491db4c4652ebfbcfce241c1c5e83c6d0c9eea75
+    contract: delta_pose_float32_identity
+  two_clean_dev_entry:
+    status: passed
+    launcher: experiments/v1r/scripts/run_clean_b1_2k_20_seed0.py
+    resolved_config_sha256: fdd53b580f625c0325da6126684fe31dadea6177f3b431ce404340549559c3cb
+    checkpoint_selection: experiments/v1r/reports/v1r_2k_seed0_checkpoint_selection.yaml
+    primary_checkpoint_step: 300000
+    primary_checkpoint_sha256: e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+    action_shape: [7]
+    default_device: cuda
+    path_resolution_after_chdir: passed
+  three_regression_tests:
+    status: passed
+    pytest: 69 passed
+    upload_size_check: passed
+    diff_check: passed
+    yaml_json_parse: passed
+    python_compile: passed
+  four_smoke:
+    status: passed
+    steps: 20
+    formal_training: false
+    command_gpu_visibility: 'CUDA_VISIBLE_DEVICES=3'
+    gpu: NVIDIA A100-SXM4-40GB
+    return_code: 0
+    snapshots: [0, 10]
+    metadata_sha256: 64a0c2730699b5782ef1aed133ba770ccb7f2a5e5b329cb19ade56e4b3379c20
+    technical_eval:
+      rollouts: 1
+      initial_state_matches: 1
+      simulator_exceptions: 0
+      action_decode_errors: 0
+      pass: true
+      csv_sha256: ff81c53d8963de0b9afa92c298467f3e9890edaa75023733dbab624db218950e
+      json_sha256: a341569825f5e762ea78f129f15aa6d25684ae8c3f2641c7a89769efe09d4302
+  five_formal_run_and_eval:
+    status: completed_gate_failed
+    training_device: cuda
+    training_steps: 300000
+    training_return_code: 0
+    primary_checkpoint_step: 300000
+    primary_checkpoint_sha256: e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+    clean_dev_device: cuda
+    clean_dev_rollouts: 40
+    clean_dev_successes: 3
+    clean_dev_threshold: 20
+    initial_state_matches: 40
+    simulator_exceptions: 0
+    action_decode_errors: 0
+    successes_per_layout: {1: 0, 2: 2, 3: 0, 4: 1}
+    failure_stage_counts: {no_approach: 9, no_grasp: 22, post_grasp_drop: 6}
+    verified_csv_sha256: b46682d68579a6bde8408d66511c410a95443e8a53da4622d60f238c74fa53b2
+    verified_json_sha256: 6341fd112599e9e4b47e737bc6f4b5c110d325e3e7af7292b92128fa70cbcc81
+decision:
+  clean_dev_gate: failed
+  next_stage: diagnose_pilot_coverage_or_learnability
+  confirm_rollouts_authorized: false
+  remaining_training_seeds_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false

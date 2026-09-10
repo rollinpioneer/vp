@@ -50,6 +50,41 @@ def _gpu_info() -> dict[str, object]:
         return {"error": f"{type(exc).__name__}: {exc}"}
 
 
+def _runtime_identity(upstream: Path) -> dict[str, object]:
+    """Capture the process-visible GPU and source identity used by the launch."""
+
+    try:
+        source_commit = subprocess.check_output(
+            ["git", "-C", str(upstream), "rev-parse", "--verify", "HEAD"],
+            text=True,
+        ).strip()
+    except Exception as exc:  # pragma: no cover - environment diagnostic
+        source_commit = f"unavailable:{type(exc).__name__}:{exc}"
+    try:
+        smi = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=index,name,driver_version",
+                "--format=csv,noheader",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        nvidia_smi = {
+            "returncode": smi.returncode,
+            "stdout": smi.stdout.strip(),
+            "stderr": smi.stderr.strip(),
+        }
+    except Exception as exc:  # pragma: no cover - environment diagnostic
+        nvidia_smi = {"returncode": None, "stdout": "", "stderr": str(exc)}
+    return {
+        "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES", ""),
+        "upstream_head": source_commit,
+        "nvidia_smi": nvidia_smi,
+    }
+
+
 def _write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -73,9 +108,16 @@ def main() -> int:
     parser.add_argument("--upstream", type=Path, default=Path("/home/xushijie/vico-point/third_party/pointbridge"))
     parser.add_argument("--output-root", type=Path, default=ROOT / "outputs/v1r/training")
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
+    parser.add_argument(
+        "--cuda-visible-devices",
+        help="Set CUDA_VISIBLE_DEVICES before importing torch (for example, 3).",
+    )
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--smoke-steps", type=int, default=20)
     args = parser.parse_args()
+
+    if args.cuda_visible_devices is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_visible_devices
 
     config = args.config.resolve()
     upstream = args.upstream.resolve()
@@ -149,6 +191,7 @@ def main() -> int:
         "output": str(output),
         "frozen": freeze,
         "gpu": _gpu_info(),
+        "runtime_identity": _runtime_identity(upstream),
     }
     _write_json(output / "launcher_metadata.json", metadata)
     (output / "launcher_overrides.txt").write_text("\n".join(overrides) + "\n", encoding="utf-8")

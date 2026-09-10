@@ -1,4 +1,6 @@
 stage: V1-R.2K.3-F
+status_note: superseded_pre_training_snapshot
+superseded_by: experiments/v1r/reports/v1r_2k_seed0_readiness_final.yaml
 status: passed_point_observation_and_chunking_freeze_seed0_authorized
 decision: authorized_seed0_b1_2k_20_pilot
 numeric_contract: delta_pose_float32_identity

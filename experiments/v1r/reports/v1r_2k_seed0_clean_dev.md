@@ -47,6 +47,14 @@ that the policy passed clean-dev.
 - Failure stages: `no_approach=9`, `no_grasp=22`, `post_grasp_drop=6`
 - Final rollout CSV SHA-256: `3bff63cdde28a8a4df102ee605fe999271e47974000d63e9f6634ac81e0f078c`
 
+The repaired dedicated entry was then run independently over all 40 rows. Its
+authoritative output is
+`outputs/v1r/training/v1r_b1_2k_20_seed0/clean_dev_seed0_verified.csv` with
+SHA-256 `b46682d68579a6bde8408d66511c410a95443e8a53da4622d60f238c74fa53b2`.
+The verified JSON summary has SHA-256
+`6341fd112599e9e4b47e737bc6f4b5c110d325e3e7af7292b92128fa70cbcc81` and
+records the same `3/40` result using CUDA and the frozen primary checkpoint.
+
 ## Authorization boundary
 
 The clean-dev gate failed. Do not run confirm rollouts, remaining seeds, V2,
