@@ -15,6 +15,7 @@ from experiments.v1r.scripts.diagnose_expert_replay import (
 )
 from experiments.v1r.scripts.run_clean_b1_2k_20_seed0 import (
     _check_checkpoint_selection,
+    _check_diagnostic_checkpoint,
 )
 from experiments.v1r.scripts.state_utils import (
     load_state_bundle,
@@ -377,6 +378,36 @@ class V1RAuditTests(unittest.TestCase):
             wrong_step.write_bytes(b"checkpoint")
             with self.assertRaises(ValueError):
                 _check_checkpoint_selection(wrong_step, selection)
+
+    def test_diagnostic_entry_accepts_only_pre_frozen_intermediate_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkpoint = root / "100000.pt"
+            checkpoint.write_bytes(b"diagnostic checkpoint")
+            import hashlib
+
+            checkpoint_sha = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+            selection = root / "selection.yaml"
+            selection.write_text(
+                "\n".join(
+                    [
+                        "status: frozen_before_clean_dev",
+                        "checkpoint_selection_by_clean_dev: false",
+                        "checkpoints:",
+                        "  '100000':",
+                        "    role: diagnostic_only",
+                        f"    sha256: {checkpoint_sha}",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            result = _check_diagnostic_checkpoint(checkpoint, selection)
+            self.assertEqual(result["checkpoint_step"], 100000)
+            primary = root / "300000.pt"
+            primary.write_bytes(b"diagnostic checkpoint")
+            with self.assertRaises(ValueError):
+                _check_diagnostic_checkpoint(primary, selection)
 
 
 if __name__ == "__main__":

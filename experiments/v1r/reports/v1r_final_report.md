@@ -81,6 +81,14 @@ confirm rollouts, remaining seeds, V2, or V3 from this result.
 - 本机 robosuite `1.4.1` 的 `math.isclose` 分支存在，但四条数据中没有旋转零值分支决策变化，该假设在当前样本上不成立。
 - 下一阶段为 V1-R.2K quantized-at-source 独立数据版本；旧 20 条合同失败结果不覆盖，训练及 V2/V3 继续未授权。
 
+## V1-R.2K seed-0 checkpoint learning-curve diagnostic
+
+- 新增显式 `--diagnostic` 入口，只允许使用训练前冻结的 `100000.pt` 和 `200000.pt`；正式 clean-dev 仍强制使用冻结的 `300000.pt`。
+- 在同一 40 条冻结 CUDA dev 初态、同一 runner、同一成功判定下，`100000.pt` 为 `2/40`，`200000.pt` 为 `6/40`，正式 `300000.pt` 为 `3/40`。
+- 布局 3 在三个 checkpoint 均为 `0/10`；200k 的局部收益集中在布局 1、2、4。所有诊断均为初态 `40/40`、模拟器异常 `0`、动作解码异常 `0`。
+- 结论限定为同一 seed 的非单调 checkpoint 行为：中期局部改善没有在最终 checkpoint 保持。该结果不替代正式 `300000.pt`，不改变 `blocked_seed0_clean_dev`，不授权 confirm、其他 seed、V2 或 V3。
+- 证据：`experiments/v1r/reports/v1r_2k_seed0_checkpoint_learning_curve.md`、`.yaml`；原始诊断 rollout 保持在 gitignored `outputs/v1r/checkpoint_diagnostics/`。
+
 ## V1-R.2J evidence hashes
 
 - absolute runtime result: see `experiments/v1r/manifests/executable_absolute_label_contract_artifact_index.csv`

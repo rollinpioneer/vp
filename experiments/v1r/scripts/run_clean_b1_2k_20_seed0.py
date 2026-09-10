@@ -135,6 +135,43 @@ def _check_smoke_checkpoint(checkpoint: Path) -> dict[str, object]:
     }
 
 
+def _check_diagnostic_checkpoint(
+    checkpoint: Path, selection_path: Path
+) -> dict[str, object]:
+    """Allow only a pre-frozen intermediate checkpoint for diagnostics."""
+
+    selection = load_yaml(selection_path)
+    if selection.get("status") != "frozen_before_clean_dev":
+        raise ValueError(
+            "checkpoint selection must be frozen_before_clean_dev before diagnostics"
+        )
+    if selection.get("checkpoint_selection_by_clean_dev") is not False:
+        raise ValueError("diagnostic checkpoint selection must not depend on clean-dev outcomes")
+    try:
+        step = int(checkpoint.stem)
+    except ValueError as exc:
+        raise ValueError("diagnostic checkpoint filename must be a numeric step") from exc
+    checkpoints = selection.get("checkpoints", {})
+    record = checkpoints.get(str(step), {})
+    if not isinstance(record, dict) or record.get("role") != "diagnostic_only":
+        raise ValueError(f"checkpoint step {step} is not a frozen diagnostic-only checkpoint")
+    expected = record.get("sha256")
+    if not expected:
+        raise ValueError(f"diagnostic checkpoint {step} is missing its SHA-256")
+    observed = sha256(checkpoint)
+    if observed != expected:
+        raise ValueError(
+            f"diagnostic checkpoint SHA-256 mismatch: expected {expected}, got {observed}"
+        )
+    return {
+        "path": str(selection_path.resolve()),
+        "sha256": sha256(selection_path),
+        "checkpoint_step": step,
+        "checkpoint_sha256": observed,
+        "selection_rule": "pre_frozen_intermediate_checkpoint_diagnostic_only",
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=Path, required=True)
@@ -150,6 +187,11 @@ def main() -> int:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--device", choices=("cpu", "cuda"))
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument(
+        "--diagnostic",
+        action="store_true",
+        help="Evaluate a pre-frozen intermediate checkpoint without affecting clean-dev gates.",
+    )
     parser.add_argument(
         "--cuda-visible-devices",
         help="Set CUDA_VISIBLE_DEVICES before importing torch (for example, 3).",
@@ -175,6 +217,8 @@ def main() -> int:
     output_path = args.output.resolve()
     if not checkpoint.is_file():
         parser.error(f"checkpoint does not exist: {checkpoint}")
+    if args.smoke and args.diagnostic:
+        parser.error("--smoke and --diagnostic are mutually exclusive")
     frozen = validate_frozen_contract(ROOT / "experiments/v1r/configs/b1_2k_20_seed0.yaml", upstream)
     resolved_path = _resolved_config(checkpoint, args.resolved_config)
     resolved = load_yaml(resolved_path)
@@ -185,6 +229,10 @@ def main() -> int:
         if args.limit < 1 or args.limit > 2:
             parser.error("--smoke requires --limit between 1 and 2")
         checkpoint_selection = _check_smoke_checkpoint(checkpoint)
+    elif args.diagnostic:
+        checkpoint_selection = _check_diagnostic_checkpoint(
+            checkpoint, args.checkpoint_selection.resolve()
+        )
     else:
         checkpoint_selection = _check_checkpoint_selection(
             checkpoint, args.checkpoint_selection.resolve()
@@ -260,8 +308,15 @@ def main() -> int:
         writer.writeheader()
         writer.writerows(rows)
     summary = {
-        "stage": "V1-R.2K.seed0.smoke_eval" if args.smoke else "V1-R.2K.seed0.clean_dev",
+        "stage": (
+            "V1-R.2K.seed0.smoke_eval"
+            if args.smoke
+            else "V1-R.2K.seed0.checkpoint_diagnostic"
+            if args.diagnostic
+            else "V1-R.2K.seed0.clean_dev"
+        ),
         "smoke": args.smoke,
+        "diagnostic": args.diagnostic,
         "status": "complete",
         "rollouts": len(rows),
         "successes_total": sum(int(row["success"]) for row in rows),
@@ -295,8 +350,15 @@ def main() -> int:
             else len(rows) == 40 and sum(int(row["success"]) for row in rows) >= 20
         ),
     }
+    if args.diagnostic:
+        summary["gate_impact"] = "diagnostic_only_not_a_clean_dev_gate"
+        summary["pass"] = None
     output_path.with_suffix(".json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))
+    # A diagnostic run is complete by definition; it must not look like a
+    # scientific gate failure merely because it has no pass/fail decision.
+    if args.diagnostic:
+        return 0
     return 0 if summary["pass"] else 2
 
 

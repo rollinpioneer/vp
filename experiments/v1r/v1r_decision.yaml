@@ -1,6 +1,6 @@
 decision: blocked_seed0_clean_dev
 status: completed_seed0_clean_dev_failed
-latest_completed_stage: V1-R.2K.seed0
+latest_completed_stage: V1-R.2K.seed0.checkpoint_diagnostic
 v1r_raw_delta_replay_diagnosis: localized_not_fully_causal
 v1r_runtime_repairs: passed
 runner_parity: passed
@@ -39,6 +39,43 @@ confirm_rollouts_authorized: false
 v2_formal_experiment_authorized: false
 v3_formal_experiment_authorized: false
 next_stage: diagnose_pilot_coverage_or_learnability
+checkpoint_learning_curve_diagnostic:
+  stage: V1-R.2K.seed0.checkpoint_diagnostic
+  status: completed_diagnostic_only
+  same_frozen_dev_manifest: true
+  same_cuda_runtime: true
+  checkpoints:
+    '100000':
+      role: diagnostic_only
+      successes: 2
+      rollouts: 40
+      successes_per_layout: {1: 0, 2: 1, 3: 0, 4: 1}
+      initial_state_matches: 40
+      simulator_exceptions: 0
+      action_decode_errors: 0
+      report: experiments/v1r/reports/v1r_2k_seed0_checkpoint_learning_curve.md
+    '200000':
+      role: diagnostic_only
+      successes: 6
+      rollouts: 40
+      successes_per_layout: {1: 1, 2: 2, 3: 0, 4: 3}
+      initial_state_matches: 40
+      simulator_exceptions: 0
+      action_decode_errors: 0
+      report: experiments/v1r/reports/v1r_2k_seed0_checkpoint_learning_curve.md
+    '300000':
+      role: primary_clean_dev
+      successes: 3
+      rollouts: 40
+      successes_per_layout: {1: 0, 2: 2, 3: 0, 4: 1}
+      formal_gate: failed
+      report: experiments/v1r/reports/v1r_2k_seed0_clean_dev.md
+  interpretation: same_seed_non_monotonic_checkpoint_behavior_local_mid_training_improvement_not_retained
+  checkpoint_selection_changed: false
+  confirm_rollouts_authorized: false
+  remaining_training_seeds_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
 formal_runtime:
   robosuite: 1.4.1
   mujoco: 3.3.5

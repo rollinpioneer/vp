@@ -65,6 +65,8 @@ experiments/v1r/reports/layout_failure_report.md,report,冻结 clean dev 布局�
 experiments/v1r/reports/v1r_2f_root_cause.yaml,report,V1-R.2F 根因定位和训练授权结论,uploaded
 experiments/v1r/reports/v1r_gate_summary.json,report,V1-R 全门槛及 V1-R.2G/2H/2I 动作合同实验摘要,uploaded
 experiments/v1r/reports/v1r_final_report.md,report,V1-R 最终决策摘要,uploaded
+experiments/v1r/reports/v1r_2k_seed0_checkpoint_learning_curve.md,report,V1-R.2K seed-0 100k/200k/300k checkpoint 学习曲线诊断摘要,uploaded
+experiments/v1r/reports/v1r_2k_seed0_checkpoint_learning_curve.yaml,report,V1-R.2K seed-0 checkpoint 诊断机器可读结果,uploaded
 experiments/v1r/v1r_decision.yaml,decision,V1-R 当前门槛授权状态和下一阶段,uploaded
 experiments/v1r/v2_handoff.yaml,decision,V2 未授权 handoff,uploaded
 experiments/v1r/v3_handoff.yaml,decision,V3 未授权 handoff,uploaded

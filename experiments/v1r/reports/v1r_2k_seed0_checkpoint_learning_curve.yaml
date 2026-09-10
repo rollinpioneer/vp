@@ -1,0 +1,55 @@
+stage: V1-R.2K.seed0.checkpoint_diagnostic
+status: completed_diagnostic_only
+decision: blocked_seed0_clean_dev
+diagnostic_only: true
+formal_clean_dev_checkpoint_step: 300000
+same_frozen_dev_manifest: true
+same_cuda_runtime: true
+same_runner: true
+same_success_predicate: true
+checkpoints:
+  '100000':
+    role: diagnostic_only
+    checkpoint_sha256: afeb91d34deee6edd353d4cda6de7198f7ba08ed97f512d26bf2e42765095716
+    rollouts: 40
+    successes: 2
+    successes_per_layout: {1: 0, 2: 1, 3: 0, 4: 1}
+    failure_stage_counts: {no_approach: 6, no_grasp: 21, post_grasp_drop: 11}
+    initial_state_matches: 40
+    simulator_exceptions: 0
+    action_decode_errors: 0
+    rollout_csv_sha256: 1bcfd159b8e94fda1d8ee3293e255c3f2673709ebbbad954036734770628c122
+    summary_json_sha256: a1e3ab07680a9d4484722b79212cf4bed06699749f12e3870dd6e8788486027e
+  '200000':
+    role: diagnostic_only
+    checkpoint_sha256: 297b9e614bcd7196b5c2e04743d42c57c6296dd41721f0f5470a8f198b03892a
+    rollouts: 40
+    successes: 6
+    successes_per_layout: {1: 1, 2: 2, 3: 0, 4: 3}
+    failure_stage_counts: {no_approach: 4, no_grasp: 24, post_grasp_drop: 6}
+    initial_state_matches: 40
+    simulator_exceptions: 0
+    action_decode_errors: 0
+    rollout_csv_sha256: bc2a2983dcd5de8ff10ad030d7ba9a63c58ca353911f0513c8c367374cff07ed
+    summary_json_sha256: c7b764a559ffaebf4508780471534ecf3a9d9b88aea211c65b3746668f72a056
+  '300000':
+    role: primary_clean_dev
+    checkpoint_sha256: e827f24d228c295c3f5f09d0d051692d573f73d7b41a181eefe4f84d590f7589
+    rollouts: 40
+    successes: 3
+    successes_per_layout: {1: 0, 2: 2, 3: 0, 4: 1}
+    failure_stage_counts: {no_approach: 9, no_grasp: 22, post_grasp_drop: 6}
+    initial_state_matches: 40
+    simulator_exceptions: 0
+    action_decode_errors: 0
+    formal_gate: failed
+interpretation:
+  same_seed_non_monotonic_checkpoint_behavior: true
+  local_mid_training_improvement_not_retained: true
+  layout_3_success_at_all_checkpoints: 0
+  checkpoint_selection_changed_by_diagnostic: false
+  confirm_rollouts_authorized: false
+  remaining_training_seeds_authorized: false
+  v2_formal_experiment_authorized: false
+  v3_formal_experiment_authorized: false
+next_stage: diagnose_pilot_coverage_or_learnability
